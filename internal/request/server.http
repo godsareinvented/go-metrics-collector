@@ -1,0 +1,10 @@
+
+# Обновление конкретной метрики типа counter
+POST {{domain}}:{{port}}/update/counter/someMetric/527
+
+###
+
+# Обновление конкретной метрики типа gauge
+POST {{domain}}:{{port}}/update/gauge/test/5
+
+###

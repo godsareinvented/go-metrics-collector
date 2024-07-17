@@ -1,0 +1,4 @@
+/.idea/
+./cmd/client/go_build_client.exe
+./cmd/server/go_build_server.exe
+test.go
