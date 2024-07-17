@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/action"
+	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/manager"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
@@ -36,7 +36,8 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 		metrics.Value, _ = strconv.ParseFloat(MValue, 64)
 	}
 
-	action.UpdateValue(metrics)
+	metricManager := manager.MetricManager{}
+	metricManager.UpdateValue(metrics)
 }
 
 func parsedMetricValues(r *http.Request) (string, string, string) {
