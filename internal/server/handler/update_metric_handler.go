@@ -2,10 +2,10 @@ package handler
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/action"
+	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/parser"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -29,13 +29,14 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 		return
 	}
 
-	if reflect.TypeOf(metricDTO.Value).Name() == "int64" {
-		metricDTO.Value, _ = strconv.ParseInt(metricDTO.Value.(string), 10, 64)
-	} else {
+	if dictionary.GaugeMetricType == metricDTO.Type {
 		metricDTO.Value, _ = strconv.ParseFloat(metricDTO.Value.(string), 64)
+	} else {
+		metricDTO.Value, _ = strconv.ParseInt(metricDTO.Value.(string), 10, 64)
 	}
 
-	action.UpdateValue(metricDTO)
+	metricManager := manager.MetricManager{}
+	metricManager.UpdateValue(metricDTO)
 }
 
 func processError(error error) (string, int) {
