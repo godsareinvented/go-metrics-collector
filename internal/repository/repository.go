@@ -3,6 +3,7 @@ package repository
 import (
 	"encoding/json"
 	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
+	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 )
@@ -26,6 +27,10 @@ func (repository *Repository[Num]) GetMetric(metric dto.Metric[Num]) (dto.Metric
 
 	var metricDTO dto.Metric[Num]
 	err := json.Unmarshal(jsonMetricDTO.([]uint8), &metricDTO)
+
+	// Необходимо для преобразования значения метрики к корректному (согласно типу метрики),
+	// т.к. парсер json'а распознаёт любое значение как float64
+	metricDTO.Value = Num(metricDTO.Value)
 
 	if nil != err {
 		panic("Cannot unmarshal metric")
