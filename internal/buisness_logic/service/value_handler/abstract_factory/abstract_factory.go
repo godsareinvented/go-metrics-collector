@@ -2,17 +2,19 @@ package abstract_factory
 
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/value_handler/handler"
+	"github.com/oldhanasong/go-metrics-collector/internal/constraint"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
+	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 )
 
-func GetValueHandler(metric dto.Metric) interfaces.ValueHandler {
+func GetValueHandler[Num constraint.Numeric](metric dto.Metric[Num], repos repository.Repository[Num]) interfaces.ValueHandler[Num] {
 	switch metric.Type {
 	case dictionary.GaugeMetricType:
-		return &handler.GaugeValuePreprocessor{}
+		return &handler.GaugeValuePreprocessor[Num]{Repository: &repos}
 	case dictionary.CounterMetricType:
-		return &handler.CounterValuePreprocessor{}
+		return &handler.CounterValuePreprocessor[Num]{Repository: &repos}
 	default:
 		panic("unknown metric type")
 	}

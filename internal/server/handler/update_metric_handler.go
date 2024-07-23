@@ -4,7 +4,9 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/manager"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
+	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
+	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"net/http"
 	"strconv"
 )
@@ -29,15 +31,22 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 		return
 	}
 
-	metrics := dto.Metric{Type: MType, Name: MName}
-	if MType == dictionary.GaugeMetricType {
-		metrics.Value, _ = strconv.ParseFloat(MValue, 64)
-	} else {
-		metrics.Value, _ = strconv.ParseInt(MValue, 10, 64)
-	}
+	switch MType {
+	case dictionary.GaugeMetricType:
+		m := dto.Metric[float64]{Type: MType, Name: MName}
+		m.Value, _ = strconv.ParseFloat(MValue, 64)
 
-	metricManager := manager.MetricManager{}
-	metricManager.UpdateValue(metrics)
+		metricManager := manager.MetricManager[float64]{Repository: repository.NewInstance[float64](mem_storage.NewInstance())}
+		metricManager.UpdateValue(m)
+	case dictionary.CounterMetricType:
+		m := dto.Metric[int64]{Type: MType, Name: MName}
+		m.Value, _ = strconv.ParseInt(MValue, 10, 64)
+
+		metricManager := manager.MetricManager[int64]{Repository: repository.NewInstance[int64](mem_storage.NewInstance())}
+		metricManager.UpdateValue(m)
+	default:
+		http.Error(responseWriter, "invalid metric type", http.StatusBadRequest)
+	}
 }
 
 func parsedMetricValues(r *http.Request) (string, string, string) {
