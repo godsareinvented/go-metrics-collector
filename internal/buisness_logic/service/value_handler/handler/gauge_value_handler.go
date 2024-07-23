@@ -6,10 +6,10 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 )
 
-type GaugeValuePreprocessor[Num constraint.Numeric] struct {
+type GaugeValueHandler[Num constraint.Numeric] struct {
 	Repository *repository.Repository[Num]
 }
 
-func (preprocessor *GaugeValuePreprocessor[Num]) GetMutatedValueMetric(metric dto.Metric[Num]) dto.Metric[Num] {
+func (preprocessor *GaugeValueHandler[Num]) GetMutatedValueMetric(metric dto.Metric[Num]) dto.Metric[Num] {
 	return metric
 }

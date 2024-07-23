@@ -12,9 +12,9 @@ import (
 func GetValueHandler[Num constraint.Numeric](metric dto.Metric[Num], repos repository.Repository[Num]) interfaces.ValueHandler[Num] {
 	switch metric.Type {
 	case dictionary.GaugeMetricType:
-		return &handler.GaugeValuePreprocessor[Num]{Repository: &repos}
+		return &handler.GaugeValueHandler[Num]{Repository: &repos}
 	case dictionary.CounterMetricType:
-		return &handler.CounterValuePreprocessor[Num]{Repository: &repos}
+		return &handler.CounterValueHandler[Num]{Repository: &repos}
 	default:
 		panic("unknown metric type")
 	}
