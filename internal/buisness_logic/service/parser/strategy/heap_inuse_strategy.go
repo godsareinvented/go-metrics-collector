@@ -1,16 +1,17 @@
 package strategy
 
 import (
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 )
 
-type HeapInuseStrategy struct{}
+type HeapInuseStrategy[Num constraint.Numeric] struct{}
 
-func (strategy *HeapInuseStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
+func (strategy *HeapInuseStrategy[Num]) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric[Num] {
+	return dto.Metric[Num]{
 		Type:  dictionary.GaugeMetricType,
 		Name:  metricName,
-		Value: float64(metricData.MemStats.HeapInuse),
+		Value: Num(metricData.MemStats.HeapInuse), // float64
 	}
 }

@@ -1,16 +1,17 @@
 package strategy
 
 import (
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 )
 
-type NumGCStrategy struct{}
+type NumGCStrategy[Num constraint.Numeric] struct{}
 
-func (strategy *NumGCStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
+func (strategy *NumGCStrategy[Num]) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric[Num] {
+	return dto.Metric[Num]{
 		Type:  dictionary.GaugeMetricType,
 		Name:  metricName,
-		Value: float64(metricData.MemStats.NumGC),
+		Value: Num(metricData.MemStats.NumGC), // float64
 	}
 }

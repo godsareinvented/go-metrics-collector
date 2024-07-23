@@ -1,33 +1,50 @@
 package repository
 
 import (
+	"encoding/json"
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
-	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
 )
 
-// MetricRepository todo: Внести наверх, когда появится конфиг приложения.
-var MetricRepository = Repository{storage: mem_storage.NewInstance()}
-
-type Repository struct {
+type Repository[Num constraint.Numeric] struct {
 	storage interfaces.Storage
 }
 
-func (repository *Repository) UpdateMetric(metric dto.Metric) {
-	key := getKey(metric)
-	value := metric.Value
+func (repository *Repository[Num]) UpdateMetric(metricDTO dto.Metric[Num]) {
+	key := getKey(metricDTO)
+	value, _ := json.Marshal(metricDTO)
 	repository.storage.Set(key, value)
 }
 
-func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
+func (repository *Repository[Num]) GetMetric(metric dto.Metric[Num]) (dto.Metric[Num], bool) {
 	key := getKey(metric)
-	value := repository.storage.Get(key)
-	if nil == value {
-		return dto.Metric{}, false
+	jsonMetricDTO := repository.storage.Get(key)
+	if nil == jsonMetricDTO {
+		return dto.Metric[Num]{}, false
 	}
-	return dto.Metric{Type: metric.Type, Name: metric.Name, Value: value}, true
+
+	var metricDTO dto.Metric[Num]
+	err := json.Unmarshal(jsonMetricDTO.([]uint8), &metricDTO)
+
+	if nil != err {
+		panic("Cannot unmarshal metric")
+	}
+
+	return metricDTO, true
 }
 
-func getKey(metric dto.Metric) string {
+func NewInstance[Num constraint.Numeric](storage interfaces.Storage) Repository[Num] {
+	return Repository[Num]{storage: storage}
+}
+
+//func (repository *Repository) GetMetricList() []dto.Metric {
+//	metricMap := repository.storage.GetAll()
+//	for _, metricDTOJson := range metricMap {
+//
+//	}
+//}
+
+func getKey[Num constraint.Numeric](metric dto.Metric[Num]) string {
 	return metric.Type + "/" + metric.Name
 }

@@ -1,7 +1,10 @@
 package interfaces
 
-import "github.com/godsareinvented/go-metrics-collector/internal/dto"
+import (
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
+	"github.com/godsareinvented/go-metrics-collector/internal/dto"
+)
 
-type ValueHandler interface {
-	GetMutatedValueMetric(metric dto.Metric) dto.Metric
+type ValueHandler[Num constraint.Numeric] interface {
+	GetMutatedValueMetric(metric dto.Metric[Num]) dto.Metric[Num]
 }

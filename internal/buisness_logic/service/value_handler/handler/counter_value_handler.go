@@ -1,24 +1,20 @@
 package handler
 
 import (
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
-	"reflect"
 )
 
-type CounterValuePreprocessor struct{}
-
-func (preprocessor *CounterValuePreprocessor) GetMutatedValueMetric(metric dto.Metric) dto.Metric {
-	currentMetricFromDb, isSet := repository.MetricRepository.GetMetric(metric)
-	if isSet {
-		metric.Value = sum(metric.Value, currentMetricFromDb.Value)
-	}
-	return metric
+// CounterValuePreprocessor todo: Почему препроцессор?
+type CounterValuePreprocessor[Num constraint.Numeric] struct {
+	Repository *repository.Repository[Num]
 }
 
-func sum(a interface{}, b interface{}) interface{} {
-	if reflect.TypeOf(a).Name() == "int64" {
-		return a.(int64) + b.(int64)
+func (preprocessor *CounterValuePreprocessor[Num]) GetMutatedValueMetric(metric dto.Metric[Num]) dto.Metric[Num] {
+	currentMetricFromDb, isSet := preprocessor.Repository.GetMetric(metric)
+	if isSet {
+		metric.Value += currentMetricFromDb.Value
 	}
-	return a.(float64) + b.(float64)
+	return metric
 }

@@ -1,9 +1,15 @@
 package handler
 
-import "github.com/godsareinvented/go-metrics-collector/internal/dto"
+import (
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
+	"github.com/godsareinvented/go-metrics-collector/internal/dto"
+	"github.com/godsareinvented/go-metrics-collector/internal/repository"
+)
 
-type GaugeValuePreprocessor struct{}
+type GaugeValuePreprocessor[Num constraint.Numeric] struct {
+	Repository *repository.Repository[Num]
+}
 
-func (preprocessor *GaugeValuePreprocessor) GetMutatedValueMetric(metric dto.Metric) dto.Metric {
+func (preprocessor *GaugeValuePreprocessor[Num]) GetMutatedValueMetric(metric dto.Metric[Num]) dto.Metric[Num] {
 	return metric
 }

@@ -2,58 +2,69 @@ package manager
 
 import (
 	"fmt"
+	"github.com/go-resty/resty"
 	parserAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/parser/abstract_factory"
 	valueHandlerAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/value_handler/abstract_factory"
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
-	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/data_collector"
-	"net/http"
-	"reflect"
 )
 
-type MetricManager struct {
-	MetricDataCollector metric_data_collector.MetricDataCollector
+type MetricManager[Num constraint.Numeric] struct {
+	MetricList          []string
+	MetricDataCollector interfaces.MetricDataCollector
+	Repository          repository.Repository[Num]
 }
 
-func (metricManager *MetricManager) CollectAndSend() {
-	var strategy interfaces.ParsingStrategy
-	var metricDTO dto.Metric
+func (metricManager *MetricManager[Num]) CollectAndSend() {
+	// todo: Првоерка на nil metricManager.Int64MetricDataCollector.
+	var strategy interfaces.ParsingStrategy[Num]
+	var metricDTO dto.Metric[Num]
+	var collectedMetricData dto.CollectedMetricData
 
-	metricCollectedData := metricManager.MetricDataCollector.GetMetricData()
-	for _, metricName := range dictionary.MetricNameList {
-		strategy = parserAbstractFactory.GetStrategy(metricName)
-		metricDTO = strategy.GetMetric(metricName, metricCollectedData)
+	metricManager.MetricDataCollector.CollectMetricData(&collectedMetricData)
+
+	for _, metricName := range metricManager.MetricList {
+		strategy = parserAbstractFactory.GetStrategy[Num](metricName)
+		metricDTO = strategy.GetMetric(metricName, collectedMetricData)
 		metricManager.sendMetrics(metricDTO)
 	}
 }
 
-func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
-	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO)
+func (metricManager *MetricManager[Num]) UpdateValue(metricDTO dto.Metric[Num]) {
+	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, metricManager.Repository)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO)
 
-	repository.MetricRepository.UpdateMetric(metricDTO)
+	metricManager.Repository.UpdateMetric(metricDTO)
 }
 
-func (metricManager *MetricManager) sendMetrics(metricDTO dto.Metric) {
-	response, err := http.Post(getPreparedURL(metricDTO), "text/plain", http.NoBody)
-	errBodyClose := response.Body.Close()
-	if nil != err {
-		panic(err)
+func (metricManager *MetricManager[Num]) Get(metricDTO dto.Metric[Num]) (dto.Metric[Num], bool) {
+	metricDTOFromDb, isSet := metricManager.Repository.GetMetric(metricDTO)
+	if isSet {
+		return metricDTOFromDb, true
 	}
-	if nil != errBodyClose {
+	return metricDTO, false
+}
+
+//func (metricManager *MetricManager) GetList(metricDTO dto.Metric) []dto.Metric {
+//
+//}
+
+func (metricManager *MetricManager[Num]) sendMetrics(metricDTO dto.Metric[Num]) {
+	request := resty.NewRequest()
+	_, err := request.Post(getPreparedURL(metricDTO))
+	if err != nil {
 		panic(err)
 	}
 }
 
-func getPreparedURL(metricDTO dto.Metric) string {
+func getPreparedURL[Num constraint.Numeric](metricDTO dto.Metric[Num]) string {
 	endpoint := "localhost:8080"
-	if reflect.TypeOf(metricDTO.Value).Name() == "float64" {
-		preparedMetricValue := metricDTO.Value.(float64)
-		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", endpoint, metricDTO.Type, metricDTO.Name, preparedMetricValue)
+	if dictionary.GaugeMetricType == metricDTO.Type {
+		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Value)
 	} else {
-		preparedMetricValue := metricDTO.Value.(int64)
-		return fmt.Sprintf("http://%s/update/%s/%s/%d", endpoint, metricDTO.Type, metricDTO.Name, preparedMetricValue)
+		return fmt.Sprintf("http://%s/update/%s/%s/%d", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Value)
 	}
 }

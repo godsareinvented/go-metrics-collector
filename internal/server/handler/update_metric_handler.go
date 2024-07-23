@@ -1,25 +1,35 @@
 package handler
 
 import (
+	"github.com/go-chi/chi"
 	"github.com/go-playground/validator/v10"
 	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
+	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/parser"
+	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
-type UpdateMetricHandler struct{}
-
-func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
+func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
+	// todo: Удалить и перепрвоерить перед коммитом.
 	if request.Method != http.MethodPost {
 		http.Error(responseWriter, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
 
-	requestParser := parser.RequestParser{}
-	metricDTO := requestParser.GetParsedMetric(request)
+	if chi.URLParam(request, "type") == dictionary.GaugeMetricType {
+		handle[float64](responseWriter, request)
+		return
+	}
+	handle[int64](responseWriter, request)
+}
+
+func handle[Num constraint.Numeric](responseWriter http.ResponseWriter, request *http.Request) {
+	requestParser := parser.RequestParser[Num]{}
+	metricDTO := requestParser.GetMetricDTO(request)
 
 	err := validator.New().Struct(metricDTO)
 
@@ -29,13 +39,8 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 		return
 	}
 
-	if dictionary.GaugeMetricType == metricDTO.Type {
-		metricDTO.Value, _ = strconv.ParseFloat(metricDTO.Value.(string), 64)
-	} else {
-		metricDTO.Value, _ = strconv.ParseInt(metricDTO.Value.(string), 10, 64)
-	}
-
-	metricManager := manager.MetricManager{}
+	metricRepository := repository.NewInstance[Num](mem_storage.NewInstance())
+	metricManager := manager.MetricManager[Num]{Repository: metricRepository}
 	metricManager.UpdateValue(metricDTO)
 }
 

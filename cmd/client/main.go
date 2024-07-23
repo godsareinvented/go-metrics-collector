@@ -2,16 +2,32 @@ package main
 
 import (
 	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
+	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/data_collector"
+	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
 	"time"
 )
 
 func main() {
-	var n time.Duration = 2
+	int64MetricRepository := repository.NewInstance[int64](mem_storage.NewInstance())
+	int64MetricManager := manager.MetricManager[int64]{
+		MetricList:          dictionary.Int64MetricNameList[:],
+		MetricDataCollector: &metric_data_collector.Int64MetricDataCollector{},
+		Repository:          int64MetricRepository,
+	}
 
+	float64MetricRepository := repository.NewInstance[float64](mem_storage.NewInstance())
+	float64MetricManager := manager.MetricManager[float64]{
+		MetricList:          dictionary.Float64MetricNameList[:],
+		MetricDataCollector: &metric_data_collector.Float64MetricDataCollector{},
+		Repository:          float64MetricRepository,
+	}
+
+	var n time.Duration = 2
 	for {
-		metricManager := manager.MetricManager{MetricDataCollector: metric_data_collector.MetricDataCollector{}}
-		metricManager.CollectAndSend()
+		int64MetricManager.CollectAndSend()
+		float64MetricManager.CollectAndSend()
 
 		time.Sleep(n * time.Second)
 	}

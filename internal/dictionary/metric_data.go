@@ -35,7 +35,7 @@ const (
 	CounterMetricType = "counter"
 )
 
-var MetricNameList = [29]string{
+var Float64MetricNameList = [28]string{
 	AllocMetricName,
 	BuckHashSysMetricName,
 	FreesMetricName,
@@ -63,6 +63,9 @@ var MetricNameList = [29]string{
 	StackSysMetricName,
 	SysMetricName,
 	TotalAllocMetricName,
-	PollCountMetricName,
 	RandomValueMetricName,
+}
+
+var Int64MetricNameList = [1]string{
+	PollCountMetricName,
 }

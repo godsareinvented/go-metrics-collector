@@ -2,41 +2,42 @@ package abstract_factory
 
 import (
 	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/parser/strategy"
+	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 )
 
-func GetStrategy(metricName string) interfaces.ParsingStrategy {
-	strategyMap := map[string]interfaces.ParsingStrategy{
-		dictionary.AllocMetricName:         &strategy.AllocStrategy{},
-		dictionary.BuckHashSysMetricName:   &strategy.BuckHashSysStrategy{},
-		dictionary.FreesMetricName:         &strategy.FreesStrategy{},
-		dictionary.GCCPUFractionMetricName: &strategy.GCCPUFractionStrategy{},
-		dictionary.GCSysMetricName:         &strategy.GCSysStrategy{},
-		dictionary.HeapAllocMetricName:     &strategy.HeapAllocStrategy{},
-		dictionary.HeapIdleMetricName:      &strategy.HeapIdleStrategy{},
-		dictionary.HeapInuseMetricName:     &strategy.HeapInuseStrategy{},
-		dictionary.HeapObjectsMetricName:   &strategy.HeapObjectsStrategy{},
-		dictionary.HeapReleasedMetricName:  &strategy.HeapReleasedStrategy{},
-		dictionary.HeapSysMetricName:       &strategy.HeapSysStrategy{},
-		dictionary.LastGCMetricName:        &strategy.LastGCStrategy{},
-		dictionary.LookupsMetricName:       &strategy.LookupsStrategy{},
-		dictionary.MCacheInuseMetricName:   &strategy.MCacheInuseStrategy{},
-		dictionary.MCacheSysMetricName:     &strategy.MCacheSysStrategy{},
-		dictionary.MSpanInuseMetricName:    &strategy.MSpanInuseStrategy{},
-		dictionary.MSpanSysMetricName:      &strategy.MSpanSysStrategy{},
-		dictionary.MallocsMetricName:       &strategy.MallocsStrategy{},
-		dictionary.NextGCMetricName:        &strategy.NextGCStrategy{},
-		dictionary.NumForcedGCMetricName:   &strategy.NumForcedGCStrategy{},
-		dictionary.NumGCMetricName:         &strategy.NumGCStrategy{},
-		dictionary.OtherSysMetricName:      &strategy.OtherSysStrategy{},
-		dictionary.PauseTotalNsMetricName:  &strategy.PauseTotalNsStrategy{},
-		dictionary.StackInuseMetricName:    &strategy.StackInuseStrategy{},
-		dictionary.StackSysMetricName:      &strategy.StackSysStrategy{},
-		dictionary.SysMetricName:           &strategy.SysStrategy{},
-		dictionary.TotalAllocMetricName:    &strategy.TotalAllockStrategy{},
-		dictionary.PollCountMetricName:     &strategy.PollCountStrategy{},
-		dictionary.RandomValueMetricName:   &strategy.RandomValueStrategy{},
+func GetStrategy[Num constraint.Numeric](metricName string) interfaces.ParsingStrategy[Num] {
+	strategyMap := map[string]interfaces.ParsingStrategy[Num]{
+		dictionary.AllocMetricName:         &strategy.AllocStrategy[Num]{},
+		dictionary.BuckHashSysMetricName:   &strategy.BuckHashSysStrategy[Num]{},
+		dictionary.FreesMetricName:         &strategy.FreesStrategy[Num]{},
+		dictionary.GCCPUFractionMetricName: &strategy.GCCPUFractionStrategy[Num]{},
+		dictionary.GCSysMetricName:         &strategy.GCSysStrategy[Num]{},
+		dictionary.HeapAllocMetricName:     &strategy.HeapAllocStrategy[Num]{},
+		dictionary.HeapIdleMetricName:      &strategy.HeapIdleStrategy[Num]{},
+		dictionary.HeapInuseMetricName:     &strategy.HeapInuseStrategy[Num]{},
+		dictionary.HeapObjectsMetricName:   &strategy.HeapObjectsStrategy[Num]{},
+		dictionary.HeapReleasedMetricName:  &strategy.HeapReleasedStrategy[Num]{},
+		dictionary.HeapSysMetricName:       &strategy.HeapSysStrategy[Num]{},
+		dictionary.LastGCMetricName:        &strategy.LastGCStrategy[Num]{},
+		dictionary.LookupsMetricName:       &strategy.LookupsStrategy[Num]{},
+		dictionary.MCacheInuseMetricName:   &strategy.MCacheInuseStrategy[Num]{},
+		dictionary.MCacheSysMetricName:     &strategy.MCacheSysStrategy[Num]{},
+		dictionary.MSpanInuseMetricName:    &strategy.MSpanInuseStrategy[Num]{},
+		dictionary.MSpanSysMetricName:      &strategy.MSpanSysStrategy[Num]{},
+		dictionary.MallocsMetricName:       &strategy.MallocsStrategy[Num]{},
+		dictionary.NextGCMetricName:        &strategy.NextGCStrategy[Num]{},
+		dictionary.NumForcedGCMetricName:   &strategy.NumForcedGCStrategy[Num]{},
+		dictionary.NumGCMetricName:         &strategy.NumGCStrategy[Num]{},
+		dictionary.OtherSysMetricName:      &strategy.OtherSysStrategy[Num]{},
+		dictionary.PauseTotalNsMetricName:  &strategy.PauseTotalNsStrategy[Num]{},
+		dictionary.StackInuseMetricName:    &strategy.StackInuseStrategy[Num]{},
+		dictionary.StackSysMetricName:      &strategy.StackSysStrategy[Num]{},
+		dictionary.SysMetricName:           &strategy.SysStrategy[Num]{},
+		dictionary.TotalAllocMetricName:    &strategy.TotalAllockStrategy[Num]{},
+		dictionary.PollCountMetricName:     &strategy.PollCountStrategy[Num]{},
+		dictionary.RandomValueMetricName:   &strategy.RandomValueStrategy[Num]{},
 	}
 
 	if _, ok := strategyMap[metricName]; !ok {
