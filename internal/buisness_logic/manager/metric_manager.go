@@ -82,14 +82,18 @@ func (metricManager *MetricManager[Num]) send(ctx context.Context) {
 }
 
 func (metricManager *MetricManager[Num]) UpdateValue(metric dto.Metric[Num]) {
-	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metric, metricManager.Repository)
+	repos := repository.GetInstance(metric)
+
+	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metric, repos)
 	metric = valueHandler.GetMutatedValueMetric(metric)
 
-	metricManager.Repository.UpdateMetric(metric)
+	repos.UpdateMetric(metric)
 }
 
 func (metricManager *MetricManager[Num]) Get(metric dto.Metric[Num]) (dto.Metric[Num], bool) {
-	metricDTOFromDb, isSet := metricManager.Repository.GetMetric(metric)
+	repos := repository.GetInstance(metric)
+
+	metricDTOFromDb, isSet := repos.GetMetric(metric)
 	if isSet {
 		return metricDTOFromDb, true
 	}

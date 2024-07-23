@@ -6,7 +6,6 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"net/http"
 	"strconv"
 )
@@ -36,13 +35,13 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 		m := dto.Metric[float64]{Type: MType, Name: MName}
 		m.Value, _ = strconv.ParseFloat(MValue, 64)
 
-		metricManager := manager.MetricManager[float64]{Repository: repository.NewInstance[float64](mem_storage.NewInstance())}
+		metricManager := manager.MetricManager[float64]{Repository: repository.GetInstance(m)}
 		metricManager.UpdateValue(m)
 	case dictionary.CounterMetricType:
 		m := dto.Metric[int64]{Type: MType, Name: MName}
 		m.Value, _ = strconv.ParseInt(MValue, 10, 64)
 
-		metricManager := manager.MetricManager[int64]{Repository: repository.NewInstance[int64](mem_storage.NewInstance())}
+		metricManager := manager.MetricManager[int64]{Repository: repository.GetInstance(m)}
 		metricManager.UpdateValue(m)
 	default:
 		http.Error(responseWriter, "invalid metric type", http.StatusBadRequest)
