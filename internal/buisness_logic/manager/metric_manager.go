@@ -15,7 +15,6 @@ import (
 type MetricManager[Num constraint.Numeric] struct {
 	MetricList          []string
 	MetricDataCollector interfaces.MetricDataCollector
-	Repository          repository.Repository[Num]
 }
 
 func (metricManager *MetricManager[Num]) CollectAndSend() {
@@ -34,14 +33,18 @@ func (metricManager *MetricManager[Num]) CollectAndSend() {
 }
 
 func (metricManager *MetricManager[Num]) UpdateValue(metricDTO dto.Metric[Num]) {
-	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, metricManager.Repository)
+	repos := repository.GetInstance(metricDTO)
+
+	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, repos)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO)
 
-	metricManager.Repository.UpdateMetric(metricDTO)
+	repos.UpdateMetric(metricDTO)
 }
 
 func (metricManager *MetricManager[Num]) Get(metricDTO dto.Metric[Num]) (dto.Metric[Num], bool) {
-	metricDTOFromDb, isSet := metricManager.Repository.GetMetric(metricDTO)
+	repos := repository.GetInstance(metricDTO)
+
+	metricDTOFromDb, isSet := repos.GetMetric(metricDTO)
 	if isSet {
 		return metricDTOFromDb, true
 	}

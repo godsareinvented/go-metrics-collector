@@ -12,6 +12,9 @@ type Repository[Num constraint.Numeric] struct {
 	storage interfaces.Storage
 }
 
+var int64Repository Repository[int64]
+var float64Repository Repository[float64]
+
 func (repository *Repository[Num]) UpdateMetric(metricDTO dto.Metric[Num]) {
 	key := getKey(metricDTO)
 	value, _ := json.Marshal(metricDTO)
@@ -39,8 +42,21 @@ func (repository *Repository[Num]) GetMetric(metric dto.Metric[Num]) (dto.Metric
 	return metricDTO, true
 }
 
-func NewInstance[Num constraint.Numeric](storage interfaces.Storage) Repository[Num] {
-	return Repository[Num]{storage: storage}
+func NewInstance(storage interfaces.Storage) {
+	int64Repository = Repository[int64]{storage: storage}
+	float64Repository = Repository[float64]{storage: storage}
+}
+
+func GetInstance[Num constraint.Numeric](metricDTO dto.Metric[Num]) Repository[Num] {
+	// todo: Тоже проблема. Надо передавать по ссылке.
+	switch metricDTO.Type {
+	case dictionary.GaugeMetricType:
+		return Repository[Num](float64Repository)
+	case dictionary.CounterMetricType:
+		return Repository[Num](int64Repository)
+	default:
+		panic("Unknown metric type")
+	}
 }
 
 //func (repository *Repository) GetMetricList() []dto.Metric {

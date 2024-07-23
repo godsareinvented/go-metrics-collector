@@ -10,18 +10,17 @@ import (
 )
 
 func main() {
-	int64MetricRepository := repository.NewInstance[int64](mem_storage.NewInstance())
+	memStorage := mem_storage.NewInstance()
+	repository.NewInstance(memStorage)
+
 	int64MetricManager := manager.MetricManager[int64]{
 		MetricList:          dictionary.Int64MetricNameList[:],
 		MetricDataCollector: &metric_data_collector.Int64MetricDataCollector{},
-		Repository:          int64MetricRepository,
 	}
 
-	float64MetricRepository := repository.NewInstance[float64](mem_storage.NewInstance())
 	float64MetricManager := manager.MetricManager[float64]{
 		MetricList:          dictionary.Float64MetricNameList[:],
 		MetricDataCollector: &metric_data_collector.Float64MetricDataCollector{},
-		Repository:          float64MetricRepository,
 	}
 
 	var n time.Duration = 2
