@@ -8,11 +8,15 @@ type MemStorage struct {
 	storage map[string]interface{}
 }
 
+func (memStorage *MemStorage) GetAll() map[string]interface{} {
+	return memStorage.storage
+}
+
 func (memStorage *MemStorage) Get(key string) interface{} {
 	if value, ok := memStorage.storage[key]; ok {
 		return value
 	}
-	return nil
+	return ""
 }
 
 func (memStorage *MemStorage) Set(key string, value interface{}) {

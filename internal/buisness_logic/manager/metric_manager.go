@@ -33,7 +33,7 @@ func (metricManager *MetricManager[Num]) CollectAndSend() {
 }
 
 func (metricManager *MetricManager[Num]) UpdateValue(metricDTO dto.Metric[Num]) {
-	repos := repository.GetInstance(metricDTO)
+	repos := repository.GetInstance[Num](metricDTO.Type)
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, repos)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO)
@@ -42,7 +42,7 @@ func (metricManager *MetricManager[Num]) UpdateValue(metricDTO dto.Metric[Num]) 
 }
 
 func (metricManager *MetricManager[Num]) Get(metricDTO dto.Metric[Num]) (dto.Metric[Num], bool) {
-	repos := repository.GetInstance(metricDTO)
+	repos := repository.GetInstance[Num](metricDTO.Type)
 
 	metricDTOFromDb, isSet := repos.GetMetric(metricDTO)
 	if isSet {

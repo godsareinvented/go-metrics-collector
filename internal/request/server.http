@@ -1,10 +1,38 @@
 
+# UPDATE METRIC VALUE
 # Обновление конкретной метрики типа counter
-POST {{domain}}:{{port}}/update/counter/someMetric/527
+POST {{domain}}:{{port}}/update/counter/PollCount/527
+
+###
+
+# Обновление конкретной метрики типа counter с внедрённым XSS
+POST {{domain}}:{{port}}/update/counter/<script>alert("Hacked")</script>/527
 
 ###
 
 # Обновление конкретной метрики типа gauge
-POST {{domain}}:{{port}}/update/gauge/test/5
+POST {{domain}}:{{port}}/update/gauge/RandomVal/0.74
+
+###
+
+# GET METRIC VALUE
+# Получение значения метрики типа counter
+GET {{domain}}:{{port}}/value/counter/PollCount
+
+###
+
+# Получение значения метрики типа gauge
+GET {{domain}}:{{port}}/value/gauge/RandomVal
+
+###
+
+# Получение несуществующего значения метрики типа counter
+GET {{domain}}:{{port}}/value/counter/test
+
+###
+
+# GET METRIC LIST
+# Получение списка метрик из хранилища
+GET {{domain}}:{{port}}/
 
 ###

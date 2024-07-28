@@ -7,25 +7,25 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/parser"
-	"html"
+	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/value_formatter"
 	"net/http"
+	"strconv"
 )
 
-func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
+func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	if chi.URLParam(request, "type") == dictionary.GaugeMetricType {
-		handleMetricUpdates[float64](responseWriter, request)
+		handleGettingMetric[float64](responseWriter, request)
 		return
 	}
-	handleMetricUpdates[int64](responseWriter, request)
+	handleGettingMetric[int64](responseWriter, request)
 }
 
-func handleMetricUpdates[Num constraint.Numeric](responseWriter http.ResponseWriter, request *http.Request) {
+func handleGettingMetric[Num constraint.Numeric](responseWriter http.ResponseWriter, request *http.Request) {
 	requestParser := parser.RequestParser[Num]{}
 	metricDTO := requestParser.GetMetricDTO(request)
 
-	// todo: Защита точно нужна? chi не находит хэндлер со спец-символами в URL.
-	metricDTO.Type = html.EscapeString(metricDTO.Type)
-	metricDTO.Name = html.EscapeString(metricDTO.Name)
+	metricDTO.Type = strconv.Quote(metricDTO.Type)
+	metricDTO.Name = strconv.Quote(metricDTO.Name)
 
 	err := validator.New().Struct(metricDTO)
 
@@ -36,5 +36,13 @@ func handleMetricUpdates[Num constraint.Numeric](responseWriter http.ResponseWri
 	}
 
 	metricManager := manager.MetricManager[Num]{}
-	metricManager.UpdateValue(metricDTO)
+	resultingMetric, isSet := metricManager.Get(metricDTO)
+
+	if isSet {
+		preparedMetricValue := value_formatter.GetFormattedValue(resultingMetric)
+		responseWriter.Write([]byte(preparedMetricValue))
+		return
+	}
+
+	http.NotFound(responseWriter, request)
 }
