@@ -13,20 +13,14 @@ func main() {
 	memStorage := mem_storage.NewInstance()
 	repository.NewInstance(memStorage)
 
-	int64MetricManager := manager.MetricManager[int64]{
-		MetricList:          dictionary.Int64MetricNameList[:],
-		MetricDataCollector: &metric_data_collector.Int64MetricDataCollector{},
-	}
-
-	float64MetricManager := manager.MetricManager[float64]{
-		MetricList:          dictionary.Float64MetricNameList[:],
-		MetricDataCollector: &metric_data_collector.Float64MetricDataCollector{},
+	metricManager := manager.MetricManager{
+		MetricList:          dictionary.MetricNameList[:],
+		MetricDataCollector: &metric_data_collector.MetricDataCollector{},
 	}
 
 	var n time.Duration = 2
 	for {
-		int64MetricManager.CollectAndSend()
-		float64MetricManager.CollectAndSend()
+		metricManager.CollectAndSend()
 
 		time.Sleep(n * time.Second)
 	}

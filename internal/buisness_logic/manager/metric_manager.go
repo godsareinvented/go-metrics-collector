@@ -5,35 +5,38 @@ import (
 	"github.com/go-resty/resty"
 	parserAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/parser/abstract_factory"
 	valueHandlerAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/value_handler/abstract_factory"
-	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 )
 
-type MetricManager[Num constraint.Numeric] struct {
+type MetricManager struct {
 	MetricList          []string
 	MetricDataCollector interfaces.MetricDataCollector
 }
 
-func (metricManager *MetricManager[Num]) CollectAndSend() {
-	// todo: Првоерка на nil metricManager.Int64MetricDataCollector.
-	var strategy interfaces.ParsingStrategy[Num]
-	var metricDTO dto.Metric[Num]
+func (metricManager *MetricManager) CollectAndSend() {
+	if nil == metricManager.MetricList {
+		panic("metric list is empty")
+	}
+
+	var strategy interfaces.ParsingStrategy
+	var metricDTO dto.Metric
 	var collectedMetricData dto.CollectedMetricData
 
 	metricManager.MetricDataCollector.CollectMetricData(&collectedMetricData)
 
 	for _, metricName := range metricManager.MetricList {
-		strategy = parserAbstractFactory.GetStrategy[Num](metricName)
+		// todo: Хуёвое решение. Каждый раз будет инициализироваться новый объект.
+		strategy = parserAbstractFactory.GetStrategy(metricName)
 		metricDTO = strategy.GetMetric(metricName, collectedMetricData)
 		metricManager.sendMetrics(metricDTO)
 	}
 }
 
-func (metricManager *MetricManager[Num]) UpdateValue(metricDTO dto.Metric[Num]) {
-	repos := repository.GetInstance[Num](metricDTO.Type)
+func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
+	repos := repository.GetInstance()
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, repos)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO)
@@ -41,8 +44,8 @@ func (metricManager *MetricManager[Num]) UpdateValue(metricDTO dto.Metric[Num]) 
 	repos.UpdateMetric(metricDTO)
 }
 
-func (metricManager *MetricManager[Num]) Get(metricDTO dto.Metric[Num]) (dto.Metric[Num], bool) {
-	repos := repository.GetInstance[Num](metricDTO.Type)
+func (metricManager *MetricManager) Get(metricDTO dto.Metric) (dto.Metric, bool) {
+	repos := repository.GetInstance()
 
 	metricDTOFromDb, isSet := repos.GetMetric(metricDTO)
 	if isSet {
@@ -55,7 +58,7 @@ func (metricManager *MetricManager[Num]) Get(metricDTO dto.Metric[Num]) (dto.Met
 //
 //}
 
-func (metricManager *MetricManager[Num]) sendMetrics(metricDTO dto.Metric[Num]) {
+func (metricManager *MetricManager) sendMetrics(metricDTO dto.Metric) {
 	request := resty.NewRequest()
 	_, err := request.Post(getPreparedURL(metricDTO))
 	if err != nil {
@@ -63,7 +66,7 @@ func (metricManager *MetricManager[Num]) sendMetrics(metricDTO dto.Metric[Num]) 
 	}
 }
 
-func getPreparedURL[Num constraint.Numeric](metricDTO dto.Metric[Num]) string {
+func getPreparedURL(metricDTO dto.Metric) string {
 	endpoint := "localhost:8080"
 	if dictionary.GaugeMetricType == metricDTO.Type {
 		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Value)

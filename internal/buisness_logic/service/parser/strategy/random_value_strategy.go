@@ -1,17 +1,16 @@
 package strategy
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 )
 
-type RandomValueStrategy[Num constraint.Numeric] struct{}
+type RandomValueStrategy struct{}
 
-func (strategy *RandomValueStrategy[Num]) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric[Num] {
-	return dto.Metric[Num]{
+func (strategy *RandomValueStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
+	return dto.Metric{
 		Type:  dictionary.GaugeMetricType,
 		Name:  metricName,
-		Value: Num(metricData.RandomValue), // float64
+		Value: float64(metricData.RandomValue),
 	}
 }

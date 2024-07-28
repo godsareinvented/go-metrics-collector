@@ -1,19 +1,18 @@
 package handler
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 )
 
-type CounterValueHandler[Num constraint.Numeric] struct {
-	Repository *repository.Repository[Num]
+type CounterValueHandler struct {
+	Repository *repository.Repository
 }
 
-func (preprocessor *CounterValueHandler[Num]) GetMutatedValueMetric(metric dto.Metric[Num]) dto.Metric[Num] {
-	currentMetricFromDb, isSet := preprocessor.Repository.GetMetric(metric)
+func (handler *CounterValueHandler) GetMutatedValueMetric(metricDTO dto.Metric) dto.Metric {
+	currentMetricDTOFromDb, isSet := handler.Repository.GetMetric(metricDTO)
 	if isSet {
-		metric.Value += currentMetricFromDb.Value
+		metricDTO.Delta += currentMetricDTOFromDb.Delta
 	}
-	return metric
+	return metricDTO
 }

@@ -1,9 +1,8 @@
 package dto
 
-import "github.com/godsareinvented/go-metrics-collector/internal/constraint"
-
-type Metric[Num constraint.Numeric] struct {
-	Type  string `json:"type" validate:"required,contains=gauge|contains=counter"`
-	Name  string `json:"name" validate:"required,alpha"`
-	Value Num    `json:"value" validate:"omitempty,required,numeric,gt=0"`
+type Metric struct {
+	Type  string  `json:"type" validate:"required,contains=gauge|contains=counter"`
+	Name  string  `json:"name" validate:"required,alpha"`
+	Delta int64   `json:"delta" validate:"omitempty,required"` // todo: переписать валидацию.
+	Value float64 `json:"value" validate:"omitempty,required"`
 }

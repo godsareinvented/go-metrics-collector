@@ -1,17 +1,16 @@
 package strategy
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/constraint"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 )
 
-type GCCPUFractionStrategy[Num constraint.Numeric] struct{}
+type GCCPUFractionStrategy struct{}
 
-func (strategy *GCCPUFractionStrategy[Num]) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric[Num] {
-	return dto.Metric[Num]{
+func (strategy *GCCPUFractionStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
+	return dto.Metric{
 		Type:  dictionary.GaugeMetricType,
 		Name:  metricName,
-		Value: Num(metricData.MemStats.GCCPUFraction), // float64
+		Value: float64(metricData.MemStats.GCCPUFraction),
 	}
 }
