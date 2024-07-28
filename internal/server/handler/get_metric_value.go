@@ -1,10 +1,7 @@
 package handler
 
 import (
-	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/manager"
-	"github.com/oldhanasong/go-metrics-collector/internal/constraint"
-	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/value_formatter"
@@ -25,20 +22,9 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	switch chi.URLParam(request, "type") {
-	case dictionary.GaugeMetricType:
-		getMetric[float64](responseWriter, request, MType, MName)
-	case dictionary.CounterMetricType:
-		getMetric[int64](responseWriter, request, MType, MName)
-	default:
-		http.Error(responseWriter, "invalid metric type", http.StatusBadRequest)
-	}
-}
+	m := dto.Metric{Type: MType, Name: MName}
 
-func getMetric[Num constraint.Numeric](responseWriter http.ResponseWriter, request *http.Request, MType, MName string) {
-	m := dto.Metric[Num]{Type: MType, Name: MName}
-
-	metricManager := manager.MetricManager[Num]{Repository: repository.GetInstance[Num](m.Type)}
+	metricManager := manager.MetricManager{Repository: repository.GetInstance()}
 	resultingMetric, isSet := metricManager.Get(m)
 
 	if !isSet {

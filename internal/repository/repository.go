@@ -2,40 +2,33 @@ package repository
 
 import (
 	"encoding/json"
-	"github.com/oldhanasong/go-metrics-collector/internal/constraint"
-	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 )
 
-type Repository[Num constraint.Numeric] struct {
+type Repository struct {
 	storage interfaces.Storage
 }
 
 var (
-	int64Repository   Repository[int64]
-	float64Repository Repository[float64]
+	repository Repository
 )
 
-func (repository *Repository[Num]) UpdateMetric(metric dto.Metric[Num]) {
+func (repository *Repository) UpdateMetric(metric dto.Metric) {
 	key := getKey(metric)
 	value, _ := json.Marshal(metric)
 	repository.storage.Set(key, value)
 }
 
-func (repository *Repository[Num]) GetMetric(metric dto.Metric[Num]) (dto.Metric[Num], bool) {
+func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
 	key := getKey(metric)
 	jsonMetric := repository.storage.Get(key)
 	if "" == jsonMetric {
-		return dto.Metric[Num]{}, false
+		return dto.Metric{}, false
 	}
 
-	var metricDTO dto.Metric[Num]
+	var metricDTO dto.Metric
 	err := json.Unmarshal(jsonMetric.([]byte), &metricDTO)
-
-	// Необходимо для преобразования значения метрики к корректному (согласно типу метрики),
-	// т.к. парсер json'а распознаёт любое значение как float64
-	metricDTO.Value = Num(metricDTO.Value)
 
 	if nil != err {
 		panic("Cannot unmarshal metric")
@@ -45,22 +38,13 @@ func (repository *Repository[Num]) GetMetric(metric dto.Metric[Num]) (dto.Metric
 }
 
 func NewInstance(storage interfaces.Storage) {
-	int64Repository = Repository[int64]{storage: storage}
-	float64Repository = Repository[float64]{storage: storage}
+	repository = Repository{storage: storage}
 }
 
-func GetInstance[Num constraint.Numeric](metricType string) Repository[Num] {
-	// todo: Тоже проблема. Надо передавать по ссылке.
-	switch metricType {
-	case dictionary.GaugeMetricType:
-		return Repository[Num](float64Repository)
-	case dictionary.CounterMetricType:
-		return Repository[Num](int64Repository)
-	default:
-		panic("Unknown metric type")
-	}
+func GetInstance() Repository {
+	return repository
 }
 
-func getKey[Num constraint.Numeric](metric dto.Metric[Num]) string {
+func getKey(metric dto.Metric) string {
 	return metric.Type + "/" + metric.Name
 }

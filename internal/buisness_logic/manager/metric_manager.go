@@ -6,19 +6,17 @@ import (
 	"github.com/go-resty/resty"
 	parserAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/parser/abstract_factory"
 	valueHandlerAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/value_handler/abstract_factory"
-	"github.com/oldhanasong/go-metrics-collector/internal/constraint"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
-	"reflect"
 	"time"
 )
 
-type MetricManager[Num constraint.Numeric] struct {
+type MetricManager struct {
 	MetricList          []string
 	MetricDataCollector interfaces.MetricDataCollector
-	Repository          repository.Repository[Num]
+	Repository          repository.Repository
 }
 
 const (
@@ -27,12 +25,15 @@ const (
 )
 
 var (
-	endpoint          = "http://localhost:8080"
-	int64MetricList   []dto.Metric[int64]
-	float64MetricList []dto.Metric[float64]
+	endpoint   = "http://localhost:8080"
+	metricList []dto.Metric
 )
 
-func (metricManager *MetricManager[Num]) CollectAndSend(ctx context.Context) {
+func (metricManager *MetricManager) CollectAndSend(ctx context.Context) {
+	if metricManager.MetricList == nil {
+		panic("metric list is empty")
+	}
+
 	go metricManager.collect(ctx)
 	go metricManager.send(ctx)
 
@@ -42,7 +43,7 @@ func (metricManager *MetricManager[Num]) CollectAndSend(ctx context.Context) {
 	}
 }
 
-func (metricManager *MetricManager[Num]) collect(ctx context.Context) {
+func (metricManager *MetricManager) collect(ctx context.Context) {
 	var metricCollectedData dto.CollectedMetricData
 	for {
 		select {
@@ -51,10 +52,11 @@ func (metricManager *MetricManager[Num]) collect(ctx context.Context) {
 		default:
 			metricManager.MetricDataCollector.CollectMetricData(&metricCollectedData)
 
-			if reflect.TypeFor[Num]().Name() == "int64" {
-				collectCounterMetrics(metricCollectedData)
-			} else {
-				collectGaugeMetrics(metricCollectedData)
+			metricList = []dto.Metric{}
+			for _, metricName := range metricManager.MetricList {
+				strategy := parserAbstractFactory.GetStrategy(metricName)
+				metrics := strategy.GetMetric(metricName, metricCollectedData)
+				metricList = append(metricList, metrics)
 			}
 
 			time.Sleep(pollInterval)
@@ -62,18 +64,14 @@ func (metricManager *MetricManager[Num]) collect(ctx context.Context) {
 	}
 }
 
-func (metricManager *MetricManager[Num]) send(ctx context.Context) {
+func (metricManager *MetricManager) send(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			for _, metrics := range int64MetricList {
-				_, _ = resty.NewRequest().Post(getPreparedURL[int64](metrics))
-			}
-
-			for _, metrics := range float64MetricList {
-				_, _ = resty.NewRequest().Post(getPreparedURL[float64](metrics))
+			for _, metrics := range metricList {
+				metricManager.sendMetric(metrics)
 			}
 
 			time.Sleep(reportInterval)
@@ -81,8 +79,8 @@ func (metricManager *MetricManager[Num]) send(ctx context.Context) {
 	}
 }
 
-func (metricManager *MetricManager[Num]) UpdateValue(metric dto.Metric[Num]) {
-	repos := repository.GetInstance[Num](metric.Type)
+func (metricManager *MetricManager) UpdateValue(metric dto.Metric) {
+	repos := repository.GetInstance()
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metric, repos)
 	metric = valueHandler.GetMutatedValueMetric(metric)
@@ -90,8 +88,8 @@ func (metricManager *MetricManager[Num]) UpdateValue(metric dto.Metric[Num]) {
 	repos.UpdateMetric(metric)
 }
 
-func (metricManager *MetricManager[Num]) Get(metric dto.Metric[Num]) (dto.Metric[Num], bool) {
-	repos := repository.GetInstance[Num](metric.Type)
+func (metricManager *MetricManager) Get(metric dto.Metric) (dto.Metric, bool) {
+	repos := repository.GetInstance()
 
 	metricDTOFromDb, isSet := repos.GetMetric(metric)
 	if isSet {
@@ -100,33 +98,14 @@ func (metricManager *MetricManager[Num]) Get(metric dto.Metric[Num]) (dto.Metric
 	return metric, false
 }
 
-// todo: Временное решение.
-func (metricManager *MetricManager[Num]) _(metric dto.Metric[Num]) {
+func (metricManager *MetricManager) sendMetric(metric dto.Metric) {
 	_, _ = resty.NewRequest().Post(getPreparedURL(metric))
 }
 
-func getPreparedURL[Num constraint.Numeric](metric dto.Metric[Num]) string {
+func getPreparedURL(metric dto.Metric) string {
 	if metric.Type == dictionary.GaugeMetricType {
 		return fmt.Sprintf("%s/update/%s/%s/%.2f", endpoint, metric.Type, metric.Name, metric.Value)
 	} else {
-		return fmt.Sprintf("%s/update/%s/%s/%d", endpoint, metric.Type, metric.Name, metric.Value)
-	}
-}
-
-func collectCounterMetrics(metricCollectedData dto.CollectedMetricData) {
-	int64MetricList = []dto.Metric[int64]{}
-	for _, metricName := range dictionary.CounterMetricNameList {
-		strategy := parserAbstractFactory.GetStrategy[int64](metricName)
-		metrics := strategy.GetMetric(metricName, metricCollectedData)
-		int64MetricList = append(int64MetricList, metrics)
-	}
-}
-
-func collectGaugeMetrics(metricCollectedData dto.CollectedMetricData) {
-	float64MetricList = []dto.Metric[float64]{}
-	for _, metricName := range dictionary.GaugeMetricNameList {
-		strategy := parserAbstractFactory.GetStrategy[float64](metricName)
-		metrics := strategy.GetMetric(metricName, metricCollectedData)
-		float64MetricList = append(float64MetricList, metrics)
+		return fmt.Sprintf("%s/update/%s/%s/%d", endpoint, metric.Type, metric.Name, metric.Delta)
 	}
 }
