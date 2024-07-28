@@ -26,12 +26,12 @@ func (repository *Repository[Num]) UpdateMetric(metric dto.Metric[Num]) {
 func (repository *Repository[Num]) GetMetric(metric dto.Metric[Num]) (dto.Metric[Num], bool) {
 	key := getKey(metric)
 	jsonMetric := repository.storage.Get(key)
-	if nil == jsonMetric {
+	if "" == jsonMetric {
 		return dto.Metric[Num]{}, false
 	}
 
 	var metricDTO dto.Metric[Num]
-	err := json.Unmarshal(jsonMetric.([]uint8), &metricDTO)
+	err := json.Unmarshal(jsonMetric.([]byte), &metricDTO)
 
 	// Необходимо для преобразования значения метрики к корректному (согласно типу метрики),
 	// т.к. парсер json'а распознаёт любое значение как float64
@@ -49,9 +49,9 @@ func NewInstance(storage interfaces.Storage) {
 	float64Repository = Repository[float64]{storage: storage}
 }
 
-func GetInstance[Num constraint.Numeric](metricDTO dto.Metric[Num]) Repository[Num] {
+func GetInstance[Num constraint.Numeric](metricType string) Repository[Num] {
 	// todo: Тоже проблема. Надо передавать по ссылке.
-	switch metricDTO.Type {
+	switch metricType {
 	case dictionary.GaugeMetricType:
 		return Repository[Num](float64Repository)
 	case dictionary.CounterMetricType:

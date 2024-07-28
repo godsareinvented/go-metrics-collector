@@ -20,3 +20,7 @@ func ValidateMetricValue(MType, MValue string) error {
 func ValidateMetricValues(MType, MName, MValue string) error {
 	return validator.WrappedError(ValidateMetricType(MType), ValidateMetricName(MName), ValidateMetricValue(MType, MValue))
 }
+
+func ValidateAbridgedMetricValues(MType, MName string) error {
+	return validator.WrappedError(ValidateMetricType(MType), ValidateMetricName(MName))
+}
