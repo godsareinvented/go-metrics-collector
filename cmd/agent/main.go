@@ -8,17 +8,11 @@ import (
 )
 
 func main() {
-	counterMetricManager := manager.MetricManager[int64]{
-		MetricList:          dictionary.CounterMetricNameList[:],
-		MetricDataCollector: &data_collector.CounterMetricDataCollector{},
+	metricManager := manager.MetricManager{
+		MetricList:          dictionary.MetricNameList[:],
+		MetricDataCollector: &data_collector.MetricDataCollector{},
 	}
 
-	gaugeMetricManager := manager.MetricManager[float64]{
-		MetricList:          dictionary.GaugeMetricNameList[:],
-		MetricDataCollector: &data_collector.GaugeMetricDataCollector{},
-	}
-
-	go counterMetricManager.CollectAndSend(context.Background())
-	go gaugeMetricManager.CollectAndSend(context.Background())
+	go metricManager.CollectAndSend(context.Background())
 	select {}
 }
