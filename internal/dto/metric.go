@@ -5,5 +5,5 @@ import "github.com/oldhanasong/go-metrics-collector/internal/constraint"
 type Metric[Num constraint.Numeric] struct {
 	Type  string `json:"type" validate:"required,contains=gauge|contains=counter"`
 	Name  string `json:"name" validate:"required,alpha"`
-	Value Num    `json:"value" validate:"omitnil,required,numeric,gt=0"`
+	Value Num    `json:"value" validate:"omitempty,required,numeric,gt=0"`
 }

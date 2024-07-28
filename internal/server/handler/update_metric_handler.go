@@ -10,9 +10,7 @@ import (
 	"strconv"
 )
 
-type UpdateMetricHandler struct{}
-
-func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
+func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		http.Error(responseWriter, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -35,21 +33,15 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 		m := dto.Metric[float64]{Type: MType, Name: MName}
 		m.Value, _ = strconv.ParseFloat(MValue, 64)
 
-		metricManager := manager.MetricManager[float64]{Repository: repository.GetInstance(m)}
+		metricManager := manager.MetricManager[float64]{Repository: repository.GetInstance[float64](m.Type)}
 		metricManager.UpdateValue(m)
 	case dictionary.CounterMetricType:
 		m := dto.Metric[int64]{Type: MType, Name: MName}
 		m.Value, _ = strconv.ParseInt(MValue, 10, 64)
 
-		metricManager := manager.MetricManager[int64]{Repository: repository.GetInstance(m)}
+		metricManager := manager.MetricManager[int64]{Repository: repository.GetInstance[int64](m.Type)}
 		metricManager.UpdateValue(m)
 	default:
 		http.Error(responseWriter, "invalid metric type", http.StatusBadRequest)
 	}
-}
-
-func parsedMetricValues(r *http.Request) (string, string, string) {
-	return r.PathValue("type"),
-		r.PathValue("name"),
-		r.PathValue("value")
 }
