@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/manager"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
-	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/value_formatter"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
 	"net/http"
@@ -24,7 +23,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 
 	m := dto.Metric{Type: MType, Name: MName}
 
-	metricManager := manager.MetricManager{Repository: repository.GetInstance()}
+	metricManager := manager.MetricManager{}
 	resultingMetric, isSet := metricManager.Get(m)
 
 	if !isSet {

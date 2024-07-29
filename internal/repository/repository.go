@@ -37,6 +37,19 @@ func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
 	return metricDTO, true
 }
 
+func (repository *Repository) GetAllMetrics() []dto.Metric {
+	var resultingList []dto.Metric
+	var metricDTO dto.Metric
+
+	metricJsonList := repository.storage.GetAll()
+	for _, metricJson := range metricJsonList {
+		_ = json.Unmarshal(metricJson.([]byte), &metricDTO)
+		resultingList = append(resultingList, metricDTO)
+	}
+
+	return resultingList
+}
+
 func NewInstance(storage interfaces.Storage) {
 	repository = Repository{storage: storage}
 }
