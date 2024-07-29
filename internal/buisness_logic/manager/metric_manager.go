@@ -52,8 +52,13 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 		default:
 			metricManager.MetricDataCollector.CollectMetricData(&metricCollectedData)
 
+			var strategies = make(map[string]interfaces.ParsingStrategy)
 			metricList = []dto.Metric{}
 			for _, metricName := range metricManager.MetricList {
+				if nil == strategies[metricName] {
+					strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
+				}
+
 				strategy := parserAbstractFactory.GetStrategy(metricName)
 				metrics := strategy.GetMetric(metricName, metricCollectedData)
 				metricList = append(metricList, metrics)
