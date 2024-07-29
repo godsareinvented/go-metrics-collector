@@ -28,16 +28,24 @@ func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
 	var metricDTO dto.Metric
 	err := json.Unmarshal(jsonMetricDTO.([]byte), &metricDTO)
 
-	// Необходимо для преобразования значения метрики к корректному (согласно типу метрики),
-	// т.к. парсер json'а распознаёт любое значение как float64
-	// todo: Позже изменить.
-	metricDTO.Value = float64(metricDTO.Value)
-
 	if nil != err {
 		panic("Cannot unmarshal metric")
 	}
 
 	return metricDTO, true
+}
+
+func (repository *Repository) GetAllMetrics() []dto.Metric {
+	var resultingList []dto.Metric
+	var metricDTO dto.Metric
+
+	metricJsonList := repository.storage.GetAll()
+	for _, metricJson := range metricJsonList {
+		_ = json.Unmarshal(metricJson.([]byte), &metricDTO)
+		resultingList = append(resultingList, metricDTO)
+	}
+
+	return resultingList
 }
 
 func NewInstance(storage interfaces.Storage) {

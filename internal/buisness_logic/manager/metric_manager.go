@@ -55,9 +55,11 @@ func (metricManager *MetricManager) Get(metricDTO dto.Metric) (dto.Metric, bool)
 	return metricDTO, false
 }
 
-//func (metricManager *MetricManager) GetList(metricDTO dto.Metric) []dto.Metric {
-//
-//}
+func (metricManager *MetricManager) GetList() []dto.Metric {
+	repos := repository.GetInstance()
+
+	return repos.GetAllMetrics()
+}
 
 func (metricManager *MetricManager) sendMetrics(metricDTO dto.Metric) {
 	request := resty.NewRequest()
@@ -72,6 +74,6 @@ func getPreparedURL(metricDTO dto.Metric) string {
 	if dictionary.GaugeMetricType == metricDTO.Type {
 		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Value)
 	} else {
-		return fmt.Sprintf("http://%s/update/%s/%s/%d", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Value)
+		return fmt.Sprintf("http://%s/update/%s/%s/%d", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Delta)
 	}
 }
