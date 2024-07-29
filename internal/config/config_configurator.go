@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"github.com/caarlos0/env"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"sync"
@@ -28,5 +29,10 @@ func (c *ConfigConfigurator) ParseConfig() {
 		flag.IntVar(&Configuration.PollInterval, "p", 2, "The interval of polling metrics")
 
 		flag.Parse()
+
+		err := env.Parse(&Configuration)
+		if err != nil {
+			panic("Error parsing environment variables")
+		}
 	})
 }

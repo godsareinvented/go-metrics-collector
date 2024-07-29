@@ -5,9 +5,9 @@ import (
 )
 
 type Config struct {
-	Endpoint       string
-	ReportInterval int
-	PollInterval   int
+	Endpoint       string `env:"ADDRESS"`
+	ReportInterval int    `env:"REPORT_INTERVAL"`
+	PollInterval   int    `env:"POLL_INTERVAL"`
 	Repository     *repository.Repository
 }
 
