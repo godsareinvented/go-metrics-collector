@@ -5,6 +5,7 @@ go 1.22.5
 require github.com/go-playground/validator/v10 v10.22.0
 
 require (
+	github.com/caarlos0/env v3.5.0+incompatible // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-chi/chi v1.5.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
