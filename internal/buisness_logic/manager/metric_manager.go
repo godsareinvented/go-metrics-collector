@@ -21,16 +21,17 @@ func (metricManager *MetricManager) CollectAndSend() {
 		panic("metric list is empty")
 	}
 
-	var strategy interfaces.ParsingStrategy
+	var strategies = make(map[string]interfaces.ParsingStrategy)
 	var metricDTO dto.Metric
 	var collectedMetricData dto.CollectedMetricData
 
 	metricManager.MetricDataCollector.CollectMetricData(&collectedMetricData)
 
 	for _, metricName := range metricManager.MetricList {
-		// todo: Хуёвое решение. Каждый раз будет инициализироваться новый объект.
-		strategy = parserAbstractFactory.GetStrategy(metricName)
-		metricDTO = strategy.GetMetric(metricName, collectedMetricData)
+		if nil == strategies[metricName] {
+			strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
+		}
+		metricDTO = strategies[metricName].GetMetric(metricName, collectedMetricData)
 		metricManager.sendMetrics(metricDTO)
 	}
 }
