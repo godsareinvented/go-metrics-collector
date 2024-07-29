@@ -2,26 +2,46 @@ package main
 
 import (
 	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
-	"github.com/godsareinvented/go-metrics-collector/internal/repository"
+	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/data_collector"
-	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
+	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/sender"
 	"time"
 )
 
 func main() {
-	memStorage := mem_storage.NewInstance()
-	repository.NewInstance(memStorage)
+	configConfigurator := config.ConfigConfigurator{}
+	configConfigurator.ParseConfig()
 
+	var metricDTOList []dto.Metric
+	metricSender := sender.NewSender()
 	metricManager := manager.MetricManager{
-		MetricList:          dictionary.MetricNameList[:],
-		MetricDataCollector: &metric_data_collector.MetricDataCollector{},
+		MetricList:    dictionary.MetricNameList[:],
+		DataCollector: &metric_data_collector.MetricDataCollector{},
 	}
+	metricManager.Init()
 
-	var n time.Duration = 2
+	go CollectMetrics(&metricDTOList, &metricManager)
+	go SendMetrics(&metricDTOList, metricSender)
+
+	select {}
+}
+
+func CollectMetrics(metricDTOList *[]dto.Metric, metricManager *manager.MetricManager) {
 	for {
-		metricManager.CollectAndSend()
+		*metricDTOList = metricManager.Collect()
 
-		time.Sleep(n * time.Second)
+		time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
+	}
+}
+
+func SendMetrics(metricDTOList *[]dto.Metric, metricSender *sender.MetricSender) {
+	for {
+		for _, metricDTO := range *metricDTOList {
+			metricSender.Send(metricDTO)
+		}
+
+		time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
 	}
 }

@@ -1,43 +1,40 @@
 package manager
 
 import (
-	"fmt"
-	"github.com/go-resty/resty"
 	parserAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/parser/abstract_factory"
 	valueHandlerAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/value_handler/abstract_factory"
-	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
+	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
-	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 )
 
 type MetricManager struct {
-	MetricList          []string
-	MetricDataCollector interfaces.MetricDataCollector
+	MetricList    []string
+	DataCollector interfaces.MetricDataCollector
+	strategies    map[string]interfaces.ParsingStrategy
 }
 
-func (metricManager *MetricManager) CollectAndSend() {
-	if nil == metricManager.MetricList {
-		panic("metric list is empty")
+func (metricManager *MetricManager) Collect() []dto.Metric {
+	if nil == metricManager.DataCollector {
+		panic("nil DataCollector")
 	}
 
-	var strategies = make(map[string]interfaces.ParsingStrategy)
 	var metricDTO dto.Metric
+	var metricDTOList []dto.Metric
 	var collectedMetricData dto.CollectedMetricData
 
-	metricManager.MetricDataCollector.CollectMetricData(&collectedMetricData)
+	metricManager.DataCollector.CollectMetricData(&collectedMetricData)
 
 	for _, metricName := range metricManager.MetricList {
-		if nil == strategies[metricName] {
-			strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
-		}
-		metricDTO = strategies[metricName].GetMetric(metricName, collectedMetricData)
-		metricManager.sendMetrics(metricDTO)
+		metricDTO = metricManager.strategies[metricName].GetMetric(metricName, collectedMetricData)
+		metricDTOList = append(metricDTOList, metricDTO)
 	}
+
+	return metricDTOList
 }
 
 func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
-	repos := repository.GetInstance()
+	repos := config.Configuration.Repository
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, repos)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO)
@@ -46,8 +43,9 @@ func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
 }
 
 func (metricManager *MetricManager) Get(metricDTO dto.Metric) (dto.Metric, bool) {
-	repos := repository.GetInstance()
+	repos := config.Configuration.Repository
 
+	// todo: Вызов функции работает без разыменования?
 	metricDTOFromDb, isSet := repos.GetMetric(metricDTO)
 	if isSet {
 		return metricDTOFromDb, true
@@ -56,24 +54,15 @@ func (metricManager *MetricManager) Get(metricDTO dto.Metric) (dto.Metric, bool)
 }
 
 func (metricManager *MetricManager) GetList() []dto.Metric {
-	repos := repository.GetInstance()
+	repos := config.Configuration.Repository
 
 	return repos.GetAllMetrics()
 }
 
-func (metricManager *MetricManager) sendMetrics(metricDTO dto.Metric) {
-	request := resty.NewRequest()
-	_, err := request.Post(getPreparedURL(metricDTO))
-	if err != nil {
-		panic(err)
-	}
-}
+func (metricManager *MetricManager) Init() {
+	metricManager.strategies = make(map[string]interfaces.ParsingStrategy)
 
-func getPreparedURL(metricDTO dto.Metric) string {
-	endpoint := "localhost:8080"
-	if dictionary.GaugeMetricType == metricDTO.Type {
-		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Value)
-	} else {
-		return fmt.Sprintf("http://%s/update/%s/%s/%d", endpoint, metricDTO.Type, metricDTO.Name, metricDTO.Delta)
+	for _, metricName := range metricManager.MetricList {
+		metricManager.strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
 	}
 }

@@ -8,12 +8,12 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 )
 
-func GetValueHandler(metric dto.Metric, repos repository.Repository) interfaces.ValueHandler {
+func GetValueHandler(metric dto.Metric, repos *repository.Repository) interfaces.ValueHandler {
 	switch metric.Type {
 	case dictionary.GaugeMetricType:
-		return &handler.GaugeValueHandler{Repository: &repos}
+		return &handler.GaugeValueHandler{Repository: repos}
 	case dictionary.CounterMetricType:
-		return &handler.CounterValueHandler{Repository: &repos}
+		return &handler.CounterValueHandler{Repository: repos}
 	default:
 		panic("unknown metric type")
 	}
