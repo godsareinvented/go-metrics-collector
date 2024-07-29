@@ -4,7 +4,6 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/manager"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
-	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
 	"net/http"
 	"strconv"
@@ -30,6 +29,6 @@ func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
 		m.Delta, _ = strconv.ParseInt(MValue, 10, 64)
 	}
 
-	metricManager := manager.MetricManager{Repository: repository.GetInstance()}
+	metricManager := manager.MetricManager{}
 	metricManager.UpdateValue(m)
 }

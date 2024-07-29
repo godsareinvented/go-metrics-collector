@@ -16,7 +16,6 @@ import (
 type MetricManager struct {
 	MetricList          []string
 	MetricDataCollector interfaces.MetricDataCollector
-	Repository          repository.Repository
 }
 
 const (
@@ -101,6 +100,12 @@ func (metricManager *MetricManager) Get(metric dto.Metric) (dto.Metric, bool) {
 		return metricDTOFromDb, true
 	}
 	return metric, false
+}
+
+func (metricManager *MetricManager) GetList() []dto.Metric {
+	repos := repository.GetInstance()
+
+	return repos.GetAllMetrics()
 }
 
 func (metricManager *MetricManager) sendMetric(metric dto.Metric) {
