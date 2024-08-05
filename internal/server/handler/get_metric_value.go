@@ -29,6 +29,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	if isSet {
 		preparedMetricValue := value_formatter.GetFormattedValue(resultingMetric)
 		responseWriter.Write([]byte(preparedMetricValue))
+		responseWriter.WriteHeader(http.StatusOK)
 		return
 	}
 

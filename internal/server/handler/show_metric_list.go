@@ -27,4 +27,6 @@ func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 	if err != nil {
 		return
 	}
+
+	responseWriter.WriteHeader(http.StatusOK)
 }

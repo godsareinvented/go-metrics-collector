@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"github.com/caarlos0/env"
+	"github.com/godsareinvented/go-metrics-collector/internal/logger"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
 )
@@ -14,6 +15,7 @@ func (c *ConfigConfigurator) ParseConfig() {
 
 	Configuration = Config{
 		Repository: repository.NewInstance(&memStorage),
+		Logger:     logger.NewInstance(),
 	}
 
 	flag.StringVar(&Configuration.Endpoint, "a", ":8080", "The endpoint of the collector")

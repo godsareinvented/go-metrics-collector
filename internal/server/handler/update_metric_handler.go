@@ -25,4 +25,6 @@ func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
 
 	metricManager := manager.MetricManager{}
 	metricManager.UpdateValue(metricDTO)
+
+	responseWriter.WriteHeader(http.StatusOK)
 }
