@@ -30,6 +30,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 		http.NotFound(responseWriter, request)
 	}
 
+	responseWriter.WriteHeader(http.StatusOK)
 	preparedMetricValue := value_formatter.GetFormattedValue(resultingMetric)
 	responseWriter.Write([]byte(preparedMetricValue))
 }

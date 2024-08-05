@@ -31,4 +31,6 @@ func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
 
 	metricManager := manager.MetricManager{}
 	metricManager.UpdateValue(m)
+
+	responseWriter.WriteHeader(http.StatusOK)
 }
