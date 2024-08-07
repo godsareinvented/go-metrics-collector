@@ -1,5 +1,6 @@
 
 # UPDATE METRIC VALUE
+
 # Обновление конкретной метрики типа counter
 POST {{domain}}:{{port}}/update/counter/PollCount/527
 
@@ -15,7 +16,9 @@ POST {{domain}}:{{port}}/update/gauge/RandomVal/0.74
 
 ###
 
+
 # GET METRIC VALUE
+
 # Получение значения метрики типа counter
 GET {{domain}}:{{port}}/value/counter/PollCount
 
@@ -31,7 +34,9 @@ GET {{domain}}:{{port}}/value/counter/test
 
 ###
 
+
 # GET METRIC LIST
+
 # Получение списка метрик из хранилища
 GET {{domain}}:{{port}}/
 

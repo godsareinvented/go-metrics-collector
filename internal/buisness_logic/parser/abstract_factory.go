@@ -1,7 +1,7 @@
-package abstract_factory
+package parser
 
 import (
-	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/parser/strategy"
+	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/parser/strategy"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 )

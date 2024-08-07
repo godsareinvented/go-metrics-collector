@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/manager"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
+	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
 	"net/http"
 	"strconv"

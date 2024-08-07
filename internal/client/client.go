@@ -1,4 +1,4 @@
-package sender
+package client
 
 import (
 	"fmt"
@@ -13,8 +13,12 @@ type MetricSender struct {
 	client resty.Client
 }
 
-func (s *MetricSender) Send(metric dto.Metric) {
-	_, _ = resty.NewRequest().Post(getPreparedURL(metric))
+func (s *MetricSender) Send(metric dto.Metric) error {
+	_, err := resty.NewRequest().Post(getPreparedURL(metric))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func getPreparedURL(metric dto.Metric) string {
@@ -24,7 +28,7 @@ func getPreparedURL(metric dto.Metric) string {
 	return fmt.Sprintf("http://%s/update/%s/%s/%d", config.Configuration.Endpoint, metric.Type, metric.Name, metric.Delta)
 }
 
-func NewSender() *MetricSender {
+func NewClient() *MetricSender {
 	client := resty.New().SetTimeout(2 * time.Second)
 
 	return &MetricSender{

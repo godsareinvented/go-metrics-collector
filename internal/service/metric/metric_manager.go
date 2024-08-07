@@ -1,13 +1,13 @@
-package manager
+package metric
 
 import (
 	"context"
-	parserAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/parser/abstract_factory"
-	valueHandlerAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/value_handler/abstract_factory"
+	parserAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/parser"
+	valueHandlerAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/value_handler"
+	"github.com/oldhanasong/go-metrics-collector/internal/client"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
-	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/sender"
 	"time"
 )
 
@@ -15,7 +15,7 @@ type MetricManager struct {
 	MetricList          []string
 	MetricDataCollector interfaces.MetricDataCollector
 	strategies          map[string]interfaces.ParsingStrategy
-	sender              *sender.MetricSender
+	client              *client.MetricSender
 }
 
 var (
@@ -64,7 +64,7 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 			return
 		default:
 			for _, metrics := range metricList {
-				metricManager.sender.Send(metrics)
+				_ = metricManager.client.Send(metrics)
 			}
 
 			time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
@@ -99,7 +99,7 @@ func (metricManager *MetricManager) GetList() []dto.Metric {
 
 func (metricManager *MetricManager) Init() {
 	metricManager.strategies = make(map[string]interfaces.ParsingStrategy)
-	metricManager.sender = sender.NewSender()
+	metricManager.client = client.NewClient()
 
 	for _, metricName := range metricManager.MetricList {
 		metricManager.strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
