@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/parser"
 	"net/http"
 )

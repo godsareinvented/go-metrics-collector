@@ -1,7 +1,7 @@
 package abstract_factory
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/service/parser/strategy"
+	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/parser/strategy"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 )

@@ -10,13 +10,13 @@ import (
 
 type RequestParser struct{}
 
-func (rp *RequestParser) GetMetricDTO(request *http.Request, parsingValue bool) (dto.Metric, error) {
+func (rp *RequestParser) GetMetricDTO(request *http.Request, parsingValueFlag bool) (dto.Metric, error) {
 	metricType, metricName, metricValue := getParsedRequest(request)
 
 	var intVal int64
 	var floatVal float64
 	var err error
-	if parsingValue {
+	if parsingValueFlag {
 		intVal, err = getParsedDelta(metricType, metricValue)
 		if nil != err {
 			return dto.Metric{}, err

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/client"
 	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/data_collector"
-	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/sender"
+	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
 	"time"
 )
 
@@ -15,7 +15,7 @@ func main() {
 	configConfigurator.ParseConfig()
 
 	var metricDTOList []dto.Metric
-	metricSender := sender.NewSender()
+	metricSender := client.NewInstance()
 	metricManager := manager.MetricManager{
 		MetricList:    dictionary.MetricNameList[:],
 		DataCollector: &metric_data_collector.MetricDataCollector{},
@@ -36,10 +36,10 @@ func CollectMetrics(metricDTOList *[]dto.Metric, metricManager *manager.MetricMa
 	}
 }
 
-func SendMetrics(metricDTOList *[]dto.Metric, metricSender *sender.MetricSender) {
+func SendMetrics(metricDTOList *[]dto.Metric, client *client.MetricSender) {
 	for {
 		for _, metricDTO := range *metricDTOList {
-			metricSender.Send(metricDTO)
+			_ = client.Send(metricDTO)
 		}
 
 		time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)

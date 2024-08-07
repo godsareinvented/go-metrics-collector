@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/manager"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
+	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
 	"html/template"
 	"net/http"
 	"sort"
@@ -25,7 +25,7 @@ func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 
 	err := tmpl.Execute(responseWriter, data)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	responseWriter.WriteHeader(http.StatusOK)
