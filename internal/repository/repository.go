@@ -35,10 +35,10 @@ func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool) 
 
 func (repository *Repository) GetAllMetrics() []dto.Metrics {
 	var resultingList []dto.Metrics
-	var metricDTO dto.Metrics
 
 	metricJsonList := (*repository.storage).GetAll()
 	for _, metricJson := range metricJsonList {
+		var metricDTO dto.Metrics
 		_ = json.Unmarshal(metricJson.([]byte), &metricDTO)
 		resultingList = append(resultingList, metricDTO)
 	}
