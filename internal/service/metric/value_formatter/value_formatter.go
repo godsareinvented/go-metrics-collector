@@ -6,12 +6,12 @@ import (
 	"strconv"
 )
 
-func GetFormattedValue(metricDTO dto.Metric) string {
-	switch metricDTO.Type {
+func GetFormattedValue(metric dto.Metrics) string {
+	switch metric.MType {
 	case dictionary.GaugeMetricType:
-		return strconv.FormatFloat(metricDTO.Value, 'f', -1, 64)
+		return strconv.FormatFloat(*metric.Value, 'f', -1, 64)
 	case dictionary.CounterMetricType:
-		return strconv.FormatInt(metricDTO.Delta, 10)
+		return strconv.FormatInt(*metric.Delta, 10)
 	default:
 		panic("Unknown metric type")
 	}

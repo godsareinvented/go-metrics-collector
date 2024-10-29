@@ -19,7 +19,7 @@ type MetricManager struct {
 }
 
 var (
-	metricList []dto.Metric
+	metricList []dto.Metrics
 )
 
 func (metricManager *MetricManager) CollectAndSend(ctx context.Context) {
@@ -45,7 +45,7 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 		default:
 			metricManager.MetricDataCollector.CollectMetricData(&metricCollectedData)
 
-			metricList = []dto.Metric{}
+			metricList = []dto.Metrics{}
 			for _, metricName := range metricManager.MetricList {
 				strategy := metricManager.strategies[metricName]
 				metrics := strategy.GetMetric(metricName, metricCollectedData)
@@ -72,7 +72,7 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 	}
 }
 
-func (metricManager *MetricManager) UpdateValue(metric dto.Metric) {
+func (metricManager *MetricManager) UpdateValue(metric dto.Metrics) {
 	repos := config.Configuration.Repository
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metric, repos)
@@ -81,7 +81,7 @@ func (metricManager *MetricManager) UpdateValue(metric dto.Metric) {
 	repos.UpdateMetric(metric)
 }
 
-func (metricManager *MetricManager) Get(metric dto.Metric) (dto.Metric, bool) {
+func (metricManager *MetricManager) Get(metric dto.Metrics) (dto.Metrics, bool) {
 	repos := config.Configuration.Repository
 
 	metricDTOFromDb, isSet := repos.GetMetric(metric)
@@ -91,7 +91,7 @@ func (metricManager *MetricManager) Get(metric dto.Metric) (dto.Metric, bool) {
 	return metric, false
 }
 
-func (metricManager *MetricManager) GetList() []dto.Metric {
+func (metricManager *MetricManager) GetList() []dto.Metrics {
 	repos := config.Configuration.Repository
 
 	return repos.GetAllMetrics()

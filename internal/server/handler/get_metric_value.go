@@ -21,7 +21,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	m := dto.Metric{Type: MType, Name: MName}
+	m := dto.Metrics{ID: MName, MType: MType}
 
 	metricManager := manager.MetricManager{}
 	resultingMetric, isSet := metricManager.Get(m)

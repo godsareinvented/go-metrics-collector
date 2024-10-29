@@ -22,11 +22,13 @@ func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	m := dto.Metric{Type: MType, Name: MName}
+	m := dto.Metrics{ID: MName, MType: MType}
 	if MType == dictionary.GaugeMetricType {
-		m.Value, _ = strconv.ParseFloat(MValue, 64)
+		floatVal, _ := strconv.ParseFloat(MValue, 64)
+		m.Value = &floatVal
 	} else {
-		m.Delta, _ = strconv.ParseInt(MValue, 10, 64)
+		intVal, _ := strconv.ParseInt(MValue, 10, 64)
+		m.Delta = &intVal
 	}
 
 	metricManager := manager.MetricManager{}

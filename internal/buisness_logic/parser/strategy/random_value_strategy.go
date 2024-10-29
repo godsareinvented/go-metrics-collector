@@ -7,10 +7,10 @@ import (
 
 type RandomValueStrategy struct{}
 
-func (strategy *RandomValueStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
-		Type:  dictionary.GaugeMetricType,
-		Name:  metricName,
-		Value: metricData.RandomValue,
+func (strategy *RandomValueStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics {
+	return dto.Metrics{
+		ID:    metricName,
+		MType: dictionary.GaugeMetricType,
+		Value: &metricData.RandomValue,
 	}
 }

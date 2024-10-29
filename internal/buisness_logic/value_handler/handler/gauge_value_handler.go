@@ -9,6 +9,6 @@ type GaugeValueHandler struct {
 	Repository *repository.Repository
 }
 
-func (_ *GaugeValueHandler) GetMutatedValueMetric(metric dto.Metric) dto.Metric {
+func (_ *GaugeValueHandler) GetMutatedValueMetric(metric dto.Metrics) dto.Metrics {
 	return metric
 }

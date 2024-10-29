@@ -7,10 +7,11 @@ import (
 
 type LookupsStrategy struct{}
 
-func (strategy *LookupsStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
-		Type:  dictionary.GaugeMetricType,
-		Name:  metricName,
-		Value: float64(metricData.MemStats.Lookups),
+func (strategy *LookupsStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics {
+	var value = float64(metricData.MemStats.Lookups)
+	return dto.Metrics{
+		ID:    metricName,
+		MType: dictionary.GaugeMetricType,
+		Value: &value,
 	}
 }

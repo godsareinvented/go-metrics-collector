@@ -10,20 +10,20 @@ type Repository struct {
 	storage *interfaces.Storage
 }
 
-func (repository *Repository) UpdateMetric(metric dto.Metric) {
+func (repository *Repository) UpdateMetric(metric dto.Metrics) {
 	key := getKey(metric)
 	value, _ := json.Marshal(metric)
 	(*repository.storage).Set(key, value)
 }
 
-func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
+func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool) {
 	key := getKey(metric)
 	jsonMetric := (*repository.storage).Get(key)
 	if jsonMetric == "" {
-		return dto.Metric{}, false
+		return dto.Metrics{}, false
 	}
 
-	var metricDTO dto.Metric
+	var metricDTO dto.Metrics
 	err := json.Unmarshal(jsonMetric.([]byte), &metricDTO)
 
 	if err != nil {
@@ -33,9 +33,9 @@ func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
 	return metricDTO, true
 }
 
-func (repository *Repository) GetAllMetrics() []dto.Metric {
-	var resultingList []dto.Metric
-	var metricDTO dto.Metric
+func (repository *Repository) GetAllMetrics() []dto.Metrics {
+	var resultingList []dto.Metrics
+	var metricDTO dto.Metrics
 
 	metricJsonList := (*repository.storage).GetAll()
 	for _, metricJson := range metricJsonList {
@@ -50,6 +50,6 @@ func NewInstance(storage *interfaces.Storage) *Repository {
 	return &Repository{storage: storage}
 }
 
-func getKey(metric dto.Metric) string {
-	return metric.Type + "/" + metric.Name
+func getKey(metric dto.Metrics) string {
+	return metric.MType + "/" + metric.ID
 }

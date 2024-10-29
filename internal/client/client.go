@@ -13,19 +13,19 @@ type MetricSender struct {
 	client resty.Client
 }
 
-func (s *MetricSender) Send(metric dto.Metric) error {
-	_, err := resty.NewRequest().Post(getPreparedURL(metric))
+func (s *MetricSender) Send(metric dto.Metrics) error {
+	_, err := s.client.NewRequest().Post(getPreparedURL(metric))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func getPreparedURL(metric dto.Metric) string {
-	if metric.Type == dictionary.GaugeMetricType {
-		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", config.Configuration.Endpoint, metric.Type, metric.Name, metric.Value)
+func getPreparedURL(metric dto.Metrics) string {
+	if metric.MType == dictionary.GaugeMetricType {
+		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", config.Configuration.Endpoint, metric.MType, metric.ID, *metric.Value)
 	}
-	return fmt.Sprintf("http://%s/update/%s/%s/%d", config.Configuration.Endpoint, metric.Type, metric.Name, metric.Delta)
+	return fmt.Sprintf("http://%s/update/%s/%s/%d", config.Configuration.Endpoint, metric.MType, metric.ID, *metric.Delta)
 }
 
 func NewClient() *MetricSender {

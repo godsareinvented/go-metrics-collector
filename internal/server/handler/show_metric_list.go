@@ -14,17 +14,17 @@ var (
 
 func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 	metricManager := manager.MetricManager{}
-	metricDTOList := metricManager.GetList()
+	metricList := metricManager.GetList()
 
-	sort.Slice(metricDTOList, func(i, j int) bool {
-		return metricDTOList[i].Name < metricDTOList[j].Name
+	sort.Slice(metricList, func(i, j int) bool {
+		return metricList[i].ID < metricList[j].ID
 	})
 
 	tmpl := template.Must(template.ParseFiles(mainPageTplPath))
 	data := struct {
-		Items []dto.Metric
+		Items []dto.Metrics
 	}{
-		Items: metricDTOList,
+		Items: metricList,
 	}
 
 	err := tmpl.Execute(responseWriter, data)
