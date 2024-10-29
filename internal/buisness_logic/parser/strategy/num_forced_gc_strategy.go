@@ -7,10 +7,11 @@ import (
 
 type NumForcedGCStrategy struct{}
 
-func (strategy *NumForcedGCStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
-		Type:  dictionary.GaugeMetricType,
-		Name:  metricName,
-		Value: float64(metricData.MemStats.NumForcedGC),
+func (strategy *NumForcedGCStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics {
+	var value = float64(metricData.MemStats.NumForcedGC)
+	return dto.Metrics{
+		MType: dictionary.GaugeMetricType,
+		MName: metricName,
+		Value: &value,
 	}
 }

@@ -7,10 +7,11 @@ import (
 
 type SysStrategy struct{}
 
-func (strategy *SysStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
-		Type:  dictionary.GaugeMetricType,
-		Name:  metricName,
-		Value: float64(metricData.MemStats.Sys),
+func (strategy *SysStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics {
+	var value = float64(metricData.MemStats.Sys)
+	return dto.Metrics{
+		MType: dictionary.GaugeMetricType,
+		MName: metricName,
+		Value: &value,
 	}
 }

@@ -8,10 +8,12 @@ import (
 
 type MetricDataCollector struct{}
 
+var pollCount int64 = 1
+
 func (metricCollector *MetricDataCollector) CollectMetricData(metricDataDTO *dto.CollectedMetricData) {
-	var pollCount int64 = 1
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
+	pollCount += 1
 
 	metricDataDTO.PollCount = pollCount
 	metricDataDTO.MemStats = memStats

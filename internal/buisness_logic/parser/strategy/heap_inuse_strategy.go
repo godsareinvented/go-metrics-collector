@@ -7,10 +7,11 @@ import (
 
 type HeapInuseStrategy struct{}
 
-func (strategy *HeapInuseStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
-		Type:  dictionary.GaugeMetricType,
-		Name:  metricName,
-		Value: float64(metricData.MemStats.HeapInuse),
+func (strategy *HeapInuseStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics {
+	var value = float64(metricData.MemStats.HeapInuse)
+	return dto.Metrics{
+		MType: dictionary.GaugeMetricType,
+		MName: metricName,
+		Value: &value,
 	}
 }

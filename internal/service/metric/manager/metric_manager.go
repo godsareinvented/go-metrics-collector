@@ -14,13 +14,13 @@ type MetricManager struct {
 	strategies    map[string]interfaces.ParsingStrategy
 }
 
-func (metricManager *MetricManager) Collect() []dto.Metric {
+func (metricManager *MetricManager) Collect() []dto.Metrics {
 	if nil == metricManager.DataCollector {
 		panic("nil DataCollector")
 	}
 
-	var metricDTO dto.Metric
-	var metricDTOList []dto.Metric
+	var metricDTO dto.Metrics
+	var metricDTOList []dto.Metrics
 	var collectedMetricData dto.CollectedMetricData
 
 	metricManager.DataCollector.CollectMetricData(&collectedMetricData)
@@ -33,7 +33,7 @@ func (metricManager *MetricManager) Collect() []dto.Metric {
 	return metricDTOList
 }
 
-func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
+func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metrics) {
 	repos := config.Configuration.Repository
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, repos)
@@ -42,7 +42,7 @@ func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
 	repos.UpdateMetric(metricDTO)
 }
 
-func (metricManager *MetricManager) Get(metricDTO dto.Metric) (dto.Metric, bool) {
+func (metricManager *MetricManager) Get(metricDTO dto.Metrics) (dto.Metrics, bool) {
 	repos := config.Configuration.Repository
 
 	// todo: Вызов функции работает без разыменования?
@@ -53,7 +53,7 @@ func (metricManager *MetricManager) Get(metricDTO dto.Metric) (dto.Metric, bool)
 	return metricDTO, false
 }
 
-func (metricManager *MetricManager) GetList() []dto.Metric {
+func (metricManager *MetricManager) GetList() []dto.Metrics {
 	repos := config.Configuration.Repository
 
 	return repos.GetAllMetrics()

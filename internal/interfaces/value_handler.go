@@ -5,5 +5,5 @@ import (
 )
 
 type ValueHandler interface {
-	GetMutatedValueMetric(metric dto.Metric) dto.Metric
+	GetMutatedValueMetric(metric dto.Metrics) dto.Metrics
 }

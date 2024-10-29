@@ -1,8 +1,10 @@
 package dto
 
-type Metric struct {
-	Type  string  `json:"type" validate:"required,contains=gauge|contains=counter"`
-	Name  string  `json:"name" validate:"required,alpha"`
-	Delta int64   `json:"delta" validate:"omitempty,required"` // todo: переписать валидацию.
-	Value float64 `json:"value" validate:"omitempty,required"`
+// Metrics todo: переписать валидацию.
+type Metrics struct {
+	ID    string   `json:"id"               validate:"omitempty,required"`
+	MType string   `json:"type"             validate:"required,contains=gauge|contains=counter"`
+	MName string   `json:"name"             validate:"required,alpha"`
+	Delta *int64   `json:"delta,omitempty"  validate:"omitempty,required"`
+	Value *float64 `json:"value,omitempty"  validate:"omitempty,required"`
 }

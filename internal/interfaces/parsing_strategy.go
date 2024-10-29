@@ -5,5 +5,5 @@ import (
 )
 
 type ParsingStrategy interface {
-	GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric
+	GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics
 }

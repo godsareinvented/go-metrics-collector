@@ -13,28 +13,29 @@ type MetricSender struct {
 	client resty.Client
 }
 
-func (s *MetricSender) Send(metricDTO dto.Metric) error {
+func (s *MetricSender) Send(metricDTO dto.Metrics) error {
 	request := s.client.R()
 	_, err := request.Post(getPreparedURL(metricDTO))
 	return err
 }
 
-func getPreparedURL(metricDTO dto.Metric) string {
-	if dictionary.GaugeMetricType == metricDTO.Type {
+// todo: Перенести шаблоны урлов в конфиг
+func getPreparedURL(metricDTO dto.Metrics) string {
+	if dictionary.GaugeMetricType == metricDTO.MType {
 		return fmt.Sprintf(
 			"http://%s/update/%s/%s/%.2f",
 			config.Configuration.Endpoint,
-			metricDTO.Type,
-			metricDTO.Name,
-			metricDTO.Value,
+			metricDTO.MType,
+			metricDTO.MName,
+			*metricDTO.Value,
 		)
 	}
 	return fmt.Sprintf(
 		"http://%s/update/%s/%s/%d",
 		config.Configuration.Endpoint,
-		metricDTO.Type,
-		metricDTO.Name,
-		metricDTO.Delta,
+		metricDTO.MType,
+		metricDTO.MName,
+		*metricDTO.Delta,
 	)
 }
 

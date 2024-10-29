@@ -10,28 +10,29 @@ import (
 
 type RequestParser struct{}
 
-func (rp *RequestParser) GetMetricDTO(request *http.Request, parsingValueFlag bool) (dto.Metric, error) {
+func (rp *RequestParser) GetMetricDTO(request *http.Request, parsingValueFlag bool) (dto.Metrics, error) {
 	metricType, metricName, metricValue := getParsedRequest(request)
 
 	var intVal int64
 	var floatVal float64
 	var err error
+
 	if parsingValueFlag {
 		intVal, err = getParsedDelta(metricType, metricValue)
 		if nil != err {
-			return dto.Metric{}, err
+			return dto.Metrics{}, err
 		}
 		floatVal, err = getParsedValue(metricType, metricValue)
 		if nil != err {
-			return dto.Metric{}, err
+			return dto.Metrics{}, err
 		}
 	}
 
-	return dto.Metric{
-		Type:  metricType,
-		Name:  metricName,
-		Delta: intVal,
-		Value: floatVal,
+	return dto.Metrics{
+		MType: metricType,
+		MName: metricName,
+		Delta: &intVal,
+		Value: &floatVal,
 	}, nil
 }
 

@@ -14,7 +14,7 @@ func main() {
 	configConfigurator := config.ConfigConfigurator{}
 	configConfigurator.ParseConfig()
 
-	var metricDTOList []dto.Metric
+	var metricDTOList []dto.Metrics
 	metricSender := client.NewInstance()
 	metricManager := manager.MetricManager{
 		MetricList:    dictionary.MetricNameList[:],
@@ -28,7 +28,7 @@ func main() {
 	select {}
 }
 
-func CollectMetrics(metricDTOList *[]dto.Metric, metricManager *manager.MetricManager) {
+func CollectMetrics(metricDTOList *[]dto.Metrics, metricManager *manager.MetricManager) {
 	for {
 		*metricDTOList = metricManager.Collect()
 
@@ -36,7 +36,7 @@ func CollectMetrics(metricDTOList *[]dto.Metric, metricManager *manager.MetricMa
 	}
 }
 
-func SendMetrics(metricDTOList *[]dto.Metric, client *client.MetricSender) {
+func SendMetrics(metricDTOList *[]dto.Metrics, client *client.MetricSender) {
 	for {
 		for _, metricDTO := range *metricDTOList {
 			_ = client.Send(metricDTO)

@@ -7,10 +7,11 @@ import (
 
 type GCCPUFractionStrategy struct{}
 
-func (strategy *GCCPUFractionStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
-	return dto.Metric{
-		Type:  dictionary.GaugeMetricType,
-		Name:  metricName,
-		Value: float64(metricData.MemStats.GCCPUFraction),
+func (strategy *GCCPUFractionStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics {
+	var value = metricData.MemStats.GCCPUFraction
+	return dto.Metrics{
+		MType: dictionary.GaugeMetricType,
+		MName: metricName,
+		Value: &value,
 	}
 }
