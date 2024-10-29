@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
-	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/value_formatter"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
 	"net/http"
 )
@@ -31,6 +30,6 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	responseWriter.WriteHeader(http.StatusOK)
-	preparedMetricValue := value_formatter.GetFormattedValue(resultingMetric)
+	preparedMetricValue := resultingMetric.FormattedValue()
 	responseWriter.Write([]byte(preparedMetricValue))
 }
