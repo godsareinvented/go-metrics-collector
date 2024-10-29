@@ -4,7 +4,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/parser"
-	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/value_formatter"
 	"net/http"
 )
 
@@ -27,7 +26,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	resultingMetric, isSet := metricManager.Get(metricDTO)
 
 	if isSet {
-		preparedMetricValue := value_formatter.GetFormattedValue(resultingMetric)
+		preparedMetricValue := resultingMetric.GetFormattedValue()
 		responseWriter.Write([]byte(preparedMetricValue))
 		responseWriter.WriteHeader(http.StatusOK)
 		return
