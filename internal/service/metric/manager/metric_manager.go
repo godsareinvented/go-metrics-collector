@@ -8,6 +8,7 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 )
 
+// MetricManager todo: Стоит ли прорядить методы менеджера метрик?
 type MetricManager struct {
 	MetricList    []string
 	DataCollector interfaces.MetricDataCollectorInterface
@@ -19,18 +20,18 @@ func (metricManager *MetricManager) Collect() []dto.Metrics {
 		panic("nil DataCollector")
 	}
 
-	var metricDTO dto.Metrics
-	var metricDTOList []dto.Metrics
+	var metric dto.Metrics
+	var metricList []dto.Metrics
 	var collectedMetricData dto.CollectedMetricData
 
 	metricManager.DataCollector.CollectMetricData(&collectedMetricData)
 
 	for _, metricName := range metricManager.MetricList {
-		metricDTO = metricManager.strategies[metricName].GetMetric(metricName, collectedMetricData)
-		metricDTOList = append(metricDTOList, metricDTO)
+		metric = metricManager.strategies[metricName].GetMetric(metricName, collectedMetricData)
+		metricList = append(metricList, metric)
 	}
 
-	return metricDTOList
+	return metricList
 }
 
 func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metrics) {
@@ -39,24 +40,47 @@ func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metrics) {
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO, repos)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO)
 
-	repos.UpdateMetric(metricDTO)
+	_, err := repos.UpdateMetric(metricDTO)
+	if nil != err {
+		panic("Error updating metric: " + err.Error())
+	}
 }
 
-func (metricManager *MetricManager) Get(metricDTO dto.Metrics) (dto.Metrics, bool) {
+func (metricManager *MetricManager) GetByName(metric dto.Metrics) (dto.Metrics, bool) {
 	repos := config.Configuration.Repository
 
 	// todo: Вызов функции работает без разыменования?
-	metricDTOFromDb, isSet := repos.GetMetric(metricDTO)
+	metricFromStorage, isSet, err := repos.GetMetricByName(metric)
 	if isSet {
-		return metricDTOFromDb, true
+		return metricFromStorage, true
 	}
-	return metricDTO, false
+	if nil != err {
+		panic("Error getting metric: " + err.Error())
+	}
+	return metric, false
+}
+
+func (metricManager *MetricManager) GetByID(metric dto.Metrics) (dto.Metrics, bool) {
+	repos := config.Configuration.Repository
+
+	metricFromStorage, isSet, err := repos.GetMetricByID(metric)
+	if isSet {
+		return metricFromStorage, true
+	}
+	if nil != err {
+		panic("Error getting metric: " + err.Error())
+	}
+	return metric, false
 }
 
 func (metricManager *MetricManager) GetList() []dto.Metrics {
 	repos := config.Configuration.Repository
 
-	return repos.GetAllMetrics()
+	metrics, err := repos.GetAllMetrics()
+	if nil != err {
+		panic("Error getting metric list: " + err.Error())
+	}
+	return metrics
 }
 
 func (metricManager *MetricManager) Init() {

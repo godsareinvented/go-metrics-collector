@@ -23,7 +23,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	metricManager := manager.MetricManager{}
-	resultingMetric, isSet := metricManager.Get(metricDTO)
+	resultingMetric, isSet := metricManager.GetByName(metricDTO)
 
 	if isSet {
 		preparedMetricValue := resultingMetric.GetFormattedValue()

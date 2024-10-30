@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// Metrics todo: переписать валидацию.
+// Metrics todo: переписать валидацию. Как создавать группы констреинтов?
 type Metrics struct {
 	ID    string   `json:"id"               validate:"omitempty,required"`
 	MType string   `json:"type"             validate:"required,contains=gauge|contains=counter"`

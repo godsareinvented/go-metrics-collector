@@ -1,55 +1,55 @@
 package repository
 
 import (
-	"encoding/json"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 )
 
 type Repository struct {
-	storage *interfaces.Storage
+	storage *interfaces.StorageInterface
 }
 
-func (repository *Repository) UpdateMetric(metricDTO dto.Metrics) {
-	key := getKey(metricDTO)
-	value, _ := json.Marshal(metricDTO)
-	(*repository.storage).Set(key, value)
+func (repository *Repository) UpdateMetric(metric dto.Metrics) (string, error) {
+	metricID, err := (*repository.storage).Save(metric)
+	return metricID, err
 }
 
-func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool) {
-	key := getKey(metric)
-	jsonMetricDTO := (*repository.storage).Get(key)
-	if "" == jsonMetricDTO {
-		return dto.Metrics{}, false
+func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool, error) {
+	var foundMetric dto.Metrics
+	var isSet = false
+	var err error
+
+	if "" != metric.ID {
+		foundMetric, isSet, err = (*repository.storage).GetByID(metric.ID, metric.MType)
+		if isSet {
+			return foundMetric, isSet, err
+		}
+	}
+	if "" != metric.MName {
+		foundMetric, isSet, err = (*repository.storage).GetByName(metric.MName, metric.MType)
+		if isSet {
+			return foundMetric, isSet, err
+		}
 	}
 
-	var metricDTO dto.Metrics
-	err := json.Unmarshal(jsonMetricDTO.([]byte), &metricDTO)
-
-	if nil != err {
-		panic("Cannot unmarshal metric")
-	}
-
-	return metricDTO, true
+	return foundMetric, isSet, err
 }
 
-func (repository *Repository) GetAllMetrics() []dto.Metrics {
-	var resultingList []dto.Metrics
-
-	metricJsonList := (*repository.storage).GetAll()
-	for _, metricJson := range metricJsonList {
-		var metricDTO dto.Metrics
-		_ = json.Unmarshal(metricJson.([]byte), &metricDTO)
-		resultingList = append(resultingList, metricDTO)
-	}
-
-	return resultingList
+func (repository *Repository) GetMetricByID(metric dto.Metrics) (dto.Metrics, bool, error) {
+	foundMetric, isSet, err := (*repository.storage).GetByID(metric.ID, metric.MType)
+	return foundMetric, isSet, err
 }
 
-func NewInstance(storage *interfaces.Storage) *Repository {
-	return &Repository{storage: storage}
+func (repository *Repository) GetMetricByName(metric dto.Metrics) (dto.Metrics, bool, error) {
+	foundMetric, isSet, err := (*repository.storage).GetByName(metric.MName, metric.MType)
+	return foundMetric, isSet, err
 }
 
-func getKey(metric dto.Metrics) string {
-	return metric.MType + "/" + metric.MName
+func (repository *Repository) GetAllMetrics() ([]dto.Metrics, error) {
+	list, err := (*repository.storage).GetAll()
+	return list, err
+}
+
+func NewInstance(storageInterface *interfaces.StorageInterface) *Repository {
+	return &Repository{storage: storageInterface}
 }

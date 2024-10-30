@@ -11,6 +11,7 @@ import (
 type ConfigConfigurator struct{}
 
 func (c *ConfigConfigurator) ParseConfig() {
+	// todo Для клиента не нужна инициализация MemStorage...
 	memStorage := mem_storage.NewInstance()
 
 	Configuration = Config{
