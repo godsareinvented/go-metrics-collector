@@ -16,6 +16,31 @@ POST {{domain}}:{{port}}/update/gauge/RandomVal/0.74
 
 ###
 
+# Обновление метрики типа gauge методом /update
+POST {{domain}}:{{port}}/update/
+Content-Type: application/json
+
+{
+  "id": "12",
+  "type": "gauge",
+  "name": "RandomVal",
+  "value": 0.47
+}
+
+###
+
+# Обновление метрики типа counter без заранее заданного идентификатора методом /update
+POST {{domain}}:{{port}}/update/
+Content-Type: application/json
+
+{
+  "type": "counter",
+  "name": "PollCount",
+  "delta": 1
+}
+
+###
+
 
 # 2. ПОЛУЧЕНИЕ ЗНАЧЕНИЯ МЕТРИКИ
 
@@ -31,6 +56,32 @@ GET {{domain}}:{{port}}/value/gauge/RandomVal
 
 # Получение несуществующего значения метрики типа counter
 GET {{domain}}:{{port}}/value/counter/test
+
+###
+
+# Получение метрики типа gauge методом /value
+POST {{domain}}:{{port}}/value/
+Content-Type: application/json
+
+{
+  "id": "12",
+  "type": "gauge"
+}
+
+###
+
+# Получение метрики типа counter методом /value
+#
+# Идентификатор необходимо корректировать
+#  - Использовать запрос / для проверки ID;
+#  - Либо вызывать метод internal/server/request/server.http:32 первым.
+POST {{domain}}:{{port}}/value/
+Content-Type: application/json
+
+{
+  "id": "0",
+  "type": "counter"
+}
 
 ###
 

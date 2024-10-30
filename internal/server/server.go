@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/go-chi/chi"
+	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/handler"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/middleware"
 	"net/http"
@@ -14,11 +15,21 @@ func (server *Server) Start() {
 
 	router.Use(middleware.WithLogging)
 
-	router.Post("/update/{type}/{name}/{value}", handler.UpdateMetric)
-	router.Get("/value/{type}/{name}", handler.GetMetric)
+	router.Route("/update", func(router chi.Router) {
+		router.Post("/", handler.UpdateMetricJson)
+		router.Route("/{type}/{name}/{value}", func(router chi.Router) {
+			router.Post("/", handler.UpdateMetric)
+		})
+	})
+	router.Route("/value", func(router chi.Router) {
+		router.Post("/", handler.GetMetricJson)
+		router.Route("/{type}/{name}", func(router chi.Router) {
+			router.Get("/", handler.GetMetric)
+		})
+	})
 	router.Get("/", handler.ShowMetricList)
 
-	err := http.ListenAndServe("localhost:8080", router)
+	err := http.ListenAndServe(config.Configuration.Endpoint, router)
 	if err != nil {
 		panic("ListenAndServe: " + err.Error())
 	}
