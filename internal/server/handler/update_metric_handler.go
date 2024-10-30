@@ -32,7 +32,11 @@ func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	metricManager := manager.MetricManager{}
-	metricManager.UpdateValue(m)
+	err = metricManager.UpdateValue(m)
+	if err != nil {
+		http.Error(responseWriter, "failed to save the metric", http.StatusInternalServerError)
+		return
+	}
 
 	responseWriter.WriteHeader(http.StatusOK)
 }

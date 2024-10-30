@@ -9,12 +9,14 @@
 1. [metric](internal/dto/metric.go:#L6) Переписать констреинты для большего соответствия сущности
 2. [config_configurator](internal/config/config_configurator.go:#L22) Необходимо валидация отрицательных значений
    флагов?
+3. [config_configurator](internal/config/config_configurator.go:#L26) Необходимо разделить логику сервера и агента,
+   т.к. для агента не требуется инициализация хранилища.
 
 ---
 
 ### Валидация
 
-3. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
+4. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
    поддерживающие проверку, что число во входной строке не больше ```math.MaxInt64``` и ```math.MaxFloat64```
    (*плюс поддержка отрицательных значений через регулярку*)\
    \
@@ -27,7 +29,7 @@
 
 ### Кодстайл
 
-4. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
+5. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
    ```if metric.Type == dictionary.GaugeMetricType { // ... } else``` на switch с обработкой ситуации в ```default```
    -секции,
    что метрика имеет некорректный тип
@@ -36,6 +38,6 @@
 
 ### Проблемы сервиса
 
-5. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
+6. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
 
 ---

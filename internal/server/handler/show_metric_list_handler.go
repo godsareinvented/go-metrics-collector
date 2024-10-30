@@ -14,7 +14,12 @@ var (
 
 func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 	metricManager := manager.MetricManager{}
-	metricList := metricManager.GetList()
+	metricList, err := metricManager.GetList()
+
+	if err != nil {
+		http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
+		return
+	}
 
 	sort.Slice(metricList, func(i, j int) bool {
 		return metricList[i].ID < metricList[j].ID
@@ -27,7 +32,7 @@ func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 		Items: metricList,
 	}
 
-	err := tmpl.Execute(responseWriter, data)
+	err = tmpl.Execute(responseWriter, data)
 	if err != nil {
 		return
 	}

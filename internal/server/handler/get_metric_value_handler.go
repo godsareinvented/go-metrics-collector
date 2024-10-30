@@ -23,10 +23,16 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	m := dto.Metrics{ID: MName, MType: MType}
 
 	metricManager := manager.MetricManager{}
-	resultingMetric, isSet := metricManager.Get(m)
+	resultingMetric, isSet, err := metricManager.Get(m)
+
+	if err != nil {
+		http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
+		return
+	}
 
 	if !isSet {
 		http.NotFound(responseWriter, request)
+		return
 	}
 
 	responseWriter.WriteHeader(http.StatusOK)

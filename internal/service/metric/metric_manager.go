@@ -2,6 +2,7 @@ package metric
 
 import (
 	"context"
+	"fmt"
 	parserAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/parser"
 	valueHandlerAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/value_handler"
 	"github.com/oldhanasong/go-metrics-collector/internal/client"
@@ -72,29 +73,40 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 	}
 }
 
-func (metricManager *MetricManager) UpdateValue(metric dto.Metrics) {
+func (metricManager *MetricManager) UpdateValue(metric dto.Metrics) error {
 	repos := config.Configuration.Repository
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metric, repos)
 	metric = valueHandler.GetMutatedValueMetric(metric)
 
-	repos.UpdateMetric(metric)
-}
-
-func (metricManager *MetricManager) Get(metric dto.Metrics) (dto.Metrics, bool) {
-	repos := config.Configuration.Repository
-
-	metricDTOFromDb, isSet := repos.GetMetric(metric)
-	if isSet {
-		return metricDTOFromDb, true
+	err := repos.UpdateMetric(metric)
+	if err != nil {
+		return err
 	}
-	return metric, false
+	return nil
 }
 
-func (metricManager *MetricManager) GetList() []dto.Metrics {
+func (metricManager *MetricManager) Get(metric dto.Metrics) (dto.Metrics, bool, error) {
 	repos := config.Configuration.Repository
 
-	return repos.GetAllMetrics()
+	metricFromStorage, isSet, err := repos.GetMetric(metric)
+	if isSet {
+		return metricFromStorage, true, nil
+	}
+	if err != nil {
+		return dto.Metrics{}, false, fmt.Errorf("error getting metrics: %w", err)
+	}
+	return metric, false, nil
+}
+
+func (metricManager *MetricManager) GetList() ([]dto.Metrics, error) {
+	repos := config.Configuration.Repository
+
+	metrics, err := repos.GetAllMetrics()
+	if err != nil {
+		return nil, fmt.Errorf("error getting metrics: %w", err)
+	}
+	return metrics, nil
 }
 
 func (metricManager *MetricManager) Init() {

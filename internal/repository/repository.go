@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 )
@@ -10,46 +10,22 @@ type Repository struct {
 	storage *interfaces.Storage
 }
 
-func (repository *Repository) UpdateMetric(metric dto.Metrics) {
-	key := getKey(metric)
-	value, _ := json.Marshal(metric)
-	(*repository.storage).Set(key, value)
+func (repository *Repository) UpdateMetric(metric dto.Metrics) error {
+	return (*repository.storage).Set(key(metric), metric)
 }
 
-func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool) {
-	key := getKey(metric)
-	jsonMetric := (*repository.storage).Get(key)
-	if jsonMetric == "" {
-		return dto.Metrics{}, false
-	}
-
-	var metricDTO dto.Metrics
-	err := json.Unmarshal(jsonMetric.([]byte), &metricDTO)
-
-	if err != nil {
-		panic("Cannot unmarshal metric")
-	}
-
-	return metricDTO, true
+func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool, error) {
+	return (*repository.storage).Get(key(metric))
 }
 
-func (repository *Repository) GetAllMetrics() []dto.Metrics {
-	var resultingList []dto.Metrics
-
-	metricJsonList := (*repository.storage).GetAll()
-	for _, metricJson := range metricJsonList {
-		var metric dto.Metrics
-		_ = json.Unmarshal(metricJson.([]byte), &metric)
-		resultingList = append(resultingList, metric)
-	}
-
-	return resultingList
+func (repository *Repository) GetAllMetrics() ([]dto.Metrics, error) {
+	return (*repository.storage).GetAll()
 }
 
-func NewInstance(storage *interfaces.Storage) *Repository {
-	return &Repository{storage: storage}
+func key(metric dto.Metrics) string {
+	return fmt.Sprintf("%s/%s", metric.MType, metric.ID)
 }
 
-func getKey(metric dto.Metrics) string {
-	return metric.MType + "/" + metric.ID
+func NewInstance(storageInterface *interfaces.Storage) *Repository {
+	return &Repository{storage: storageInterface}
 }

@@ -1,28 +1,32 @@
 package mem_storage
 
 import (
+	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
+	"maps"
+	"slices"
 )
 
 type MemStorage struct {
-	storage map[string]interface{}
+	entityList map[string]dto.Metrics
 }
 
-func (memStorage *MemStorage) GetAll() map[string]interface{} {
-	return memStorage.storage
+func (memStorage *MemStorage) GetAll() ([]dto.Metrics, error) {
+	return slices.Collect(maps.Values(memStorage.entityList)), nil
 }
 
-func (memStorage *MemStorage) Get(key string) interface{} {
-	if value, ok := memStorage.storage[key]; ok {
-		return value
-	}
-	return ""
+func (memStorage *MemStorage) Get(key string) (dto.Metrics, bool, error) {
+	metrics, ok := memStorage.entityList[key]
+	return metrics, ok, nil
 }
 
-func (memStorage *MemStorage) Set(key string, value interface{}) {
-	memStorage.storage[key] = value
+func (memStorage *MemStorage) Set(key string, metric dto.Metrics) error {
+	memStorage.entityList[key] = metric
+	return nil
 }
 
 func NewInstance() interfaces.Storage {
-	return &MemStorage{make(map[string]interface{})}
+	return &MemStorage{
+		entityList: make(map[string]dto.Metrics),
+	}
 }

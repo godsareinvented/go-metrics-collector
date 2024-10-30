@@ -10,7 +10,7 @@ type CounterValueHandler struct {
 }
 
 func (h *CounterValueHandler) GetMutatedValueMetric(metric dto.Metrics) dto.Metrics {
-	currentMetricFromDb, isSet := h.Repository.GetMetric(metric)
+	currentMetricFromDb, isSet, _ := h.Repository.GetMetric(metric)
 	if isSet {
 		*metric.Delta += *currentMetricFromDb.Delta
 	}
