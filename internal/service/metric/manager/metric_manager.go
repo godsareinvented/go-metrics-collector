@@ -10,8 +10,8 @@ import (
 
 type MetricManager struct {
 	MetricList    []string
-	DataCollector interfaces.MetricDataCollector
-	strategies    map[string]interfaces.ParsingStrategy
+	DataCollector interfaces.MetricDataCollectorInterface
+	strategies    map[string]interfaces.ParsingStrategyInterface
 }
 
 func (metricManager *MetricManager) Collect() []dto.Metrics {
@@ -60,7 +60,7 @@ func (metricManager *MetricManager) GetList() []dto.Metrics {
 }
 
 func (metricManager *MetricManager) Init() {
-	metricManager.strategies = make(map[string]interfaces.ParsingStrategy)
+	metricManager.strategies = make(map[string]interfaces.ParsingStrategyInterface)
 
 	for _, metricName := range metricManager.MetricList {
 		metricManager.strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)

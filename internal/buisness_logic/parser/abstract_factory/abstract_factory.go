@@ -6,8 +6,8 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 )
 
-func GetStrategy(metricName string) interfaces.ParsingStrategy {
-	strategyMap := map[string]interfaces.ParsingStrategy{
+func GetStrategy(metricName string) interfaces.ParsingStrategyInterface {
+	strategyMap := map[string]interfaces.ParsingStrategyInterface{
 		dictionary.AllocMetricName:         &strategy.AllocStrategy{},
 		dictionary.BuckHashSysMetricName:   &strategy.BuckHashSysStrategy{},
 		dictionary.FreesMetricName:         &strategy.FreesStrategy{},
