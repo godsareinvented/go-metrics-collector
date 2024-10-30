@@ -15,8 +15,18 @@ func (server *Server) Start() {
 
 	router.Use(middleware.WithLogging)
 
-	router.Post("/update/{type}/{name}/{value}", handler.UpdateMetric)
-	router.Get("/value/{type}/{name}", handler.GetMetric)
+	router.Route("/update", func(router chi.Router) {
+		router.Post("/", handler.UpdateMetricJson)
+		router.Route("/{type}/{name}/{value}", func(router chi.Router) {
+			router.Post("/", handler.UpdateMetric)
+		})
+	})
+	router.Route("/value", func(router chi.Router) {
+		router.Post("/", handler.GetMetricJson)
+		router.Route("/{type}/{name}", func(router chi.Router) {
+			router.Get("/", handler.GetMetric)
+		})
+	})
 	router.Get("/", handler.ShowMetricList)
 
 	err := http.ListenAndServe(config.Configuration.Endpoint, router)
