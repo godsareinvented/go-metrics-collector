@@ -28,5 +28,6 @@ func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 		panic(err)
 	}
 
+	responseWriter.Header().Set("Content-Type", "text/html")
 	responseWriter.WriteHeader(http.StatusOK)
 }
