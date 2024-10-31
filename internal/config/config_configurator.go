@@ -15,8 +15,10 @@ func (c *ConfigConfigurator) ParseConfig() {
 	memStorage := mem_storage.NewInstance()
 
 	Configuration = Config{
-		Repository: repository.NewInstance(&memStorage),
-		Logger:     logger.NewInstance(),
+		GzipAcceptedContentTypes: []string{"application/json", "text/html"},
+		GzipMinContentLength:     1400,
+		Repository:               repository.NewInstance(&memStorage),
+		Logger:                   logger.NewInstance(),
 	}
 
 	flag.StringVar(&Configuration.Endpoint, "a", ":8080", "The endpoint of the collector")
