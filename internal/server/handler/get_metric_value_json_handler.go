@@ -9,11 +9,8 @@ import (
 )
 
 type InputMetrics struct {
-	ID    string   `json:"id"               validate:"required,omitempty,required"`
-	MType string   `json:"type"             validate:"required,contains=gauge|contains=counter"`
-	MName string   `json:"name"             validate:""`
-	Delta *int64   `json:"delta,omitempty"  validate:""`
-	Value *float64 `json:"value,omitempty"  validate:""`
+	ID    string `json:"id"               validate:"required,omitempty,required"`
+	MType string `json:"type"             validate:"required,contains=gauge|contains=counter"`
 }
 
 func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
@@ -50,6 +47,7 @@ func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	responseWriter.Write(metricJson)
+	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
 	return
 }
