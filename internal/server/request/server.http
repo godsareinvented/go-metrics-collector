@@ -3,6 +3,7 @@
 
 # Обновление конкретной метрики типа counter
 POST {{domain}}:{{port}}/update/counter/PollCount/527
+Accept-Encoding: gzip
 
 ###
 
@@ -13,12 +14,14 @@ POST {{domain}}:{{port}}/update/counter/<script>alert("Hacked")</script>/527
 
 # Обновление конкретной метрики типа gauge
 POST {{domain}}:{{port}}/update/gauge/RandomVal/0.74
+Accept-Encoding: gzip
 
 ###
 
 # Обновление метрики типа gauge методом /update
 POST {{domain}}:{{port}}/update/
 Content-Type: application/json
+Accept-Encoding: gzip
 
 {
   "id": "RandomValue",
@@ -31,6 +34,7 @@ Content-Type: application/json
 # Обновление метрики типа counter без заранее заданного идентификатора методом /update
 POST {{domain}}:{{port}}/update/
 Content-Type: application/json
+Accept-Encoding: gzip
 
 {
   "id": "PollCount",
@@ -61,6 +65,7 @@ GET {{domain}}:{{port}}/value/counter/test
 # Получение метрики типа gauge методом /value
 POST {{domain}}:{{port}}/value/
 Content-Type: application/json
+Accept-Encoding: gzip
 
 {
   "id": "RandomValue",
@@ -72,6 +77,7 @@ Content-Type: application/json
 # Получение метрики типа counter методом /value
 POST {{domain}}:{{port}}/value/
 Content-Type: application/json
+Accept-Encoding: gzip
 
 {
   "id": "0",
@@ -85,5 +91,6 @@ Content-Type: application/json
 
 # Получение списка метрик из хранилища
 GET {{domain}}:{{port}}/
+Accept-Encoding: gzip
 
 ###
