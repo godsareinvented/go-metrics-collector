@@ -74,7 +74,7 @@ func clientAcceptEncoding(request *http.Request) bool {
 }
 
 func appropriateContentType(responseWriter bufferResponseWriter) bool {
-	contentType := responseWriter.Header().Get("Content-Type")
+	contentType := strings.Split(responseWriter.Header().Get("Content-Type"), ";")[0]
 	return slices.Contains(config.Configuration.GzipAcceptedContentTypes, contentType)
 }
 
