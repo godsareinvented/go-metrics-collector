@@ -10,5 +10,7 @@ func main() {
 	configConfigurator.ParseConfig()
 
 	webServer := server.Server{}
-	webServer.Start()
+	go webServer.Start()
+
+	select {}
 }
