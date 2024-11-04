@@ -14,6 +14,7 @@ func (server *Server) Start() {
 	router := chi.NewRouter()
 
 	router.Use(middleware.WithLogging)
+	router.Use(middleware.GzipRequestDecompressing)
 	router.Use(middleware.GzipResponseCompressing)
 
 	router.Route("/update", func(router chi.Router) {

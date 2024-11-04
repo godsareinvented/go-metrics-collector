@@ -75,6 +75,16 @@ Accept-Encoding: gzip
 
 ###
 
+# Получение метрики типа gauge методом /value
+POST {{domain}}:{{port}}/value/
+Content-Type: text/plain
+Accept-Encoding: gzip
+Content-Encoding: gzip
+
+H4sIAAAAAAAAA6tWykxRslIyNFLSUSqpLEgFstMTS9NTlWoBLLcKjRoAAAA=
+
+###
+
 # Получение метрики типа counter методом /value
 #
 # Идентификатор необходимо корректировать
