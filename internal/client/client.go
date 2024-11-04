@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/go-resty/resty"
+	"github.com/oldhanasong/go-metrics-collector/internal/client/decorator"
 	"github.com/oldhanasong/go-metrics-collector/internal/client/request"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"time"
@@ -12,7 +13,7 @@ type MetricSender struct {
 }
 
 func (s *MetricSender) Send(metric dto.Metrics) error {
-	r := request.GetUpdateMetricJsonRequest(metric, &s.client)
+	r := decorator.GzipCompress(request.GetUpdateMetricJsonRequest(metric, &s.client))
 
 	_, err := r.Execute(r.Method, r.URL)
 	return err
