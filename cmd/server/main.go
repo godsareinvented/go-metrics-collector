@@ -11,4 +11,6 @@ func main() {
 
 	webServer := server.Server{}
 	webServer.Start()
+
+	select {}
 }
