@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
-	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
 	"html/template"
 	"net/http"
 	"sort"
@@ -13,8 +13,7 @@ var (
 )
 
 func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
-	metricManager := manager.MetricManager{}
-	metricList, err := metricManager.GetList()
+	metricList, err := config.Configuration.Repository.GetAllMetrics()
 	if err != nil {
 		http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 		return

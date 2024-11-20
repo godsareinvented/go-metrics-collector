@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
+	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"net/http"
 )
 
@@ -18,8 +18,7 @@ func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	metricManager := manager.MetricManager{}
-	resultingMetric, isSet, err := metricManager.Get(m)
+	resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(m)
 	if err != nil {
 		http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 		return

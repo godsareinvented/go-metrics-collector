@@ -9,10 +9,9 @@ type CounterValueHandler struct {
 	Repository *repository.Repository
 }
 
-func (h *CounterValueHandler) GetMutatedValueMetric(metric dto.Metrics) dto.Metrics {
-	currentMetricFromDb, isSet, _ := h.Repository.GetMetric(metric)
-	if isSet {
-		*metric.Delta += *currentMetricFromDb.Delta
+func (h *CounterValueHandler) GetMutatedValueMetric(metric dto.Metrics, metricFromStorage dto.Metrics, isSetMetricIsStorage bool) dto.Metrics {
+	if isSetMetricIsStorage {
+		*metric.Delta += *metricFromStorage.Delta
 	}
 	return metric
 }

@@ -19,7 +19,7 @@ func UpdateMetricJson(responseWriter http.ResponseWriter, request *http.Request)
 	}
 
 	metricManager := manager.MetricManager{}
-	if err = metricManager.UpdateValue(m); err != nil {
+	if err = metricManager.UpdateMetrics(m); err != nil {
 		http.Error(responseWriter, "failed to write metric in the response", http.StatusInternalServerError)
 		return
 	}

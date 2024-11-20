@@ -6,15 +6,14 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
-	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 )
 
-func GetValueHandler(metric dto.Metrics, repos *repository.Repository) (interfaces.ValueHandler, error) {
+func GetValueHandler(metric dto.Metrics) (interfaces.ValueHandler, error) {
 	switch metric.MType {
 	case dictionary.GaugeMetricType:
-		return &handler.GaugeValueHandler{Repository: repos}, nil
+		return &handler.GaugeValueHandler{}, nil
 	case dictionary.CounterMetricType:
-		return &handler.CounterValueHandler{Repository: repos}, nil
+		return &handler.CounterValueHandler{}, nil
 	default:
 		return nil, fmt.Errorf("unknown metric type: %s", metric.MType)
 	}

@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
-	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
 	"net/http"
 )
@@ -22,9 +22,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 
 	m := dto.Metrics{ID: MName, MType: MType}
 
-	metricManager := manager.MetricManager{}
-	resultingMetric, isSet, err := metricManager.Get(m)
-
+	resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(m)
 	if err != nil {
 		http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 		return
