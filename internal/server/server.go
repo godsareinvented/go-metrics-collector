@@ -2,11 +2,11 @@ package server
 
 import (
 	"context"
-	"errors"
 	"github.com/go-chi/chi"
 	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/handler"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/middleware"
+	"net"
 	"net/http"
 )
 
@@ -22,25 +22,15 @@ type Server struct {
 
 func (s *Server) Start() {
 	s.createAndConfigureRouter()
-
-	s.server = &http.Server{
-		Addr:    config.Configuration.Endpoint,
-		Handler: s.router,
-	}
+	s.createServer()
 
 	s.createContext()
-
 	defer (*s.cancel)()
 
-	serverIsRunning := make(chan bool)
 	go func() {
-		go func() {
-			if err := s.server.ListenAndServe(); nil != err && !errors.Is(err, http.ErrServerClosed) {
-				panic("ListenAndServe: " + err.Error())
-			}
-		}()
-
-		serverIsRunning <- true
+		if err := s.startingServer(); nil != err {
+			panic(err)
+		}
 	}()
 
 	select {
@@ -49,8 +39,6 @@ func (s *Server) Start() {
 		if nil != err {
 			return
 		}
-	case <-serverIsRunning:
-		s.executeOnStartCallback()
 	}
 }
 
@@ -91,18 +79,45 @@ func (s *Server) createAndConfigureRouter() {
 	s.router.Get("/", handler.ShowMetricList)
 }
 
+func (s *Server) createServer() {
+	s.server = &http.Server{
+		Addr:    config.Configuration.Endpoint,
+		Handler: s.router,
+	}
+}
+
 func (s *Server) createContext() {
 	ctx, cancel := context.WithCancel(context.Background())
 	s.ctx = &ctx
 	s.cancel = &cancel
 }
 
-func (s *Server) executeOnStartCallback() {
+func (s *Server) startingServer() error {
+	l, err := net.Listen("tcp", config.Configuration.Endpoint)
+	if nil != err {
+		return err
+	}
+
+	err = s.executeOnStartCallback()
+	if nil != err {
+		_ = l.Close()
+		return err
+	}
+
+	if err = s.server.Serve(l); err != nil {
+		_ = l.Close()
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) executeOnStartCallback() error {
 	if nil == s.OnStart {
-		return
+		return nil
 	}
 	if err := s.OnStart(); nil != err {
-		// todo: Не panic.
-		panic("OnStart: " + err.Error())
+		return err
 	}
+	return nil
 }
