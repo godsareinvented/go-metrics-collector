@@ -1,16 +1,15 @@
 package handler
 
 import (
+	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
-	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
 	"html/template"
 	"net/http"
 	"sort"
 )
 
 func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
-	metricManager := manager.MetricManager{}
-	metricDTOList := metricManager.GetList()
+	metricDTOList, _ := config.Configuration.Repository.GetAllMetrics()
 
 	sort.Slice(metricDTOList, func(i, j int) bool {
 		return metricDTOList[i].MName < metricDTOList[j].MName

@@ -2,13 +2,10 @@ package handler
 
 import (
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
-	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 )
 
-type GaugeValueHandler struct {
-	Repository *repository.Repository
-}
+type GaugeValueHandler struct{}
 
-func (handler *GaugeValueHandler) GetMutatedValueMetric(metric dto.Metrics) dto.Metrics {
+func (handler *GaugeValueHandler) GetMutatedValueMetric(metric dto.Metrics, metricFromStorage dto.Metrics, isSetMetricIsStorage bool) dto.Metrics {
 	return metric
 }
