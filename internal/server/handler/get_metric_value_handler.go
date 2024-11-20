@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/parser"
 	"net/http"
 )
@@ -22,8 +22,7 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	metricManager := manager.MetricManager{}
-	resultingMetric, isSet := metricManager.GetByName(metricDTO)
+	resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByName(metricDTO)
 
 	if isSet {
 		preparedMetricValue := resultingMetric.GetFormattedValue()

@@ -3,14 +3,15 @@ package handler
 import (
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
+	"github.com/godsareinvented/go-metrics-collector/internal/config"
+	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/parser"
 	"net/http"
 )
 
 type InputMetrics struct {
-	ID    string `json:"id"               validate:"required,omitempty,required"`
-	MType string `json:"type"             validate:"required,contains=gauge|contains=counter"`
+	ID    string `json:"id"   validate:"required,omitempty,required"`
+	MType string `json:"type" validate:"required,contains=gauge|contains=counter"`
 }
 
 func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
@@ -21,19 +22,22 @@ func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	InputMetric := InputMetrics{
+	inputMetric := InputMetrics{
 		ID:    metric.ID,
 		MType: metric.MType,
 	}
-	err = validator.New().Struct(InputMetric)
+	err = validator.New().Struct(inputMetric)
 	if nil != err {
 		message, statusCode := ProcessValidationError(err)
 		http.Error(responseWriter, message, statusCode)
 		return
 	}
 
-	metricManager := manager.MetricManager{}
-	resultingMetric, isSet := metricManager.GetByID(metric)
+	searchMetric := dto.Metrics{
+		ID:    metric.ID,
+		MType: metric.MType,
+	}
+	resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByID(searchMetric)
 
 	if !isSet {
 		http.NotFound(responseWriter, request)

@@ -24,7 +24,7 @@ func UpdateMetricJson(responseWriter http.ResponseWriter, request *http.Request)
 	}
 
 	metricManager := manager.MetricManager{}
-	metricManager.UpdateValue(metricDTO)
+	metricManager.UpdateMetric(metricDTO)
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
