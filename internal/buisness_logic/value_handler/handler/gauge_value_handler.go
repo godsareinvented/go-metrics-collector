@@ -6,6 +6,6 @@ import (
 
 type GaugeValueHandler struct{}
 
-func (handler *GaugeValueHandler) GetMutatedValueMetric(metric dto.Metrics, metricFromStorage dto.Metrics, isSetMetricIsStorage bool) dto.Metrics {
+func (handler *GaugeValueHandler) GetMutatedValueMetric(metric dto.Metrics, _ dto.Metrics, _ bool) dto.Metrics {
 	return metric
 }

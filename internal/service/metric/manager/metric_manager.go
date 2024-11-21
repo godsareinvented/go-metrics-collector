@@ -43,8 +43,36 @@ func (metricManager *MetricManager) UpdateMetric(metricDTO dto.Metrics) {
 
 	_, err := repos.UpdateMetric(metricDTO)
 	if nil != err {
+		// todo: Надо пересмотреть выплёвывание ошибок.
 		panic("Error updating metric: " + err.Error())
 	}
+}
+
+func (metricManager *MetricManager) ImportFrom(permanentStorage *interfaces.PermanentStorage) error {
+	metricList, err := (*permanentStorage).Import()
+	if nil != err {
+		return err
+	}
+
+	for _, metric := range metricList {
+		metricManager.UpdateMetric(metric)
+	}
+
+	return nil
+}
+
+func (metricManager *MetricManager) ExportTo(permanentStorage *interfaces.PermanentStorage) error {
+	metricList, err := config.Configuration.Repository.GetAllMetrics()
+	if nil != err {
+		return err
+	}
+
+	err = (*permanentStorage).Export(metricList)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (metricManager *MetricManager) Init() {
