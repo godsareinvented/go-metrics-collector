@@ -90,6 +90,34 @@ func (metricManager *MetricManager) UpdateMetrics(metric dto.Metrics) error {
 	return repos.UpdateMetric(metric)
 }
 
+func (metricManager *MetricManager) ImportFrom(permanentStorage *interfaces.PermanentStorage) error {
+	toImport, err := (*permanentStorage).Import()
+	if err != nil {
+		return err
+	}
+
+	for _, metric := range toImport {
+		if err = metricManager.UpdateMetrics(metric); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (metricManager *MetricManager) ExportTo(permanentStorage *interfaces.PermanentStorage) error {
+	toExport, err := config.Configuration.Repository.GetAllMetrics()
+	if err != nil {
+		return err
+	}
+
+	if err = (*permanentStorage).Export(toExport); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (metricManager *MetricManager) Init() {
 	metricManager.strategies = make(map[string]interfaces.ParsingStrategy)
 	metricManager.client = client.NewClient()
