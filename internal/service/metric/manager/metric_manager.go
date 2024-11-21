@@ -46,6 +46,10 @@ func (metricManager *MetricManager) UpdateMetric(metricDTO dto.Metrics) {
 		// todo: Надо пересмотреть выплёвывание ошибок.
 		panic("Error updating metric: " + err.Error())
 	}
+
+	if 0 == config.Configuration.StoreInterval {
+		_ = metricManager.ExportTo(config.Configuration.PermanentStorage)
+	}
 }
 
 func (metricManager *MetricManager) ImportFrom(permanentStorage *interfaces.PermanentStorage) error {
