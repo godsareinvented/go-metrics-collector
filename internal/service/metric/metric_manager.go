@@ -8,6 +8,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
+	"github.com/oldhanasong/go-metrics-collector/internal/util"
 	"time"
 )
 
@@ -86,8 +87,14 @@ func (metricManager *MetricManager) UpdateMetrics(metric dto.Metrics) error {
 	}
 
 	metric = valueHandler.GetMutatedValueMetric(metric, metricFromStorage, isSet)
+	err = repos.UpdateMetric(metric)
 
-	return repos.UpdateMetric(metric)
+	var errExport error
+	if 0 == config.Configuration.StoreInterval {
+		errExport = metricManager.ExportTo(config.Configuration.PermanentStorage)
+	}
+
+	return util.WrappedErrs(err, errExport)
 }
 
 func (metricManager *MetricManager) ImportFrom(permanentStorage *interfaces.PermanentStorage) error {
