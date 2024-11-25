@@ -64,19 +64,17 @@ func (s *Server) createAndConfigureRouter() {
 	s.router.Use(middleware.GzipRequestDecompressing)
 	s.router.Use(middleware.GzipResponseCompressing)
 
-	s.router.Route("/update", func(router chi.Router) {
-		router.Post("/", handler.UpdateMetricJson)
-		router.Route("/{type}/{name}/{value}", func(router chi.Router) {
-			router.Post("/", handler.UpdateMetric)
+	s.router.Route("/", func(router chi.Router) {
+		s.router.Get("/", handler.ShowMetricList)
+		s.router.Route("/update", func(router chi.Router) {
+			router.Post("/", handler.UpdateMetricJson)
+			router.Post("/{type}/{name}/{value}", handler.UpdateMetric)
+		})
+		s.router.Route("/value", func(router chi.Router) {
+			router.Post("/", handler.GetMetricJson)
+			router.Get("/{type}/{name}", handler.GetMetric)
 		})
 	})
-	s.router.Route("/value", func(router chi.Router) {
-		router.Post("/", handler.GetMetricJson)
-		router.Route("/{type}/{name}", func(router chi.Router) {
-			router.Get("/", handler.GetMetric)
-		})
-	})
-	s.router.Get("/", handler.ShowMetricList)
 }
 
 func (s *Server) createServer() {
