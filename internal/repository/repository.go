@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 )
@@ -48,6 +49,14 @@ func (repository *Repository) GetMetricByName(metric dto.Metrics) (dto.Metrics, 
 func (repository *Repository) GetAllMetrics() ([]dto.Metrics, error) {
 	list, err := (*repository.storage).GetAll()
 	return list, err
+}
+
+func (repository *Repository) CloseStorage() error {
+	return (*repository.storage).Close()
+}
+
+func (repository *Repository) PingStorage(ctx context.Context) (bool, error) {
+	return (*repository.storage).Ping(ctx)
 }
 
 func NewInstance(storageInterface *interfaces.StorageInterface) *Repository {
