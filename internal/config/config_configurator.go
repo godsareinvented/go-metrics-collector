@@ -6,7 +6,7 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/logger"
 	"github.com/godsareinvented/go-metrics-collector/internal/permanent_storage/file"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
-	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
+	"github.com/godsareinvented/go-metrics-collector/internal/storage/postgres"
 	"os"
 	"strings"
 )
@@ -14,13 +14,9 @@ import (
 type ConfigConfigurator struct{}
 
 func (c *ConfigConfigurator) ParseConfig() {
-	// todo Для клиента не нужна инициализация хранилищ...
-	memStorage := mem_storage.NewInstance()
-
 	Configuration = Config{
 		GzipAcceptedContentTypes: []string{"application/json", "text/html"},
 		GzipMinContentLength:     1400,
-		Repository:               repository.NewInstance(&memStorage),
 		Logger:                   logger.NewInstance(),
 	}
 
@@ -30,6 +26,7 @@ func (c *ConfigConfigurator) ParseConfig() {
 	flag.IntVar(&Configuration.StoreInterval, "i", 300, "Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск")
 	flag.StringVar(&Configuration.FileStoragePath, "f", getFileStoragePathDefaultValue(), "Путь до файла, куда сохраняются текущие значения")
 	flag.BoolVar(&Configuration.Restore, "e", true, "Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера")
+	flag.StringVar(&Configuration.DatabaseDSN, "d", "", "Адрес подключения к БД")
 
 	flag.Parse()
 	// todo: Отрицательные значения?
@@ -40,7 +37,10 @@ func (c *ConfigConfigurator) ParseConfig() {
 	}
 
 	// todo Для клиента не нужна инициализация хранилищ...
+	storage := postgres.NewInstance(Configuration.DatabaseDSN)
 	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
+
+	Configuration.Repository = repository.NewInstance(&storage)
 	Configuration.PermanentStorage = &permanentStorage
 }
 

@@ -13,6 +13,7 @@ type Config struct {
 	StoreInterval            int                          `env:"STORE_INTERVAL"`    // Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск.
 	FileStoragePath          string                       `env:"FILE_STORAGE_PATH"` // Путь до файла, куда сохраняются текущие значения.
 	Restore                  bool                         `env:"RESTORE"`           // Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера.
+	DatabaseDSN              string                       `env:"DATABASE_DSN"`      // Адрес подключения к БД
 	GzipAcceptedContentTypes []string                     // Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера
 	GzipMinContentLength     int                          // Минимальный размер тела ответа сервера, при котором будет происходить сжатие
 	PermanentStorage         *interfaces.PermanentStorage // Сконфигурированное постоянное хранилище метрик между работой сервера
