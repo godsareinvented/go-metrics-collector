@@ -1,6 +1,7 @@
 package mem_storage
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
@@ -30,7 +31,7 @@ func (memStorage *MemStorage) GetAll() ([]dto.Metrics, error) {
 }
 
 // GetByID todo: ID - уникальный. Зачем поиск по типу?
-func (memStorage *MemStorage) GetByID(ID string, mType string) (dto.Metrics, bool, error) {
+func (memStorage *MemStorage) GetByID(ID string, _ string) (dto.Metrics, bool, error) {
 	index := memStorage.getMetricIndexByID(ID)
 	if -1 == index {
 		return dto.Metrics{}, false, nil
@@ -87,6 +88,14 @@ func (memStorage *MemStorage) GetGeneratedID(metric dto.Metrics) string {
 	}
 
 	return strconv.Itoa(len(memStorage.entityList))
+}
+
+func (memStorage *MemStorage) Close() error {
+	return nil
+}
+
+func (memStorage *MemStorage) Ping(_ context.Context) (bool, error) {
+	return true, nil
 }
 
 func (memStorage *MemStorage) save(metric dto.Metrics, metricJson []byte) int {
