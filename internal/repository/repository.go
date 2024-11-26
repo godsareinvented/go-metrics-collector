@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"fmt"
+	"context"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 )
@@ -11,19 +11,31 @@ type Repository struct {
 }
 
 func (repository *Repository) UpdateMetric(metric dto.Metrics) error {
-	return (*repository.storage).Set(key(metric), metric)
+	return (*repository.storage).Set(metric)
 }
 
 func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool, error) {
-	return (*repository.storage).Get(key(metric))
+	return (*repository.storage).Get(metric)
 }
 
 func (repository *Repository) GetAllMetrics() ([]dto.Metrics, error) {
 	return (*repository.storage).GetAll()
 }
 
-func key(metric dto.Metrics) string {
-	return fmt.Sprintf("%s/%s", metric.MType, metric.ID)
+func (repository *Repository) CloseStorage() error {
+	if connector, ok := (*repository.storage).(interfaces.StorageConnector); ok {
+		return connector.Close()
+	}
+
+	return nil
+}
+
+func (repository *Repository) PingStorage(ctx context.Context) (bool, error) {
+	if connector, ok := (*repository.storage).(interfaces.StorageConnector); ok {
+		return connector.Ping(ctx)
+	}
+
+	return true, nil
 }
 
 func NewInstance(storageInterface *interfaces.Storage) *Repository {

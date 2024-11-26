@@ -1,6 +1,7 @@
 package mem_storage
 
 import (
+	"fmt"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 	"maps"
@@ -15,14 +16,18 @@ func (memStorage *MemStorage) GetAll() ([]dto.Metrics, error) {
 	return slices.Collect(maps.Values(memStorage.entityList)), nil
 }
 
-func (memStorage *MemStorage) Get(key string) (dto.Metrics, bool, error) {
-	metrics, ok := memStorage.entityList[key]
+func (memStorage *MemStorage) Get(m dto.Metrics) (dto.Metrics, bool, error) {
+	metrics, ok := memStorage.entityList[key(m)]
 	return metrics, ok, nil
 }
 
-func (memStorage *MemStorage) Set(key string, metric dto.Metrics) error {
-	memStorage.entityList[key] = metric
+func (memStorage *MemStorage) Set(m dto.Metrics) error {
+	memStorage.entityList[key(m)] = m
 	return nil
+}
+
+func key(metric dto.Metrics) string {
+	return fmt.Sprintf("%s/%s", metric.MType, metric.ID)
 }
 
 func NewInstance() interfaces.Storage {
