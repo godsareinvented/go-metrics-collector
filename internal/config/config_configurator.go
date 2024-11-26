@@ -6,7 +6,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/logger"
 	"github.com/oldhanasong/go-metrics-collector/internal/permanent_storage/file"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
+	"github.com/oldhanasong/go-metrics-collector/internal/storage/postgres"
 	"os"
 	"strings"
 	"sync"
@@ -22,12 +22,9 @@ var (
 
 func (c *ConfigConfigurator) ParseConfig() {
 	once.Do(func() {
-		memStorage := mem_storage.NewInstance()
-
 		Configuration = Config{
 			GzipAcceptedContentTypes: []string{"application/json", "text/html"},
 			GzipMinContentLength:     0, // Должно быть 1400. Для соответствия инкременту 8 заменено на 0.
-			Repository:               repository.NewInstance(&memStorage),
 			Logger:                   logger.NewInstance(),
 		}
 
@@ -37,6 +34,7 @@ func (c *ConfigConfigurator) ParseConfig() {
 		flag.IntVar(&Configuration.StoreInterval, "i", 300, "Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск")
 		flag.StringVar(&Configuration.FileStoragePath, "f", getFileStoragePathDefaultValue(), "Путь до файла, куда сохраняются текущие значения")
 		flag.BoolVar(&Configuration.Restore, "e", true, "Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера")
+		flag.StringVar(&Configuration.DatabaseDSN, "d", "", "Адрес подключения к БД")
 
 		flag.Parse()
 
@@ -47,6 +45,9 @@ func (c *ConfigConfigurator) ParseConfig() {
 
 		permanentStorage := file.NewInstance(Configuration.FileStoragePath)
 		Configuration.PermanentStorage = &permanentStorage
+
+		storage := postgres.NewInstance(Configuration.DatabaseDSN)
+		Configuration.Repository = repository.NewInstance(&storage)
 	})
 }
 
