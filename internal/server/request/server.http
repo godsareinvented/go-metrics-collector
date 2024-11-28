@@ -109,3 +109,11 @@ GET {{domain}}:{{port}}/
 Accept-Encoding: gzip
 
 ###
+
+
+# 4. БАЗА ДАННЫХ
+
+# Получение списка метрик из хранилища
+GET {{domain}}:{{port}}/ping
+
+###

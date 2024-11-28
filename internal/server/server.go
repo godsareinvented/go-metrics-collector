@@ -21,11 +21,11 @@ type Server struct {
 }
 
 func (s *Server) Start() {
+	s.createParentContext()
+	defer (*s.cancel)()
+
 	s.createAndConfigureRouter()
 	s.createServer()
-
-	s.createContext()
-	defer (*s.cancel)()
 
 	go func() {
 		if err := s.startingServer(); nil != err {
@@ -74,6 +74,9 @@ func (s *Server) createAndConfigureRouter() {
 			router.Post("/", handler.GetMetricJson)
 			router.Get("/{type}/{name}", handler.GetMetric)
 		})
+		s.router.Route("/ping", func(router chi.Router) {
+			router.Get("/", handler.DbPing(*s.ctx))
+		})
 	})
 }
 
@@ -84,7 +87,7 @@ func (s *Server) createServer() {
 	}
 }
 
-func (s *Server) createContext() {
+func (s *Server) createParentContext() {
 	ctx, cancel := context.WithCancel(context.Background())
 	s.ctx = &ctx
 	s.cancel = &cancel
