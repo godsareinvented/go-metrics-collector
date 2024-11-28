@@ -1,11 +1,14 @@
 package config
 
 import (
+	"context"
 	"flag"
 	"github.com/caarlos0/env"
+	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/logger"
 	"github.com/godsareinvented/go-metrics-collector/internal/permanent_storage/file"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
+	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
 	"github.com/godsareinvented/go-metrics-collector/internal/storage/postgres"
 	"os"
 	"strings"
@@ -37,7 +40,7 @@ func (c *ConfigConfigurator) ParseConfig() {
 	}
 
 	// todo Для клиента не нужна инициализация хранилищ...
-	storage := postgres.NewInstance(Configuration.DatabaseDSN)
+	storage := getSuitableStorage()
 	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
 
 	Configuration.Repository = repository.NewInstance(&storage)
@@ -47,4 +50,17 @@ func (c *ConfigConfigurator) ParseConfig() {
 func getFileStoragePathDefaultValue() string {
 	filePathParts := []string{os.TempDir(), "metrics_snapshot.txt"}
 	return strings.Join(filePathParts, string(os.PathSeparator))
+}
+
+func getSuitableStorage() interfaces.StorageInterface {
+	if "" == Configuration.DatabaseDSN {
+		return mem_storage.NewInstance()
+	}
+
+	storage := postgres.NewInstance(Configuration.DatabaseDSN)
+	if res, err := storage.Ping(context.Background()); nil == err && res {
+		return storage
+	}
+
+	return mem_storage.NewInstance()
 }
