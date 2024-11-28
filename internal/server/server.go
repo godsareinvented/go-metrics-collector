@@ -21,8 +21,8 @@ type Server struct {
 	OnStop  func() error
 }
 
-func (s *Server) Start() {
-	s.createServer()
+func (s *Server) Start(ctx context.Context) {
+	s.createServer(ctx)
 
 	go func() {
 		if err := s.startingServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -48,7 +48,7 @@ func (s *Server) Stop() error {
 	return util.WrappedErrs(err, errShutdown)
 }
 
-func (s *Server) createAndConfigureRouter() {
+func (s *Server) createAndConfigureRouter(ctx context.Context) {
 	s.router = chi.NewRouter()
 
 	s.router.Use(middleware.WithLogging)
@@ -69,15 +69,18 @@ func (s *Server) createAndConfigureRouter() {
 				router.Get("/", handler.GetMetric)
 			})
 		})
+		s.router.Route("/ping", func(router chi.Router) {
+			router.Get("/", handler.DbPing(ctx))
+		})
 	})
 }
 
-func (s *Server) createServer() {
+func (s *Server) createServer(ctx context.Context) {
 	if s.server != nil {
 		return
 	}
 
-	s.createAndConfigureRouter()
+	s.createAndConfigureRouter(ctx)
 	s.server = &http.Server{
 		Addr:    config.Configuration.Endpoint,
 		Handler: s.router,
