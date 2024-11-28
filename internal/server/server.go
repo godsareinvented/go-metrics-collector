@@ -56,21 +56,21 @@ func (s *Server) createAndConfigureRouter(ctx context.Context) {
 	s.router.Use(middleware.GzipResponseCompressing)
 
 	s.router.Route("/", func(r chi.Router) {
-		s.router.Get("/", handler.ShowMetricList)
-		s.router.Route("/update", func(router chi.Router) {
-			router.Post("/", handler.UpdateMetricJson)
-			router.Route("/{type}/{name}/{value}", func(router chi.Router) {
-				router.Post("/", handler.UpdateMetric)
+		r.Get("/", handler.ShowMetricList(ctx))
+		r.Route("/update", func(r chi.Router) {
+			r.Post("/", handler.UpdateMetricJson(ctx))
+			r.Route("/{type}/{name}/{value}", func(r chi.Router) {
+				r.Post("/", handler.UpdateMetric(ctx))
 			})
 		})
-		s.router.Route("/value", func(router chi.Router) {
-			router.Post("/", handler.GetMetricJson)
-			router.Route("/{type}/{name}", func(router chi.Router) {
-				router.Get("/", handler.GetMetric)
+		r.Route("/value", func(r chi.Router) {
+			r.Post("/", handler.GetMetricJson(ctx))
+			r.Route("/{type}/{name}", func(r chi.Router) {
+				r.Get("/", handler.GetMetric(ctx))
 			})
 		})
-		s.router.Route("/ping", func(router chi.Router) {
-			router.Get("/", handler.DbPing(ctx))
+		r.Route("/ping", func(r chi.Router) {
+			r.Get("/", handler.DbPing(ctx))
 		})
 	})
 }

@@ -1,37 +1,41 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"net/http"
 )
 
-func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
-	m, err := parsedJsonMetric(request)
-	if err != nil {
-		http.Error(responseWriter, "failed to decode request body", http.StatusBadRequest)
-		return
-	}
+func GetMetricJson(_ context.Context) http.HandlerFunc {
+	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
+		m, err := parsedJsonMetric(request)
+		if err != nil {
+			http.Error(responseWriter, "failed to decode request body", http.StatusBadRequest)
+			return
+		}
 
-	if err = v.StructPartial(m, "ID", "MType"); err != nil {
-		http.Error(responseWriter, "incorrect metric data", http.StatusBadRequest)
-		return
-	}
+		if err = v.StructPartial(m, "ID", "MType"); err != nil {
+			http.Error(responseWriter, "incorrect metric data", http.StatusBadRequest)
+			return
+		}
 
-	resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(m)
-	if err != nil {
-		http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
-		return
-	}
+		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(m)
+		if err != nil {
+			http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
+			return
+		}
 
-	if !isSet {
-		http.Error(responseWriter, "metric not found", http.StatusNotFound)
-		return
-	}
+		if !isSet {
+			http.Error(responseWriter, "metric not found", http.StatusNotFound)
+			return
+		}
 
-	responseWriter.Header().Set("Content-Type", "application/json")
-	responseWriter.WriteHeader(http.StatusOK)
-	if err = json.NewEncoder(responseWriter).Encode(resultingMetric); err != nil {
-		http.Error(responseWriter, "failed to encode the metric", http.StatusInternalServerError)
+		responseWriter.Header().Set("Content-Type", "application/json")
+		responseWriter.WriteHeader(http.StatusOK)
+		if err = json.NewEncoder(responseWriter).Encode(resultingMetric); err != nil {
+			http.Error(responseWriter, "failed to encode the metric", http.StatusInternalServerError)
+		}
 	}
+	return fn
 }
