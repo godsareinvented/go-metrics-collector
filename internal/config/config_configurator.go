@@ -6,7 +6,6 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/logger"
 	"github.com/oldhanasong/go-metrics-collector/internal/permanent_storage/file"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"os"
 	"strings"
 	"sync"
@@ -46,7 +45,10 @@ func (c *ConfigConfigurator) ParseConfig() {
 		permanentStorage := file.NewInstance(Configuration.FileStoragePath)
 		Configuration.PermanentStorage = &permanentStorage
 
-		storage := mem_storage.NewInstance()
+		storage := suitableStorage()
+		if storage == nil {
+			panic("storage is not set")
+		}
 		Configuration.Repository = repository.NewInstance(storage)
 	})
 }
