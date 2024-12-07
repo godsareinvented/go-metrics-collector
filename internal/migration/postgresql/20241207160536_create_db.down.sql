@@ -1,1 +1,3 @@
-DROP TABLE IF EXISTS metrics;
+DROP TYPE IF EXISTS metric_type;
+DROP TABLE IF EXISTS metric_types;
+DROP TABLE IF EXISTS metric;
