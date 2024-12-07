@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"context"
 	parserAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/parser/abstract_factory"
 	valueHandlerAbstractFactory "github.com/godsareinvented/go-metrics-collector/internal/buisness_logic/value_handler/abstract_factory"
 	"github.com/godsareinvented/go-metrics-collector/internal/config"
@@ -33,40 +34,40 @@ func (metricManager *MetricManager) Collect() []dto.Metrics {
 	return metricList
 }
 
-func (metricManager *MetricManager) UpdateMetric(metricDTO dto.Metrics) {
+func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metricDTO dto.Metrics) {
 	repos := config.Configuration.Repository
 
-	metricFromStorage, isSet, _ := repos.GetMetric(metricDTO)
+	metricFromStorage, isSet, _ := repos.GetMetric(ctx, metricDTO)
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO, metricFromStorage, isSet)
 
-	_, err := repos.UpdateMetric(metricDTO)
+	_, err := repos.UpdateMetric(ctx, metricDTO)
 	if nil != err {
 		// todo: Надо пересмотреть выплёвывание ошибок.
 		panic("Error updating metric: " + err.Error())
 	}
 
 	if 0 == config.Configuration.StoreInterval {
-		_ = metricManager.ExportTo(config.Configuration.PermanentStorage)
+		_ = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 	}
 }
 
-func (metricManager *MetricManager) ImportFrom(permanentStorage *interfaces.PermanentStorage) error {
+func (metricManager *MetricManager) ImportFrom(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {
 	metricList, err := (*permanentStorage).Import()
 	if nil != err {
 		return err
 	}
 
 	for _, metric := range metricList {
-		metricManager.UpdateMetric(metric)
+		metricManager.UpdateMetric(ctx, metric)
 	}
 
 	return nil
 }
 
-func (metricManager *MetricManager) ExportTo(permanentStorage *interfaces.PermanentStorage) error {
-	metricList, err := config.Configuration.Repository.GetAllMetrics()
+func (metricManager *MetricManager) ExportTo(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {
+	metricList, err := config.Configuration.Repository.GetAllMetrics(ctx)
 	if nil != err {
 		return err
 	}

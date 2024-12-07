@@ -6,11 +6,11 @@ import (
 )
 
 type StorageInterface interface {
-	GetAll() ([]dto.Metrics, error)
-	GetByID(ID string, mType string) (dto.Metrics, bool, error)
-	GetByName(mName string, mType string) (dto.Metrics, bool, error)
-	Save(metric dto.Metrics) (string, error)
-	GetGeneratedID(metric dto.Metrics) string
+	GetAll(ctx context.Context) ([]dto.Metrics, error)
+	GetByID(ctx context.Context, ID string, mType string) (dto.Metrics, bool, error)
+	GetByName(ctx context.Context, mName string, mType string) (dto.Metrics, bool, error)
+	Save(ctx context.Context, metric dto.Metrics) (string, error)
+	GetGeneratedID(ctx context.Context, metric dto.Metrics) string
 }
 
 type StorageConnectorInterface interface {

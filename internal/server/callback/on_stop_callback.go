@@ -1,17 +1,18 @@
 package callback
 
 import (
+	"context"
 	"fmt"
 	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/metric/manager"
 )
 
-func OnServerStoppedCallback() error {
+func OnServerStoppedCallback(ctx context.Context) error {
 	var resultError error
 
 	printServerStopped()
 
-	err := exportMetricsToPermanentStorage()
+	err := exportMetricsToPermanentStorage(ctx)
 	if nil != err {
 		resultError = err
 	}
@@ -28,14 +29,14 @@ func printServerStopped() {
 	fmt.Println("Server shutdown")
 }
 
-func exportMetricsToPermanentStorage() error {
+func exportMetricsToPermanentStorage(ctx context.Context) error {
 	if nil == config.Configuration.PermanentStorage {
 		fmt.Println("Saving metrics to persistent storage by server shutdowns is disabled")
 		return nil
 	}
 
 	metricManager := manager.MetricManager{}
-	err := metricManager.ExportTo(config.Configuration.PermanentStorage)
+	err := metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 	(*config.Configuration.PermanentStorage).Close()
 
 	return err

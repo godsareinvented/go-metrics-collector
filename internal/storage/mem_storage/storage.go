@@ -15,7 +15,7 @@ type MemStorage struct {
 	idIndex    map[string]int
 }
 
-func (memStorage *MemStorage) GetAll() ([]dto.Metrics, error) {
+func (memStorage *MemStorage) GetAll(_ context.Context) ([]dto.Metrics, error) {
 	var metricList []dto.Metrics
 
 	for _, metricJson := range memStorage.entityList {
@@ -31,7 +31,7 @@ func (memStorage *MemStorage) GetAll() ([]dto.Metrics, error) {
 }
 
 // GetByID todo: ID - уникальный. Зачем поиск по типу?
-func (memStorage *MemStorage) GetByID(ID string, _ string) (dto.Metrics, bool, error) {
+func (memStorage *MemStorage) GetByID(_ context.Context, ID string, _ string) (dto.Metrics, bool, error) {
 	index := memStorage.getMetricIndexByID(ID)
 	if -1 == index {
 		return dto.Metrics{}, false, nil
@@ -44,7 +44,7 @@ func (memStorage *MemStorage) GetByID(ID string, _ string) (dto.Metrics, bool, e
 }
 
 // GetByName todo: ...
-func (memStorage *MemStorage) GetByName(mName string, mType string) (dto.Metrics, bool, error) {
+func (memStorage *MemStorage) GetByName(_ context.Context, mName string, mType string) (dto.Metrics, bool, error) {
 	index := memStorage.getMetricIndexByName(mName)
 	if -1 == index {
 		return dto.Metrics{}, false, nil
@@ -56,9 +56,9 @@ func (memStorage *MemStorage) GetByName(mName string, mType string) (dto.Metrics
 	return metric, true, nil
 }
 
-func (memStorage *MemStorage) Save(metric dto.Metrics) (string, error) {
+func (memStorage *MemStorage) Save(ctx context.Context, metric dto.Metrics) (string, error) {
 	if "" == metric.ID {
-		ID := memStorage.GetGeneratedID(metric)
+		ID := memStorage.GetGeneratedID(ctx, metric)
 		metric.ID = ID
 	}
 
@@ -78,7 +78,7 @@ func (memStorage *MemStorage) Save(metric dto.Metrics) (string, error) {
 
 // GetGeneratedID Метод предполагает, что все идентификаторы генерятся либо вне, либо внутри.
 // Проверки на уникальность сгенерированного внутри идентификатора нет.
-func (memStorage *MemStorage) GetGeneratedID(metric dto.Metrics) string {
+func (memStorage *MemStorage) GetGeneratedID(_ context.Context, metric dto.Metrics) string {
 	if "" != metric.ID {
 		return metric.ID
 	}

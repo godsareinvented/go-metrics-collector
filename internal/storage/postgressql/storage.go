@@ -12,27 +12,27 @@ type PostgreSQLStorage struct {
 }
 
 // GetAll todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) GetAll() ([]dto.Metrics, error) {
+func (s *PostgreSQLStorage) GetAll(ctx context.Context) ([]dto.Metrics, error) {
 	return []dto.Metrics{}, nil
 }
 
 // GetByID todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) GetByID(ID string, mType string) (dto.Metrics, bool, error) {
+func (s *PostgreSQLStorage) GetByID(ctx context.Context, ID string, mType string) (dto.Metrics, bool, error) {
 	return dto.Metrics{}, false, nil
 }
 
 // GetByName todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) GetByName(mName string, mType string) (dto.Metrics, bool, error) {
+func (s *PostgreSQLStorage) GetByName(ctx context.Context, mName string, mType string) (dto.Metrics, bool, error) {
 	return dto.Metrics{}, false, nil
 }
 
 // Save todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) Save(metric dto.Metrics) (string, error) {
+func (s *PostgreSQLStorage) Save(ctx context.Context, metric dto.Metrics) (string, error) {
 	return "", nil
 }
 
 // GetGeneratedID todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) GetGeneratedID(metric dto.Metrics) string {
+func (s *PostgreSQLStorage) GetGeneratedID(ctx context.Context, metric dto.Metrics) string {
 	return ""
 }
 

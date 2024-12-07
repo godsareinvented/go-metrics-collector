@@ -16,8 +16,8 @@ type Server struct {
 	ctx    *context.Context
 	cancel *context.CancelFunc
 
-	OnStart func() error
-	OnStop  func() error
+	OnStart func(ctx context.Context) error
+	OnStop  func(ctx context.Context) error
 }
 
 func (s *Server) Start() {
@@ -51,7 +51,7 @@ func (s *Server) Stop() {
 		return
 	}
 
-	err := s.OnStop()
+	err := s.OnStop(*s.ctx)
 
 	(*s.cancel)()
 
@@ -120,7 +120,7 @@ func (s *Server) executeOnStartCallback() error {
 	if nil == s.OnStart {
 		return nil
 	}
-	if err := s.OnStart(); nil != err {
+	if err := s.OnStart(*s.ctx); nil != err {
 		return err
 	}
 	return nil

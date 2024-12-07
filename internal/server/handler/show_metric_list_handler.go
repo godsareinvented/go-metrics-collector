@@ -9,9 +9,18 @@ import (
 	"sort"
 )
 
-func ShowMetricList(_ context.Context) http.HandlerFunc {
+func ShowMetricList(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		metricDTOList, _ := config.Configuration.Repository.GetAllMetrics()
+		// Комбинированный контекст, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
+		requestCtx, cancel := context.WithCancel(request.Context())
+		defer cancel()
+
+		go func() {
+			<-ctx.Done()
+			cancel()
+		}()
+
+		metricDTOList, _ := config.Configuration.Repository.GetAllMetrics(requestCtx)
 
 		sort.Slice(metricDTOList, func(i, j int) bool {
 			return metricDTOList[i].MName < metricDTOList[j].MName
