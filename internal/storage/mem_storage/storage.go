@@ -90,14 +90,6 @@ func (memStorage *MemStorage) GetGeneratedID(metric dto.Metrics) string {
 	return strconv.Itoa(len(memStorage.entityList))
 }
 
-func (memStorage *MemStorage) Close() error {
-	return nil
-}
-
-func (memStorage *MemStorage) Ping(_ context.Context) (bool, error) {
-	return true, nil
-}
-
 func (memStorage *MemStorage) save(metric dto.Metrics, metricJson []byte) int {
 	memStorage.entityList = append(memStorage.entityList, metricJson)
 
