@@ -15,8 +15,17 @@ type InputMetrics struct {
 	MType string `json:"type" validate:"required,contains=gauge|contains=counter"`
 }
 
-func GetMetricJson(_ context.Context) http.HandlerFunc {
+func GetMetricJson(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Комбинированный контекст, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
+		requestCtx, cancel := context.WithCancel(request.Context())
+		defer cancel()
+
+		go func() {
+			<-ctx.Done()
+			cancel()
+		}()
+
 		requestParser := parser.JsonParser{}
 		metric, err := requestParser.GetMetricDTO(request)
 		if nil != err {
@@ -39,7 +48,7 @@ func GetMetricJson(_ context.Context) http.HandlerFunc {
 			ID:    metric.ID,
 			MType: metric.MType,
 		}
-		resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByID(searchMetric)
+		resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByID(requestCtx, searchMetric)
 
 		if !isSet {
 			http.NotFound(responseWriter, request)

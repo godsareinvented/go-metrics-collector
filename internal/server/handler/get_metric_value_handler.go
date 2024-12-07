@@ -8,8 +8,17 @@ import (
 	"net/http"
 )
 
-func GetMetric(_ context.Context) http.HandlerFunc {
+func GetMetric(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Комбинированный контекст, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
+		requestCtx, cancel := context.WithCancel(request.Context())
+		defer cancel()
+
+		go func() {
+			<-ctx.Done()
+			cancel()
+		}()
+
 		requestParser := parser.RequestParser{}
 		metricDTO, err := requestParser.GetMetricDTO(request, false)
 		if nil != err {
@@ -24,11 +33,11 @@ func GetMetric(_ context.Context) http.HandlerFunc {
 			return
 		}
 
-		resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByName(metricDTO)
+		resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByName(requestCtx, metricDTO)
 
 		if isSet {
 			preparedMetricValue := resultingMetric.GetFormattedValue()
-			responseWriter.Write([]byte(preparedMetricValue))
+			_, _ = responseWriter.Write([]byte(preparedMetricValue))
 			responseWriter.WriteHeader(http.StatusOK)
 			return
 		}
