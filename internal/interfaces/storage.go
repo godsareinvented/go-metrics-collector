@@ -11,6 +11,13 @@ type StorageInterface interface {
 	GetByName(mName string, mType string) (dto.Metrics, bool, error)
 	Save(metric dto.Metrics) (string, error)
 	GetGeneratedID(metric dto.Metrics) string
-	Close() error
+}
+
+type StorageConnectorInterface interface {
+	CloseConnect() error
 	Ping(ctx context.Context) (bool, error)
+}
+
+type StorageConfiguratorInterface interface {
+	Configure() error
 }
