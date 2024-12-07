@@ -3,8 +3,9 @@ package handler
 import (
 	"context"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/postgres"
+	"github.com/oldhanasong/go-metrics-collector/internal/storage"
 	"net/http"
 )
 
@@ -19,13 +20,14 @@ func DbPing(ctx context.Context) http.HandlerFunc {
 			cancel()
 		}()
 
-		storage, err := postgres.NewInstance(config.Configuration.DatabaseDSN)
+		conf := storage.Config{Type: dictionary.PostgresqlStorage, DSN: config.Configuration.DatabaseDSN}
+		s, _, err := storage.CreateStorageAndConfigurator(conf)
 		if err != nil {
 			http.Error(responseWriter, "error when accessing the storage", http.StatusInternalServerError)
 			return
 		}
 
-		connector, ok := storage.(interfaces.StorageConnector)
+		connector, ok := s.(interfaces.StorageConnector)
 		if !ok {
 			http.Error(responseWriter, "storage doesn't import the StorageConnector interface", http.StatusInternalServerError)
 			return

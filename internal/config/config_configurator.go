@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"github.com/caarlos0/env"
 	"github.com/oldhanasong/go-metrics-collector/internal/logger"
@@ -27,30 +28,49 @@ func (c *ConfigConfigurator) ParseConfig() {
 			Logger:                   logger.NewInstance(),
 		}
 
-		flag.StringVar(&Configuration.Endpoint, "a", "localhost:8080", "Адрес эндпоинта HTTP-сервера")
-		flag.IntVar(&Configuration.ReportInterval, "r", 10, "Частота отправки метрик на сервер")
-		flag.IntVar(&Configuration.PollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
-		flag.IntVar(&Configuration.StoreInterval, "i", 300, "Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск")
-		flag.StringVar(&Configuration.FileStoragePath, "f", getFileStoragePathDefaultValue(), "Путь до файла, куда сохраняются текущие значения")
-		flag.BoolVar(&Configuration.Restore, "e", true, "Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера")
-		flag.StringVar(&Configuration.DatabaseDSN, "d", "", "Адрес подключения к БД")
-
-		flag.Parse()
-
-		err := env.Parse(&Configuration)
-		if err != nil {
+		parseFlags()
+		if err := parseEnv(); err != nil {
 			panic("Error parsing environment variables")
 		}
-
-		permanentStorage := file.NewInstance(Configuration.FileStoragePath)
-		Configuration.PermanentStorage = &permanentStorage
-
-		storage := suitableStorage()
-		if storage == nil {
-			panic("storage is not set")
+		createPermanentStorage()
+		if err := createRepository(); err != nil {
+			panic(err)
 		}
-		Configuration.Repository = repository.NewInstance(storage)
 	})
+}
+
+func parseFlags() {
+	flag.StringVar(&Configuration.Endpoint, "a", "localhost:8080", "Адрес эндпоинта HTTP-сервера")
+	flag.IntVar(&Configuration.ReportInterval, "r", 10, "Частота отправки метрик на сервер")
+	flag.IntVar(&Configuration.PollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
+	flag.IntVar(&Configuration.StoreInterval, "i", 300, "Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск")
+	flag.StringVar(&Configuration.FileStoragePath, "f", getFileStoragePathDefaultValue(), "Путь до файла, куда сохраняются текущие значения")
+	flag.BoolVar(&Configuration.Restore, "e", true, "Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера")
+	flag.StringVar(&Configuration.DatabaseDSN, "d", "", "Адрес подключения к БД")
+
+	flag.Parse()
+}
+
+func parseEnv() error {
+	return env.Parse(&Configuration)
+}
+
+func createPermanentStorage() {
+	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
+	Configuration.PermanentStorage = &permanentStorage
+}
+
+func createRepository() error {
+	storage, configurator := createSuitableStorageAndConfigurator()
+	if storage == nil || configurator == nil {
+		return errors.New("storage or configurator is not set")
+	}
+	if err := configurator.Configure(); err != nil {
+		return err
+	}
+	Configuration.Repository = repository.NewInstance(storage)
+
+	return nil
 }
 
 func getFileStoragePathDefaultValue() string {

@@ -30,7 +30,7 @@ func key(metric dto.Metrics) string {
 	return fmt.Sprintf("%s/%s", metric.MType, metric.ID)
 }
 
-func NewInstance() interfaces.Storage {
+func NewStorage() interfaces.Storage {
 	return &MemStorage{
 		entityList: make(map[string]dto.Metrics),
 	}

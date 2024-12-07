@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
@@ -42,26 +41,6 @@ func (s *PostgreSQLStorage) Ping(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func NewInstance(dbDsn string) (interfaces.Storage, error) {
-	db, err := openedConnection(dbDsn)
-	if err != nil {
-		return nil, err
-	}
-
-	return &PostgreSQLStorage{
-		db: db,
-	}, nil
-}
-
-func openedConnection(dbDsn string) (*sql.DB, error) {
-	if dbDsn == "" {
-		return nil, errors.New("dbDsn is empty")
-	}
-
-	db, err := sql.Open("pgx", dbDsn)
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
+func NewStorage(db *sql.DB) interfaces.Storage {
+	return &PostgreSQLStorage{db: db}
 }

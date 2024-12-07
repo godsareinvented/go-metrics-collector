@@ -5,62 +5,53 @@ import (
 	"errors"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/postgres"
+	"github.com/oldhanasong/go-metrics-collector/internal/storage"
 	"time"
 )
 
-func suitableStorage() interfaces.Storage {
-	for _, storageType := range []string{dictionary.PostgresqlStorage, dictionary.MemStorage} {
-		if s, err := createStorage(storageType); err == nil {
-			return s
+type handler func() (interfaces.Storage, interfaces.StorageConfigurator, error)
+
+var creators = []handler{createPostgresStorage, createMemStorage}
+
+func createSuitableStorageAndConfigurator() (interfaces.Storage, interfaces.StorageConfigurator) {
+	for _, f := range creators {
+		if s, sc, err := f(); err == nil {
+			return s, sc
 		}
 	}
 
-	return nil
+	s, sc, _ := createMemStorage()
+	return s, sc
 }
 
-func createStorage(storageType string) (interfaces.Storage, error) {
-	switch storageType {
-	case dictionary.PostgresqlStorage:
-		return createPostgreSQLStorage()
-	case dictionary.MemStorage:
-	default:
-		return createMemStorage()
-	}
-
-	return nil, errors.New("unknown storage type passed")
-}
-
-func createPostgreSQLStorage() (interfaces.Storage, error) {
+func createPostgresStorage() (interfaces.Storage, interfaces.StorageConfigurator, error) {
 	if Configuration.DatabaseDSN == "" {
-		return nil, errors.New("dsn flag not set")
+		return nil, nil, errors.New("dsn flag not set")
 	}
-	s, err := postgres.NewInstance(Configuration.DatabaseDSN)
+	conf := storage.Config{Type: dictionary.PostgresqlStorage, DSN: Configuration.DatabaseDSN}
+	s, sc, err := storage.CreateStorageAndConfigurator(conf)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	c, ok := s.(interfaces.StorageConnector)
 	if !ok {
-		return nil, errors.New("storage doesn't implement the interface StorageConnector")
+		return nil, nil, errors.New("storage doesn't implement the interface StorageConnector")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var ping bool
-	ping, err = c.Ping(ctx)
+	ping, err := c.Ping(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
 	if !ping {
-		return nil, errors.New("failed to ping the storage")
+		return nil, nil, errors.New("failed to ping the storage")
 	}
 
-	return s, nil
+	return s, sc, nil
 }
 
-func createMemStorage() (interfaces.Storage, error) {
-	return mem_storage.NewInstance(), nil
+func createMemStorage() (interfaces.Storage, interfaces.StorageConfigurator, error) {
+	return storage.CreateStorageAndConfigurator(storage.Config{Type: dictionary.MemStorage})
 }
