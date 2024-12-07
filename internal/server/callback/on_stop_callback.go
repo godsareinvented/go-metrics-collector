@@ -7,8 +7,21 @@ import (
 )
 
 func OnServerStoppedCallback() error {
+	var resultError error
+
 	printServerStopped()
-	return exportMetricsToPermanentStorage()
+
+	err := exportMetricsToPermanentStorage()
+	if nil != err {
+		resultError = err
+	}
+
+	err = closeStorage()
+	if nil != err {
+		resultError = err
+	}
+
+	return resultError
 }
 
 func printServerStopped() {
@@ -26,4 +39,8 @@ func exportMetricsToPermanentStorage() error {
 	(*config.Configuration.PermanentStorage).Close()
 
 	return err
+}
+
+func closeStorage() error {
+	return config.Configuration.Repository.CloseStorage()
 }

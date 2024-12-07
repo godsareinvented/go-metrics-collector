@@ -52,11 +52,13 @@ func (repository *Repository) GetAllMetrics() ([]dto.Metrics, error) {
 }
 
 func (repository *Repository) CloseStorage() error {
-	return (*repository.storage).Close()
+	storageConnector := (*repository.storage).(interfaces.StorageConnectorInterface)
+	return storageConnector.CloseConnect()
 }
 
 func (repository *Repository) PingStorage(ctx context.Context) (bool, error) {
-	return (*repository.storage).Ping(ctx)
+	storageConnector := (*repository.storage).(interfaces.StorageConnectorInterface)
+	return storageConnector.Ping(ctx)
 }
 
 func NewInstance(storageInterface *interfaces.StorageInterface) *Repository {

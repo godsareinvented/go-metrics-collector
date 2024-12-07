@@ -2,14 +2,15 @@ package config
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"github.com/caarlos0/env"
+	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/logger"
 	"github.com/godsareinvented/go-metrics-collector/internal/permanent_storage/file"
 	"github.com/godsareinvented/go-metrics-collector/internal/repository"
-	"github.com/godsareinvented/go-metrics-collector/internal/storage/mem_storage"
-	"github.com/godsareinvented/go-metrics-collector/internal/storage/postgres"
+	storagePackage "github.com/godsareinvented/go-metrics-collector/internal/storage"
 	"os"
 	"strings"
 )
@@ -23,6 +24,28 @@ func (c *ConfigConfigurator) ParseConfig() {
 		Logger:                   logger.NewInstance(),
 	}
 
+	parseFlags()
+	err := parseEnv()
+	if nil != err {
+		panic("Error parsing env: " + err.Error())
+	}
+
+	// todo Для клиента не нужна инициализация хранилищ...
+	storage, storageConfigurator, err := getSuitableStorage()
+	if nil != err {
+		panic("Error configuring storage: " + err.Error())
+	}
+	err = storageConfigurator.Configure()
+	if nil != err {
+		panic("Error configuring storage: " + err.Error())
+	}
+	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
+
+	Configuration.Repository = repository.NewInstance(&storage)
+	Configuration.PermanentStorage = &permanentStorage
+}
+
+func parseFlags() {
 	flag.StringVar(&Configuration.Endpoint, "a", ":8080", "Адрес эндпоинта HTTP-сервера")
 	flag.IntVar(&Configuration.ReportInterval, "r", 10, "Частота отправки метрик на сервер")
 	flag.IntVar(&Configuration.PollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
@@ -33,18 +56,10 @@ func (c *ConfigConfigurator) ParseConfig() {
 
 	flag.Parse()
 	// todo: Отрицательные значения?
+}
 
-	err := env.Parse(&Configuration)
-	if err != nil {
-		panic("Error parsing environment variables")
-	}
-
-	// todo Для клиента не нужна инициализация хранилищ...
-	storage := getSuitableStorage()
-	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
-
-	Configuration.Repository = repository.NewInstance(&storage)
-	Configuration.PermanentStorage = &permanentStorage
+func parseEnv() error {
+	return env.Parse(&Configuration)
 }
 
 func getFileStoragePathDefaultValue() string {
@@ -52,15 +67,26 @@ func getFileStoragePathDefaultValue() string {
 	return strings.Join(filePathParts, string(os.PathSeparator))
 }
 
-func getSuitableStorage() interfaces.StorageInterface {
+func getSuitableStorage() (interfaces.StorageInterface, interfaces.StorageConfiguratorInterface, error) {
 	if "" == Configuration.DatabaseDSN {
-		return mem_storage.NewInstance()
+		return storagePackage.GetStorageAndConfigurator(storagePackage.StorageConfig{StorageType: dictionary.MemStorage})
 	}
 
-	storage := postgres.NewInstance(Configuration.DatabaseDSN)
-	if res, err := storage.Ping(context.Background()); nil == err && res {
-		return storage
+	storage, storageConfigurator, err := storagePackage.GetStorageAndConfigurator(storagePackage.StorageConfig{
+		StorageType: dictionary.PostgresqlStorage,
+		DatabaseDSN: Configuration.DatabaseDSN,
+	})
+	if nil != err {
+		return nil, nil, err
+	}
+	storageConnector, ok := storage.(interfaces.StorageConnectorInterface)
+	if !ok {
+		return nil, nil, errors.New("the postgresql storage doesn't implement the StorageConnectorInterface")
 	}
 
-	return mem_storage.NewInstance()
+	if res, err := storageConnector.Ping(context.Background()); nil == err && res {
+		return storage, storageConfigurator, nil
+	}
+
+	return storagePackage.GetStorageAndConfigurator(storagePackage.StorageConfig{StorageType: dictionary.MemStorage})
 }

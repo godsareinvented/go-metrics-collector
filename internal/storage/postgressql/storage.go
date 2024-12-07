@@ -1,12 +1,10 @@
-package postgres
+package postgressql
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
-	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type PostgreSQLStorage struct {
@@ -38,7 +36,7 @@ func (s *PostgreSQLStorage) GetGeneratedID(metric dto.Metrics) string {
 	return ""
 }
 
-func (s *PostgreSQLStorage) Close() error {
+func (s *PostgreSQLStorage) CloseConnect() error {
 	return s.db.Close()
 }
 
@@ -50,21 +48,10 @@ func (s *PostgreSQLStorage) Ping(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func NewInstance(dbDsn string) interfaces.StorageInterface {
-	return &PostgreSQLStorage{
-		db: getOpenedConnection(dbDsn),
-	}
+func (s *PostgreSQLStorage) GetConnect() *sql.DB {
+	return s.db
 }
 
-func getOpenedConnection(dbDsn string) *sql.DB {
-	if "" == dbDsn {
-		panic(errors.New("DATABASE_DSN is empty"))
-	}
-
-	db, err := sql.Open("pgx", dbDsn)
-	if nil != err {
-		panic(err)
-	}
-
-	return db
+func NewInstance(db *sql.DB) interfaces.StorageInterface {
+	return &PostgreSQLStorage{db: db}
 }
