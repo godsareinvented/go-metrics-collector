@@ -48,10 +48,6 @@ func (s *PostgreSQLStorage) Ping(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (s *PostgreSQLStorage) GetConnect() *sql.DB {
-	return s.db
-}
-
 func NewInstance(db *sql.DB) interfaces.StorageInterface {
 	return &PostgreSQLStorage{db: db}
 }
