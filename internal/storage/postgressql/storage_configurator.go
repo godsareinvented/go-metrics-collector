@@ -16,16 +16,16 @@ func (c *PostgreSQLConfigurator) Configure() error {
 }
 
 func (c *PostgreSQLConfigurator) createDB() error {
-	return c.applyMigrations(20241207160536) // 20241207160536_create_db.up.sql
+	return c.applyMigration(20241207160536) // 20241207160536_create_db.up.sql
 }
 
-func (c *PostgreSQLConfigurator) applyMigrations(version uint) error {
+func (c *PostgreSQLConfigurator) applyMigration(version uint) error {
 	driver, err := postgres.WithInstance(c.Db, &postgres.Config{})
 	if nil != err {
 		return err
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://internal/migration/postgresql/", "metrics", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://internal/migration/postgresql/", "metric", driver)
 	if nil != err {
 		return err
 	}
