@@ -1,4 +1,10 @@
-CREATE TYPE metric_type_enum AS ENUM ('gauge', 'counter');
+DO
+$$
+BEGIN
+    CREATE TYPE metric_type_enum AS ENUM ('gauge', 'counter');
+    EXCEPTION WHEN DUPLICATE_OBJECT THEN
+END
+$$;
 
 COMMENT ON TYPE metric_type_enum is 'Тип метрики: gauge или counter';
 
