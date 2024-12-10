@@ -8,15 +8,6 @@ $$;
 
 COMMENT ON TYPE metric_type_enum is 'Тип метрики: gauge или counter';
 
-CREATE TABLE IF NOT EXISTS metric_type (
-    ID VARCHAR(36) PRIMARY KEY,
-    metric_type metric_type_enum NOT NULL UNIQUE
-);
-
-COMMENT ON TABLE metric_type is 'Таблица типов метрик';
-COMMENT ON COLUMN metric_type.ID is 'Индекнтификатор метрики';
-COMMENT ON COLUMN metric_type.metric_type is 'Тип метрики: gauge или counter';
-
 CREATE TABLE IF NOT EXISTS metric (
     ID VARCHAR(36) PRIMARY KEY,
     metric_name VARCHAR(100) NOT NULL,
@@ -25,8 +16,7 @@ CREATE TABLE IF NOT EXISTS metric (
     CONSTRAINT chk_one_value CHECK (
         (delta IS NOT NULL AND value IS NULL) OR
         (delta IS NULL AND value IS NOT NULL)
-    ),
-    CONSTRAINT fk_metric_type FOREIGN KEY (ID) REFERENCES metric_type(ID) ON DELETE RESTRICT ON UPDATE CASCADE
+    )
 );
 
 COMMENT ON TABLE metric is 'Таблица метрик';
@@ -34,6 +24,16 @@ COMMENT ON COLUMN metric.ID is 'Индекнтификатор метрики';
 COMMENT ON COLUMN metric.metric_name is 'Название метрики';
 COMMENT ON COLUMN metric.delta is 'Целочисленное значение метрики';
 COMMENT ON COLUMN metric.value is 'Вещественное значение метрики';
+
+CREATE TABLE IF NOT EXISTS metric_type (
+    ID VARCHAR(36) PRIMARY KEY,
+    metric_type metric_type_enum NOT NULL UNIQUE,
+    CONSTRAINT fk_metric_type FOREIGN KEY (ID) REFERENCES metric(ID) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+COMMENT ON TABLE metric_type is 'Таблица типов метрик';
+COMMENT ON COLUMN metric_type.ID is 'Индекнтификатор метрики';
+COMMENT ON COLUMN metric_type.metric_type is 'Тип метрики: gauge или counter';
 
 CREATE TABLE IF NOT EXISTS uuid (
     UUID VARCHAR(36) UNIQUE,
