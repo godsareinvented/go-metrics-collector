@@ -58,7 +58,7 @@ func (memStorage *MemStorage) GetByName(_ context.Context, mName string, mType s
 
 func (memStorage *MemStorage) Save(ctx context.Context, metric dto.Metrics) (string, error) {
 	if "" == metric.ID {
-		ID := memStorage.GetGeneratedID(ctx, metric)
+		ID, _ := memStorage.GetGeneratedID(ctx, metric)
 		metric.ID = ID
 	}
 
@@ -78,16 +78,16 @@ func (memStorage *MemStorage) Save(ctx context.Context, metric dto.Metrics) (str
 
 // GetGeneratedID Метод предполагает, что все идентификаторы генерятся либо вне, либо внутри.
 // Проверки на уникальность сгенерированного внутри идентификатора нет.
-func (memStorage *MemStorage) GetGeneratedID(_ context.Context, metric dto.Metrics) string {
+func (memStorage *MemStorage) GetGeneratedID(_ context.Context, metric dto.Metrics) (string, error) {
 	if "" != metric.ID {
-		return metric.ID
+		return metric.ID, nil
 	}
 
 	if index := memStorage.getMetricIndex(metric); -1 != index {
-		return strconv.Itoa(index)
+		return strconv.Itoa(index), nil
 	}
 
-	return strconv.Itoa(len(memStorage.entityList))
+	return strconv.Itoa(len(memStorage.entityList)), nil
 }
 
 func (memStorage *MemStorage) save(metric dto.Metrics, metricJson []byte) int {
