@@ -13,27 +13,28 @@ type RequestParser struct{}
 func (rp *RequestParser) GetMetricDTO(request *http.Request, parsingValueFlag bool) (dto.Metrics, error) {
 	metricType, metricName, metricValue := getParsedRequest(request)
 
-	var intVal int64
-	var floatVal float64
-	var err error
-
+	metric := dto.Metrics{
+		MType: metricType,
+		MName: metricName,
+	}
 	if parsingValueFlag {
-		intVal, err = getParsedDelta(metricType, metricValue)
+		intVal, err := getParsedDelta(metricType, metricValue)
+		if 0 != intVal {
+			metric.Delta = &intVal
+		}
 		if nil != err {
 			return dto.Metrics{}, err
 		}
-		floatVal, err = getParsedValue(metricType, metricValue)
+		floatVal, err := getParsedValue(metricType, metricValue)
+		if 0.0 != floatVal {
+			metric.Value = &floatVal
+		}
 		if nil != err {
 			return dto.Metrics{}, err
 		}
 	}
 
-	return dto.Metrics{
-		MType: metricType,
-		MName: metricName,
-		Delta: &intVal,
-		Value: &floatVal,
-	}, nil
+	return metric, nil
 }
 
 func getParsedRequest(request *http.Request) (string, string, string) {
