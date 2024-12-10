@@ -10,7 +10,7 @@ type StorageInterface interface {
 	GetByID(ctx context.Context, ID string, mType string) (dto.Metrics, bool, error)
 	GetByName(ctx context.Context, mName string, mType string) (dto.Metrics, bool, error)
 	Save(ctx context.Context, metric dto.Metrics) (string, error)
-	GetGeneratedID(ctx context.Context, metric dto.Metrics) string
+	GetGeneratedID(ctx context.Context, metric dto.Metrics) (string, error)
 }
 
 type StorageConnectorInterface interface {
