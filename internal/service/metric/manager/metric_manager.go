@@ -42,6 +42,10 @@ func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metricDTO 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO, metricFromStorage, isSet)
 
+	if "" != metricFromStorage.ID {
+		metricDTO.ID = metricFromStorage.ID
+	}
+
 	_, err := repos.UpdateMetric(ctx, metricDTO)
 	if nil != err {
 		// todo: Надо пересмотреть выплёвывание ошибок.
