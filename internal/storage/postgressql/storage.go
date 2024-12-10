@@ -63,7 +63,7 @@ ON CONFLICT (id) DO UPDATE
 	SET ID = $1, metric_type = $2;`
 
 	updateUUIDIsFreeFlagQuery = `
-UPDATE postgres.public.uuid SET is_free = true WHERE UUID = $1;`
+UPDATE postgres.public.uuid SET is_free = false WHERE UUID = $1;`
 
 	getGeneratedIDQuery = `
 SELECT get_metric_uuid();`
