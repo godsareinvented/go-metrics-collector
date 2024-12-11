@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
+	"go.uber.org/multierr"
 )
 
 type PostgreSQLStorage struct {
@@ -139,29 +140,62 @@ func (s *PostgreSQLStorage) GetByName(ctx context.Context, mName string, mType s
 }
 
 func (s *PostgreSQLStorage) Save(ctx context.Context, metric dto.Metrics) (string, error) {
-	isMetricIDEmpty := false
-	if "" == metric.ID {
-		ID, err := s.GetGeneratedID(ctx, metric)
-		if nil != err {
-			return "", err
-		}
-		metric.ID = ID
-		isMetricIDEmpty = true
-	}
-	_, err := s.db.ExecContext(ctx, saveOrUpdateMetricQuery, metric.ID, metric.MName, metric.Delta, metric.Value)
-	if nil != err {
-		return "", err
-	}
-	_, err = s.db.ExecContext(ctx, saveOrUpdateMetricTypeQuery, metric.ID, metric.MType)
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{
+		ReadOnly: false,
+	})
 	if nil != err {
 		return "", err
 	}
 
-	if isMetricIDEmpty {
-		_, err = s.db.ExecContext(ctx, updateUUIDIsFreeFlagQuery, metric.ID)
+	var errs error
+	isMetricIDEmpty := false
+	if "" == metric.ID {
+		ID, err := s.GetGeneratedID(ctx, metric)
 		if nil != err {
-			return "", err
+			multierr.AppendInto(&errs, err)
+			err = tx.Rollback()
+			if nil != err {
+				multierr.AppendInto(&errs, err)
+				return "", err
+			}
 		}
+		metric.ID = ID
+		isMetricIDEmpty = true
+	}
+	_, err = tx.ExecContext(ctx, saveOrUpdateMetricQuery, metric.ID, metric.MName, metric.Delta, metric.Value)
+	if nil != err {
+		multierr.AppendInto(&errs, err)
+		err = tx.Rollback()
+		if err != nil {
+			multierr.AppendInto(&errs, err)
+		}
+		return "", err
+	}
+	_, err = tx.ExecContext(ctx, saveOrUpdateMetricTypeQuery, metric.ID, metric.MType)
+	if nil != err {
+		multierr.AppendInto(&errs, err)
+		err = tx.Rollback()
+		if err != nil {
+			multierr.AppendInto(&errs, err)
+		}
+		return "", errs
+	}
+
+	if isMetricIDEmpty {
+		_, err = tx.ExecContext(ctx, updateUUIDIsFreeFlagQuery, metric.ID)
+		if nil != err {
+			multierr.AppendInto(&errs, err)
+			err = tx.Rollback()
+			if err != nil {
+				multierr.AppendInto(&errs, err)
+			}
+			return "", errs
+		}
+	}
+
+	err = tx.Commit()
+	if nil != err {
+		return "", err
 	}
 
 	return metric.ID, nil

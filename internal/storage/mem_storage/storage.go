@@ -6,10 +6,11 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 	"strconv"
+	"sync"
 )
 
-// MemStorage todo: Хочется разделить ответственность хранилища и репозитория.. Но пока не выходит.
 type MemStorage struct {
+	mu         sync.Mutex
 	entityList [][]byte
 	nameIndex  map[string]int
 	idIndex    map[string]int
@@ -57,6 +58,9 @@ func (memStorage *MemStorage) GetByName(_ context.Context, mName string, mType s
 }
 
 func (memStorage *MemStorage) Save(ctx context.Context, metric dto.Metrics) (string, error) {
+	memStorage.mu.Lock()
+	defer memStorage.mu.Unlock()
+
 	if "" == metric.ID {
 		ID, _ := memStorage.GetGeneratedID(ctx, metric)
 		metric.ID = ID
@@ -166,9 +170,9 @@ func (memStorage *MemStorage) getDecodedMetric(metricJson []byte) (dto.Metrics, 
 	return metric, nil
 }
 
-func NewInstance() interfaces.StorageInterface {
+func NewInstance(idIndex map[string]int, nameIndex map[string]int) interfaces.StorageInterface {
 	return &MemStorage{
-		idIndex:   make(map[string]int),
-		nameIndex: make(map[string]int),
+		idIndex:   idIndex,
+		nameIndex: nameIndex,
 	}
 }
