@@ -19,7 +19,9 @@ type StorageConfig struct {
 func GetStorageAndConfigurator(sc StorageConfig) (interfaces.StorageInterface, interfaces.StorageConfiguratorInterface, error) {
 	switch sc.StorageType {
 	case dictionary.MemStorage:
-		return mem_storage.NewInstance(), &mem_storage.MemStorageConfigurator{}, nil
+		idIndex := make(map[string]int)
+		nameIndex := make(map[string]int)
+		return mem_storage.NewInstance(idIndex, nameIndex), &mem_storage.MemStorageConfigurator{}, nil
 	case dictionary.PostgresqlStorage:
 		db, err := getPostgreSQLOpenedConnection(sc)
 		if nil != err {
