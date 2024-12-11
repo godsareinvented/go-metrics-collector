@@ -8,6 +8,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
+	"go.uber.org/multierr"
 )
 
 type PostgreSQLStorage struct {
@@ -49,66 +50,105 @@ ON CONFLICT (id) DO UPDATE
 )
 
 func (s *PostgreSQLStorage) GetAll(ctx context.Context) ([]dto.Metrics, error) {
-	queryRows, err := s.db.QueryContext(ctx, getAllMetricsQuery)
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return nil, err
+	}
+
+	queryRows, err := tx.QueryContext(ctx, getAllMetricsQuery)
+	if err != nil {
+		errRollback := tx.Rollback()
+		return nil, multierr.Combine(errRollback, err)
 	}
 
 	var metrics []dto.Metrics
 	for queryRows.Next() {
 		var metric dto.Metrics
-		err = queryRows.Scan(&metric.ID, &metric.MType, &metric.Delta, &metric.Value)
-		if err != nil {
-			return nil, err
+		if err = queryRows.Scan(&metric.ID, &metric.MType, &metric.Delta, &metric.Value); err != nil {
+			errRollback := tx.Rollback()
+			return nil, multierr.Combine(errRollback, err)
 		}
 		metrics = append(metrics, metric)
 	}
 
-	err = queryRows.Err()
-	if err != nil {
-		return metrics, err
+	if err = queryRows.Err(); err != nil {
+		errRollback := tx.Rollback()
+		return nil, multierr.Combine(errRollback, err)
 	}
 
-	err = queryRows.Close()
-	if err != nil {
-		return metrics, err
+	if err = queryRows.Close(); err != nil {
+		errRollback := tx.Rollback()
+		return metrics, multierr.Combine(errRollback, err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		errRollback := tx.Rollback()
+		return metrics, multierr.Combine(errRollback, err)
 	}
 
 	return metrics, nil
 }
 
 func (s *PostgreSQLStorage) Get(ctx context.Context, m dto.Metrics) (dto.Metrics, bool, error) {
-	queryRow := s.db.QueryRowContext(ctx, getMetricByIDQuery, m.ID, m.MType)
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return dto.Metrics{}, false, err
+	}
+
+	queryRow := tx.QueryRowContext(ctx, getMetricByIDQuery, m.ID, m.MType)
 
 	var metric dto.Metrics
-	err := queryRow.Scan(&metric.ID, &metric.MType, &metric.Delta, &metric.Value)
+	err = queryRow.Scan(&metric.ID, &metric.MType, &metric.Delta, &metric.Value)
 	if errors.Is(err, sql.ErrNoRows) {
+		if err = tx.Commit(); err != nil {
+			return dto.Metrics{}, false, err
+		}
 		return dto.Metrics{}, false, nil
 	}
 	if err != nil {
-		return dto.Metrics{}, false, err
+		errRollback := tx.Rollback()
+		return dto.Metrics{}, false, multierr.Combine(errRollback, err)
 	}
 
-	err = queryRow.Err()
-	if err != nil {
-		return dto.Metrics{}, false, err
+	if err = queryRow.Err(); err != nil {
+		errRollback := tx.Rollback()
+		return dto.Metrics{}, false, multierr.Combine(errRollback, err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		errRollback := tx.Rollback()
+		return metric, false, multierr.Combine(errRollback, err)
 	}
 
 	return metric, true, nil
 }
 
 func (s *PostgreSQLStorage) Set(ctx context.Context, m dto.Metrics) error {
-	res, err := s.db.ExecContext(ctx, saveOrUpdateMetricQuery, m.ID, m.Delta, m.Value, m.MType)
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return err
+	}
+
+	res, err := tx.ExecContext(ctx, saveOrUpdateMetricQuery, m.ID, m.Delta, m.Value, m.MType)
+	if err != nil {
+		errTx := tx.Rollback()
+		return multierr.Combine(errTx, err)
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return err
+		errTx := tx.Rollback()
+		return multierr.Combine(errTx, err)
 	}
 	if rowsAffected == 0 {
-		return errors.New(fmt.Sprintf("no rows affected by saveOrUpdateMetricQuery %s", m.ID))
+		errTx := tx.Rollback()
+		return multierr.Combine(errTx, errors.New(fmt.Sprintf("no rows affected by saveOrUpdateMetricQuery %s", m.ID)))
 	}
+
+	if err = tx.Commit(); err != nil {
+		errRollback := tx.Rollback()
+		return multierr.Combine(errRollback, err)
+	}
+
 	return nil
 }
 
