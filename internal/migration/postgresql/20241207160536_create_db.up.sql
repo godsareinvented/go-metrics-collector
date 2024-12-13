@@ -27,7 +27,7 @@ COMMENT ON COLUMN metric.value is 'Вещественное значение м�
 
 CREATE TABLE IF NOT EXISTS metric_type (
     ID VARCHAR(36) PRIMARY KEY,
-    metric_type metric_type_enum NOT NULL UNIQUE,
+    metric_type metric_type_enum NOT NULL,
     CONSTRAINT fk_metric_type FOREIGN KEY (ID) REFERENCES metric(ID) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
