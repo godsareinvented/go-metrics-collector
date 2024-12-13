@@ -86,7 +86,7 @@ BEGIN
         WHILE NOT is_set LOOP
             SELECT gen_random_uuid() INTO searched_UUID;
             BEGIN
-                INSERT INTO uuid("UUID") VALUES (searched_UUID);
+                INSERT INTO uuid("uuid") VALUES (searched_UUID);
                 EXCEPTION WHEN OTHERS THEN
                     CONTINUE;
             END;
