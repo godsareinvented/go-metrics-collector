@@ -44,6 +44,26 @@ Accept-Encoding: gzip
 
 ###
 
+# Обновление пачкм метрик /updates
+POST {{domain}}:{{port}}/updates/
+Content-Type: application/json
+Accept-Encoding: gzip
+
+[
+  {
+    "id": "GaugeMetric",
+    "type": "gauge",
+    "value": 0.97
+  },
+  {
+    "id": "CounterMetric",
+    "type": "counter",
+    "delta": 1
+  }
+]
+
+###
+
 
 # 2. ПОЛУЧЕНИЕ ЗНАЧЕНИЯ МЕТРИКИ
 

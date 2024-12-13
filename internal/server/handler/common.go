@@ -76,6 +76,15 @@ func parsedJsonMetric(r *http.Request) (dto.Metrics, error) {
 	return m, nil
 }
 
+func parsedJsonMetrics(r *http.Request) ([]dto.Metrics, error) {
+	var m []dto.Metrics
+	err := json.NewDecoder(r.Body).Decode(&m)
+	if err != nil {
+		return m, err
+	}
+	return m, nil
+}
+
 func parsedMetricValues(r *http.Request) (string, string, string) {
 	return chi.URLParam(r, "type"),
 		chi.URLParam(r, "name"),

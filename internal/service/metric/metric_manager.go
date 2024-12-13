@@ -93,25 +93,26 @@ func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metric dto
 	return multierr.Combine(err, errExport)
 }
 
-func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metrics []dto.Metrics) {
+func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metrics []dto.Metrics) error {
 	repos := config.Configuration.Repository
 
-	var resultingMetrics []dto.Metrics
+	var resMetrics []dto.Metrics
 	for _, metric := range metrics {
 		m, err := metricManager.prepareMetric(ctx, *repos, metric)
 		if err != nil {
-			return
+			return err
 		}
-		resultingMetrics = append(resultingMetrics, m)
+		resMetrics = append(resMetrics, m)
 	}
 
-	if err := repos.UpdateMetricBatch(ctx, resultingMetrics); nil != err {
-		panic("Error updating metric: " + err.Error())
+	err := repos.UpdateMetricBatch(ctx, resMetrics)
+
+	var errExport error
+	if config.Configuration.StoreInterval == 0 {
+		errExport = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 	}
 
-	if 0 == config.Configuration.StoreInterval {
-		_ = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
-	}
+	return multierr.Combine(err, errExport)
 }
 
 func (metricManager *MetricManager) ImportFrom(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {
