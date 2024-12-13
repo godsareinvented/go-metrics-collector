@@ -10,6 +10,7 @@ type StorageInterface interface {
 	GetByID(ctx context.Context, ID string, mType string) (dto.Metrics, bool, error)
 	GetByName(ctx context.Context, mName string, mType string) (dto.Metrics, bool, error)
 	Save(ctx context.Context, metric dto.Metrics) (string, error)
+	SaveBatch(ctx context.Context, metricBatch []dto.Metrics) error
 	GetGeneratedID(ctx context.Context, metric dto.Metrics) (string, error)
 }
 

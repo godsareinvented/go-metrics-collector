@@ -147,58 +147,109 @@ func (s *PostgreSQLStorage) Save(ctx context.Context, metric dto.Metrics) (strin
 		return "", err
 	}
 
-	var errs error
 	isMetricIDEmpty := false
 	if "" == metric.ID {
 		ID, err := s.GetGeneratedID(ctx, metric)
 		if nil != err {
-			multierr.AppendInto(&errs, err)
-			err = tx.Rollback()
-			if nil != err {
-				multierr.AppendInto(&errs, err)
-				return "", err
-			}
+			err = rollbackTransaction(tx, err)
+			return "", err
 		}
 		metric.ID = ID
 		isMetricIDEmpty = true
 	}
 	_, err = tx.ExecContext(ctx, saveOrUpdateMetricQuery, metric.ID, metric.MName, metric.Delta, metric.Value)
 	if nil != err {
-		multierr.AppendInto(&errs, err)
-		err = tx.Rollback()
-		if err != nil {
-			multierr.AppendInto(&errs, err)
-		}
+		err = rollbackTransaction(tx, err)
 		return "", err
 	}
 	_, err = tx.ExecContext(ctx, saveOrUpdateMetricTypeQuery, metric.ID, metric.MType)
 	if nil != err {
-		multierr.AppendInto(&errs, err)
-		err = tx.Rollback()
-		if err != nil {
-			multierr.AppendInto(&errs, err)
-		}
-		return "", errs
+		err = rollbackTransaction(tx, err)
+		return "", err
 	}
 
 	if isMetricIDEmpty {
 		_, err = tx.ExecContext(ctx, updateUUIDIsFreeFlagQuery, metric.ID)
 		if nil != err {
-			multierr.AppendInto(&errs, err)
-			err = tx.Rollback()
-			if err != nil {
-				multierr.AppendInto(&errs, err)
-			}
-			return "", errs
+			err = rollbackTransaction(tx, err)
+			return "", err
 		}
 	}
 
 	err = tx.Commit()
 	if nil != err {
+		err = rollbackTransaction(tx, err) // todo: При ошибочном коммите надо делать роллбек? Звучит комично.
 		return "", err
 	}
 
 	return metric.ID, nil
+}
+
+func (s *PostgreSQLStorage) SaveBatch(ctx context.Context, metricBatch []dto.Metrics) error {
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{
+		ReadOnly: false,
+	})
+	if nil != err {
+		return err
+	}
+	defer tx.Rollback()
+
+	saveOrUpdateMetricQueryStmt, err := tx.PrepareContext(ctx, saveOrUpdateMetricQuery)
+	if nil != err {
+		err = rollbackTransaction(tx, err)
+		return err
+	}
+	saveOrUpdateMetricTypeQueryStmt, err := tx.PrepareContext(ctx, saveOrUpdateMetricTypeQuery)
+	if nil != err {
+		err = rollbackTransaction(tx, err)
+		return err
+	}
+	updateUUIDIsFreeFlagQueryStmt, err := tx.PrepareContext(ctx, updateUUIDIsFreeFlagQuery)
+	if nil != err {
+		err = rollbackTransaction(tx, err)
+		return err
+	}
+
+	var isMetricIDEmpty bool
+	for _, metric := range metricBatch {
+		isMetricIDEmpty = false
+		if "" == metric.ID {
+			ID, err := s.GetGeneratedID(ctx, metric)
+			if nil != err {
+				err = rollbackTransaction(tx, err)
+				return err
+			}
+			metric.ID = ID
+			isMetricIDEmpty = true
+		}
+
+		_, err = saveOrUpdateMetricQueryStmt.ExecContext(ctx, metric.ID, metric.MName, metric.Delta, metric.Value)
+		if nil != err {
+			err = rollbackTransaction(tx, err)
+			return err
+		}
+		_, err = saveOrUpdateMetricTypeQueryStmt.ExecContext(ctx, metric.ID, metric.MType)
+		if nil != err {
+			err = rollbackTransaction(tx, err)
+			return err
+		}
+
+		if isMetricIDEmpty {
+			_, err = updateUUIDIsFreeFlagQueryStmt.ExecContext(ctx, metric.ID)
+			if nil != err {
+				err = rollbackTransaction(tx, err)
+				return err
+			}
+		}
+	}
+
+	err = tx.Commit()
+	if nil != err {
+		err = rollbackTransaction(tx, err) // todo: При ошибочном коммите надо делать роллбек? Звучит комично.
+		return err
+	}
+
+	return nil
 }
 
 func (s *PostgreSQLStorage) GetGeneratedID(ctx context.Context, metric dto.Metrics) (string, error) {
@@ -232,6 +283,16 @@ func (s *PostgreSQLStorage) Ping(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func rollbackTransaction(tx *sql.Tx, err error) error {
+	var errs error
+	multierr.AppendInto(&errs, err)
+	err = tx.Rollback()
+	if nil != err {
+		multierr.AppendInto(&errs, err)
+	}
+	return errs
 }
 
 func NewInstance(db *sql.DB) interfaces.StorageInterface {
