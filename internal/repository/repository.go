@@ -15,6 +15,11 @@ func (repository *Repository) UpdateMetric(ctx context.Context, metric dto.Metri
 	return metricID, err
 }
 
+// UpdateMetricBatch todo: В будущем также добавить дедлайн через контекст.
+func (repository *Repository) UpdateMetricBatch(ctx context.Context, metrics []dto.Metrics) error {
+	return (*repository.storage).SaveBatch(ctx, metrics)
+}
+
 func (repository *Repository) GetMetric(ctx context.Context, metric dto.Metrics) (dto.Metrics, bool, error) {
 	var foundMetric dto.Metrics
 	var isSet = false

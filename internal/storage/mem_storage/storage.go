@@ -80,6 +80,32 @@ func (memStorage *MemStorage) Save(ctx context.Context, metric dto.Metrics) (str
 	return strconv.Itoa(index), nil
 }
 
+func (memStorage *MemStorage) SaveBatch(ctx context.Context, metricBatch []dto.Metrics) error {
+	memStorage.mu.Lock()
+	defer memStorage.mu.Unlock()
+
+	for _, metric := range metricBatch {
+		if "" == metric.ID {
+			ID, _ := memStorage.GetGeneratedID(ctx, metric)
+			metric.ID = ID
+		}
+
+		metricJson, err := memStorage.getEncodedMetric(metric)
+		if nil != err {
+			return err
+		}
+		if index := memStorage.getMetricIndex(metric); -1 != index {
+			memStorage.update(index, metric, metricJson)
+			strconv.Itoa(index)
+			continue
+		}
+
+		memStorage.save(metric, metricJson)
+	}
+
+	return nil
+}
+
 // GetGeneratedID Метод предполагает, что все идентификаторы генерятся либо вне, либо внутри.
 // Проверки на уникальность сгенерированного внутри идентификатора нет.
 func (memStorage *MemStorage) GetGeneratedID(_ context.Context, metric dto.Metrics) (string, error) {

@@ -7,6 +7,7 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
+	"github.com/godsareinvented/go-metrics-collector/internal/repository"
 )
 
 type MetricManager struct {
@@ -34,21 +35,28 @@ func (metricManager *MetricManager) Collect() []dto.Metrics {
 	return metricList
 }
 
-func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metricDTO dto.Metrics) {
+func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metric dto.Metrics) {
 	repos := config.Configuration.Repository
 
-	metricFromStorage, isSet, _ := repos.GetMetric(ctx, metricDTO)
-
-	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO)
-	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO, metricFromStorage, isSet)
-
-	if "" != metricFromStorage.ID {
-		metricDTO.ID = metricFromStorage.ID
+	if _, err := repos.UpdateMetric(ctx, metricManager.getPreparedMetric(ctx, *repos, &metric)); nil != err {
+		// todo: Надо пересмотреть выплёвывание ошибок.
+		panic("Error updating metric: " + err.Error())
 	}
 
-	_, err := repos.UpdateMetric(ctx, metricDTO)
-	if nil != err {
-		// todo: Надо пересмотреть выплёвывание ошибок.
+	if 0 == config.Configuration.StoreInterval {
+		_ = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+	}
+}
+
+func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metrics []dto.Metrics) {
+	repos := config.Configuration.Repository
+
+	var resultingMetrics []dto.Metrics
+	for _, metric := range metrics {
+		resultingMetrics = append(resultingMetrics, metricManager.getPreparedMetric(ctx, *repos, &metric))
+	}
+
+	if err := repos.UpdateMetricBatch(ctx, resultingMetrics); nil != err {
 		panic("Error updating metric: " + err.Error())
 	}
 
@@ -94,4 +102,17 @@ func (metricManager *MetricManager) initStrategyList() {
 	for _, metricName := range metricManager.MetricList {
 		metricManager.strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
 	}
+}
+
+func (metricManager *MetricManager) getPreparedMetric(ctx context.Context, repos repository.Repository, metric *dto.Metrics) dto.Metrics {
+	metricFromStorage, isSet, _ := repos.GetMetric(ctx, *metric)
+
+	valueHandler := valueHandlerAbstractFactory.GetValueHandler(*metric)
+	mutatedValueMetric := valueHandler.GetMutatedValueMetric(*metric, metricFromStorage, isSet)
+
+	if "" != metricFromStorage.ID {
+		mutatedValueMetric.ID = metricFromStorage.ID
+	}
+
+	return mutatedValueMetric
 }
