@@ -69,6 +69,9 @@ func (s *Server) createAndConfigureRouter() {
 
 	s.router.Route("/", func(router chi.Router) {
 		s.router.Get("/", handler.ShowMetricList(*s.ctx))
+		s.router.Route("/updates", func(router chi.Router) {
+			router.Post("/", handler.UpdateMetricBatchMetric(*s.ctx))
+		})
 		s.router.Route("/update", func(router chi.Router) {
 			router.Post("/", handler.UpdateMetricJson(*s.ctx))
 			router.Post("/{type}/{name}/{value}", handler.UpdateMetric(*s.ctx))
