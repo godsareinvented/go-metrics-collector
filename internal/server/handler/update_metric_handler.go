@@ -37,7 +37,7 @@ func UpdateMetric(ctx context.Context) http.HandlerFunc {
 		}
 
 		metricManager := manager.MetricManager{}
-		err = metricManager.UpdateMetrics(combinedCtx, m)
+		err = metricManager.UpdateMetric(combinedCtx, m)
 		if err != nil {
 			http.Error(responseWriter, "failed to save the metric", http.StatusInternalServerError)
 			return

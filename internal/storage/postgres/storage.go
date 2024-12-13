@@ -152,6 +152,40 @@ func (s *PostgreSQLStorage) Set(ctx context.Context, m dto.Metrics) error {
 	return nil
 }
 
+func (s *PostgreSQLStorage) SetBatch(ctx context.Context, metricList []dto.Metrics) error {
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return err
+	}
+
+	var rowsAffected int64 = 0
+	for _, m := range metricList {
+		res, err := tx.ExecContext(ctx, saveOrUpdateMetricQuery, m.ID, m.Delta, m.Value, m.MType)
+		if err != nil {
+			errTx := tx.Rollback()
+			return multierr.Combine(errTx, err)
+		}
+		rowAffected, err := res.RowsAffected()
+		if err != nil {
+			errTx := tx.Rollback()
+			return multierr.Combine(errTx, err)
+		}
+		rowsAffected += rowAffected
+	}
+
+	if rowsAffected != int64(len(metricList)) {
+		errTx := tx.Rollback()
+		return multierr.Combine(errTx, errors.New(fmt.Sprintf("%d rows affected by SetBatch, needs %d", rowsAffected, len(metricList))))
+	}
+
+	if err = tx.Commit(); err != nil {
+		errRollback := tx.Rollback()
+		return multierr.Combine(errRollback, err)
+	}
+
+	return nil
+}
+
 func (s *PostgreSQLStorage) Close() error {
 	return s.db.Close()
 }

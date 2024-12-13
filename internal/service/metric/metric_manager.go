@@ -8,6 +8,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
+	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"go.uber.org/multierr"
 	"time"
 )
@@ -75,21 +76,14 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 	}
 }
 
-func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metric dto.Metrics) error {
+func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metric dto.Metrics) error {
 	repos := config.Configuration.Repository
 
-	metricFromStorage, isSet, err := repos.GetMetric(ctx, metric)
+	m, err := metricManager.prepareMetric(ctx, *repos, metric)
 	if err != nil {
 		return err
 	}
-
-	valueHandler, err := valueHandlerAbstractFactory.GetValueHandler(metric)
-	if err != nil {
-		return err
-	}
-
-	metric = valueHandler.GetMutatedValueMetric(metric, metricFromStorage, isSet)
-	err = repos.UpdateMetric(ctx, metric)
+	err = repos.UpdateMetric(ctx, m)
 
 	var errExport error
 	if config.Configuration.StoreInterval == 0 {
@@ -97,6 +91,27 @@ func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metric dt
 	}
 
 	return multierr.Combine(err, errExport)
+}
+
+func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metrics []dto.Metrics) {
+	repos := config.Configuration.Repository
+
+	var resultingMetrics []dto.Metrics
+	for _, metric := range metrics {
+		m, err := metricManager.prepareMetric(ctx, *repos, metric)
+		if err != nil {
+			return
+		}
+		resultingMetrics = append(resultingMetrics, m)
+	}
+
+	if err := repos.UpdateMetricBatch(ctx, resultingMetrics); nil != err {
+		panic("Error updating metric: " + err.Error())
+	}
+
+	if 0 == config.Configuration.StoreInterval {
+		_ = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+	}
 }
 
 func (metricManager *MetricManager) ImportFrom(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {
@@ -136,4 +151,20 @@ func (metricManager *MetricManager) Init() {
 	for _, metricName := range metricManager.MetricList {
 		metricManager.strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
 	}
+}
+
+func (metricManager *MetricManager) prepareMetric(ctx context.Context, repos repository.Repository, metric dto.Metrics) (dto.Metrics, error) {
+	metricFromStorage, isSet, err := repos.GetMetric(ctx, metric)
+	if err != nil {
+		return dto.Metrics{}, err
+	}
+
+	valueHandler, err := valueHandlerAbstractFactory.GetValueHandler(metric)
+	if err != nil {
+		return dto.Metrics{}, err
+	}
+
+	metric = valueHandler.GetMutatedValueMetric(metric, metricFromStorage, isSet)
+
+	return metric, nil
 }

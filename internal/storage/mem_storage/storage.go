@@ -38,6 +38,16 @@ func (memStorage *MemStorage) Set(_ context.Context, m dto.Metrics) error {
 	return nil
 }
 
+func (memStorage *MemStorage) SetBatch(_ context.Context, metricList []dto.Metrics) error {
+	memStorage.mu.Lock()
+	defer memStorage.mu.Unlock()
+
+	for _, m := range metricList {
+		memStorage.entityList[key(m)] = m
+	}
+	return nil
+}
+
 func key(metric dto.Metrics) string {
 	return fmt.Sprintf("%s/%s", metric.MType, metric.ID)
 }

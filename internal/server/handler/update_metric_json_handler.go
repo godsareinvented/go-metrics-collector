@@ -24,7 +24,7 @@ func UpdateMetricJson(ctx context.Context) http.HandlerFunc {
 		}
 
 		metricManager := manager.MetricManager{}
-		if err = metricManager.UpdateMetrics(combinedCtx, m); err != nil {
+		if err = metricManager.UpdateMetric(combinedCtx, m); err != nil {
 			http.Error(responseWriter, "failed to write metric in the response", http.StatusInternalServerError)
 			return
 		}

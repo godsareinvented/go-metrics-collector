@@ -35,9 +35,15 @@
 
 ---
 
+### Хранилища
+
+8. [postgres/storage](internal/storage/postgres/storage.go:#L155) Следует ли добавить в будущем контекст с дедлайном?
+
+---
+
 ### Кодстайл
 
-8. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
+9. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
    ```if metric.Type == dictionary.GaugeMetricType { // ... } else``` на switch с обработкой ситуации в ```default```
    -секции,
    что метрика имеет некорректный тип
@@ -46,6 +52,6 @@
 
 ### Проблемы сервиса
 
-9. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
+10. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
 
 ---
