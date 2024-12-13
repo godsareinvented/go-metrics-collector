@@ -9,6 +9,7 @@ import (
 
 type JsonParser struct{}
 
+// GetMetricDTO todo: Убрать в будущем значения по умолчанию для целочисленного и вещественного значений.
 func (jp *JsonParser) GetMetricDTO(request *http.Request) (dto.Metrics, error) {
 	var metricDTO = dto.Metrics{}
 
@@ -25,4 +26,22 @@ func (jp *JsonParser) GetMetricDTO(request *http.Request) (dto.Metrics, error) {
 	}
 
 	return metricDTO, nil
+}
+
+func (jp *JsonParser) GetMetricBatch(request *http.Request) ([]dto.Metrics, error) {
+	var metrics []dto.Metrics
+
+	body, err := io.ReadAll(request.Body)
+
+	if err != nil {
+		return metrics, err
+	}
+
+	err = json.Unmarshal(body, &metrics)
+
+	if err != nil {
+		return metrics, err
+	}
+
+	return metrics, nil
 }
