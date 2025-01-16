@@ -19,6 +19,13 @@ func (s *MetricSender) Send(metric dto.Metrics) error {
 	return err
 }
 
+func (s *MetricSender) SendBatch(metrics []dto.Metrics) error {
+	r := decorator.GzipCompress(request.GetUpdateMetricBatchRequest(metrics, &s.client))
+
+	_, err := r.Execute(r.Method, r.URL)
+	return err
+}
+
 func NewClient() *MetricSender {
 	client := resty.New().SetTimeout(2 * time.Second)
 

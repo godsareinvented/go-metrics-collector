@@ -8,15 +8,15 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 )
 
-func GetUpdateMetricJsonRequest(metric dto.Metrics, client *resty.Client) *resty.Request {
+func GetUpdateMetricBatchRequest(metrics []dto.Metrics, client *resty.Client) *resty.Request {
 	request := client.R()
 
-	body, err := json.Marshal(metric)
-	if err != nil {
+	body, err := json.Marshal(metrics)
+	if nil != err {
 		panic(err)
 	}
 
-	request.URL = fmt.Sprintf("http://%s/update/", config.Configuration.Endpoint)
+	request.URL = fmt.Sprintf("http://%s/updates/", config.Configuration.Endpoint)
 	request.Method = resty.MethodPost
 	request.SetBody(body)
 	request.Header.Set("Content-Type", "application/json")
