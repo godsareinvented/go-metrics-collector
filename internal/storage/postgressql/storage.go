@@ -149,7 +149,7 @@ func (s *PostgreSQLStorage) Save(ctx context.Context, metric dto.Metrics) (strin
 
 	isMetricIDEmpty := false
 	if "" == metric.ID {
-		ID, err := s.GetGeneratedID(ctx, metric)
+		ID, err := getGeneratedIDInTx(ctx, tx, metric)
 		if nil != err {
 			err = rollbackTransaction(tx, err)
 			return "", err
@@ -186,25 +186,26 @@ func (s *PostgreSQLStorage) Save(ctx context.Context, metric dto.Metrics) (strin
 }
 
 func (s *PostgreSQLStorage) SaveBatch(ctx context.Context, metricBatch []dto.Metrics) error {
-	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{
-		ReadOnly: false,
-	})
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
 	if nil != err {
 		return err
 	}
 	defer tx.Rollback()
 
 	saveOrUpdateMetricQueryStmt, err := tx.PrepareContext(ctx, saveOrUpdateMetricQuery)
+	defer saveOrUpdateMetricQueryStmt.Close()
 	if nil != err {
 		err = rollbackTransaction(tx, err)
 		return err
 	}
 	saveOrUpdateMetricTypeQueryStmt, err := tx.PrepareContext(ctx, saveOrUpdateMetricTypeQuery)
+	defer saveOrUpdateMetricTypeQueryStmt.Close()
 	if nil != err {
 		err = rollbackTransaction(tx, err)
 		return err
 	}
 	updateUUIDIsFreeFlagQueryStmt, err := tx.PrepareContext(ctx, updateUUIDIsFreeFlagQuery)
+	defer updateUUIDIsFreeFlagQueryStmt.Close()
 	if nil != err {
 		err = rollbackTransaction(tx, err)
 		return err
@@ -214,7 +215,7 @@ func (s *PostgreSQLStorage) SaveBatch(ctx context.Context, metricBatch []dto.Met
 	for _, metric := range metricBatch {
 		isMetricIDEmpty = false
 		if "" == metric.ID {
-			ID, err := s.GetGeneratedID(ctx, metric)
+			ID, err := getGeneratedIDInTx(ctx, tx, metric)
 			if nil != err {
 				err = rollbackTransaction(tx, err)
 				return err
@@ -283,6 +284,27 @@ func (s *PostgreSQLStorage) Ping(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func getGeneratedIDInTx(ctx context.Context, tx *sql.Tx, metric dto.Metrics) (string, error) {
+	if "" != metric.ID {
+		return metric.ID, nil
+	}
+
+	queryRow := tx.QueryRowContext(ctx, getGeneratedIDQuery)
+
+	var ID string
+	err := queryRow.Scan(&ID)
+	if nil != err {
+		return "", err
+	}
+
+	err = queryRow.Err()
+	if nil != err {
+		return "", err
+	}
+
+	return ID, nil
 }
 
 func rollbackTransaction(tx *sql.Tx, err error) error {
