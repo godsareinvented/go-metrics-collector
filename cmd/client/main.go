@@ -38,8 +38,8 @@ func CollectMetrics(metricDTOList *[]dto.Metrics, metricManager *manager.MetricM
 
 func SendMetrics(metricDTOList *[]dto.Metrics, client *client.MetricSender) {
 	for {
-		for _, metricDTO := range *metricDTOList {
-			_ = client.Send(metricDTO)
+		if nil != *metricDTOList {
+			_ = client.SendBatch(*metricDTOList)
 		}
 
 		time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)

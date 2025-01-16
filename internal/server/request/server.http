@@ -65,6 +65,161 @@ Accept-Encoding: gzip
 
 ###
 
+# Обновление пачкм метрик /updates. Реальный запрос
+POST {{domain}}:{{port}}/updates/
+Content-Type: application/json
+Accept-Encoding: gzip
+
+[
+  {
+    "type": "gauge",
+    "name": "Alloc",
+    "value": 2214784
+  },
+  {
+    "type": "gauge",
+    "name": "BuckHashSys",
+    "value": 10102
+  },
+  {
+    "type": "gauge",
+    "name": "Frees",
+    "value": 227
+  },
+  {
+    "type": "gauge",
+    "name": "GCCPUFraction",
+    "value": 0
+  },
+  {
+    "type": "gauge",
+    "name": "GCSys",
+    "value": 1872520
+  },
+  {
+    "type": "gauge",
+    "name": "HeapAlloc",
+    "value": 2214784
+  },
+  {
+    "type": "gauge",
+    "name": "HeapIdle",
+    "value": 753664
+  },
+  {
+    "type": "gauge",
+    "name": "HeapInuse",
+    "value": 3153920
+  },
+  {
+    "type": "gauge",
+    "name": "HeapObjects",
+    "value": 3115
+  },
+  {
+    "type": "gauge",
+    "name": "HeapReleased",
+    "value": 753664
+  },
+  {
+    "type": "gauge",
+    "name": "HeapSys",
+    "value": 3907584
+  },
+  {
+    "type": "gauge",
+    "name": "LastGC",
+    "value": 0
+  },
+  {
+    "type": "gauge",
+    "name": "Lookups",
+    "value": 0
+  },
+  {
+    "type": "gauge",
+    "name": "MCacheInuse",
+    "value": 14016
+  },
+  {
+    "type": "gauge",
+    "name": "MCacheSys",
+    "value": 16352
+  },
+  {
+    "type": "gauge",
+    "name": "MSpanInuse",
+    "value": 55200
+  },
+  {
+    "type": "gauge",
+    "name": "MSpanSys",
+    "value": 65280
+  },
+  {
+    "type": "gauge",
+    "name": "Mallocs",
+    "value": 3342
+  },
+  {
+    "type": "gauge",
+    "name": "NextGC",
+    "value": 4194304
+  },
+  {
+    "type": "gauge",
+    "name": "NumForcedGC",
+    "value": 0
+  },
+  {
+    "type": "gauge",
+    "name": "NumGC",
+    "value": 0
+  },
+  {
+    "type": "gauge",
+    "name": "OtherSys",
+    "value": 964386
+  },
+  {
+    "type": "gauge",
+    "name": "PauseTotalNs",
+    "value": 0
+  },
+  {
+    "type": "gauge",
+    "name": "StackInuse",
+    "value": 262144
+  },
+  {
+    "type": "gauge",
+    "name": "StackSys",
+    "value": 262144
+  },
+  {
+    "type": "gauge",
+    "name": "Sys",
+    "value": 7098368
+  },
+  {
+    "type": "gauge",
+    "name": "TotalAlloc",
+    "value": 2214784
+  },
+  {
+    "type": "gauge",
+    "name": "RandomValue",
+    "value": 0.3834050811587329
+  },
+  {
+    "type": "counter",
+    "name": "PollCount",
+    "delta": 1
+  }
+]
+
+###
+
 
 # 2. ПОЛУЧЕНИЕ ЗНАЧЕНИЯ МЕТРИКИ
 
