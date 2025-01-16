@@ -23,7 +23,7 @@ SELECT
     metric.value
 FROM postgres.public.metric
 JOIN postgres.public.metric_type
-	ON metric_type.ID = metric.ID;`
+	ON metric_type.id = metric.metric_type_id;`
 
 	getMetricByIDQuery = `
 SELECT
@@ -34,7 +34,7 @@ SELECT
     metric.value
 FROM postgres.public.metric
 JOIN postgres.public.metric_type
-	ON metric_type.ID = metric.ID
+	ON metric_type.id = metric.metric_type_id
 WHERE metric.ID = $1
 	AND metric_type.metric_type = $2;`
 
@@ -47,21 +47,36 @@ SELECT
     metric.value
 FROM postgres.public.metric
 JOIN postgres.public.metric_type
-	ON metric_type.ID = metric.ID
+	ON metric_type.id = metric.metric_type_id
 WHERE metric.metric_name = $1
 	AND metric_type.metric_type = $2;`
 
 	saveOrUpdateMetricQuery = `
-INSERT INTO postgres.public.metric ("id", "metric_name", "delta", "value") 
-VALUES ($1, $2, $3, $4)
+WITH inserted_metric_type AS (
+    INSERT INTO metric_type (metric_type)
+    VALUES ($5)
+    ON CONFLICT (metric_type) DO NOTHING
+    RETURNING id
+)
+INSERT INTO postgres.public.metric ("id", "metric_name", "delta", "value", "metric_type_id") 
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    (
+        SELECT id FROM inserted_metric_type UNION SELECT id FROM metric_type WHERE metric_type = $5 LIMIT 1
+    )
+)
 ON CONFLICT (id) DO UPDATE
-  SET ID = $1, metric_name = $2, delta = $3, value = $4;`
-
-	saveOrUpdateMetricTypeQuery = `
-INSERT INTO postgres.public.metric_type ("id", "metric_type")
-VALUES ($1, $2)
-ON CONFLICT (id) DO UPDATE
-	SET ID = $1, metric_type = $2;`
+  SET 
+    ID = $1,
+    metric_name = $2,
+    delta = $3,
+    value = $4,
+    metric_type_id = (
+        SELECT id FROM inserted_metric_type UNION SELECT id FROM metric_type WHERE metric_type = $5 LIMIT 1
+    );`
 
 	updateUUIDIsFreeFlagQuery = `
 UPDATE postgres.public.uuid SET is_free = false WHERE UUID = $1;`
@@ -157,12 +172,7 @@ func (s *PostgreSQLStorage) Save(ctx context.Context, metric dto.Metrics) (strin
 		metric.ID = ID
 		isMetricIDEmpty = true
 	}
-	_, err = tx.ExecContext(ctx, saveOrUpdateMetricQuery, metric.ID, metric.MName, metric.Delta, metric.Value)
-	if nil != err {
-		err = rollbackTransaction(tx, err)
-		return "", err
-	}
-	_, err = tx.ExecContext(ctx, saveOrUpdateMetricTypeQuery, metric.ID, metric.MType)
+	_, err = tx.ExecContext(ctx, saveOrUpdateMetricQuery, metric.ID, metric.MName, metric.Delta, metric.Value, metric.MType)
 	if nil != err {
 		err = rollbackTransaction(tx, err)
 		return "", err
@@ -198,12 +208,6 @@ func (s *PostgreSQLStorage) SaveBatch(ctx context.Context, metricBatch []dto.Met
 		err = rollbackTransaction(tx, err)
 		return err
 	}
-	saveOrUpdateMetricTypeQueryStmt, err := tx.PrepareContext(ctx, saveOrUpdateMetricTypeQuery)
-	defer saveOrUpdateMetricTypeQueryStmt.Close()
-	if nil != err {
-		err = rollbackTransaction(tx, err)
-		return err
-	}
 	updateUUIDIsFreeFlagQueryStmt, err := tx.PrepareContext(ctx, updateUUIDIsFreeFlagQuery)
 	defer updateUUIDIsFreeFlagQueryStmt.Close()
 	if nil != err {
@@ -224,12 +228,7 @@ func (s *PostgreSQLStorage) SaveBatch(ctx context.Context, metricBatch []dto.Met
 			isMetricIDEmpty = true
 		}
 
-		_, err = saveOrUpdateMetricQueryStmt.ExecContext(ctx, metric.ID, metric.MName, metric.Delta, metric.Value)
-		if nil != err {
-			err = rollbackTransaction(tx, err)
-			return err
-		}
-		_, err = saveOrUpdateMetricTypeQueryStmt.ExecContext(ctx, metric.ID, metric.MType)
+		_, err = saveOrUpdateMetricQueryStmt.ExecContext(ctx, metric.ID, metric.MName, metric.Delta, metric.Value, metric.MType)
 		if nil != err {
 			err = rollbackTransaction(tx, err)
 			return err

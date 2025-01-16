@@ -16,10 +16,10 @@ func (c *PostgreSQLConfigurator) Configure() error {
 }
 
 func (c *PostgreSQLConfigurator) createDB() error {
-	return c.applyMigration(20241207160536) // 20241207160536_create_db.up.sql
+	return c.applyMigrations()
 }
 
-func (c *PostgreSQLConfigurator) applyMigration(version uint) error {
+func (c *PostgreSQLConfigurator) applyMigrations() error {
 	driver, err := postgres.WithInstance(c.Db, &postgres.Config{})
 	if nil != err {
 		return err
@@ -30,7 +30,7 @@ func (c *PostgreSQLConfigurator) applyMigration(version uint) error {
 		return err
 	}
 
-	if err = m.Migrate(version); nil != err && !errors.Is(err, migrate.ErrNoChange) {
+	if err = m.Up(); nil != err && !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
 
