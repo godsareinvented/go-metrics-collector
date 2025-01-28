@@ -4,7 +4,6 @@ import (
 	"context"
 	parserAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/parser"
 	valueHandlerAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/value_handler"
-	"github.com/oldhanasong/go-metrics-collector/internal/client"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
@@ -18,8 +17,8 @@ import (
 type MetricManager struct {
 	MetricList          []string
 	MetricDataCollector interfaces.MetricDataCollector
+	Client              interfaces.Client
 	strategies          map[string]interfaces.ParsingStrategy
-	client              *client.MetricSender
 }
 
 var (
@@ -30,14 +29,12 @@ func (metricManager *MetricManager) CollectAndSend(ctx context.Context) {
 	if metricManager.MetricList == nil {
 		panic("metric list is empty")
 	}
+	if metricManager.Client == nil {
+		panic("Client is required")
+	}
 
 	go metricManager.collect(ctx)
 	go metricManager.send(ctx)
-
-	select {
-	case <-ctx.Done():
-		return
-	}
 }
 
 func (metricManager *MetricManager) collect(ctx context.Context) {
@@ -69,7 +66,7 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			_ = metricManager.client.SendBatch(metricList)
+			_ = metricManager.Client.SendBatch(metricList)
 
 			time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
 		}
@@ -152,7 +149,6 @@ func (metricManager *MetricManager) ExportTo(ctx context.Context, permanentStora
 
 func (metricManager *MetricManager) Init() {
 	metricManager.strategies = make(map[string]interfaces.ParsingStrategy)
-	metricManager.client = client.NewClient()
 
 	for _, metricName := range metricManager.MetricList {
 		metricManager.strategies[metricName] = parserAbstractFactory.GetStrategy(metricName)
