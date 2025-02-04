@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	clientPackage "github.com/godsareinvented/go-metrics-collector/internal/client"
 	"github.com/godsareinvented/go-metrics-collector/internal/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
@@ -16,7 +17,7 @@ func main() {
 	configConfigurator := config.ConfigConfigurator{}
 	configConfigurator.ParseConfig()
 
-	var metricDTOList []dto.Metrics
+	var metricQueue = list.New()
 	client := clientPackage.NewClientWithRetry()
 	metricManager := manager.MetricManager{
 		MetricList:    dictionary.MetricNameList[:],
@@ -24,27 +25,37 @@ func main() {
 	}
 	metricManager.Init()
 
-	go CollectMetrics(&metricDTOList, &metricManager)
-	go SendMetrics(&metricDTOList, client)
+	go CollectMetrics(metricQueue, &metricManager)
+	go SendMetrics(metricQueue, client)
 
 	select {}
 }
 
-func CollectMetrics(metricDTOList *[]dto.Metrics, metricManager *manager.MetricManager) {
+func CollectMetrics(metricQueue *list.List, metricManager *manager.MetricManager) {
 	for {
-		*metricDTOList = metricManager.Collect()
+		// todo: Обернуть элемент очереди в какую-то iterable структуру? Типа, пакет метрик..
+		metricQueue.PushBack(metricManager.Collect())
 
 		time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
 	}
 }
 
-// SendMetrics todo: Не возникнет из-за ретрая ситуации, когда старая горутина, которая недлостучалась до сервера,
-// SendMetrics todo: отправит данные на сервер после следующей горутины, успешно достучавшейся до сервера?..
-// SendMetrics todo: При этом, нужно держать список собранных метрик, потому что важно передавать метрики с типом counter последовательно.
-func SendMetrics(metricList *[]dto.Metrics, client interfaces.Client) {
+func SendMetrics(metricQueue *list.List, client interfaces.Client) {
 	for {
-		if nil != *metricList {
-			_ = client.SendBatch(*metricList)
+		metricListRaw := metricQueue.Front()
+		if nil == metricListRaw {
+			time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
+			continue
+		}
+
+		metricList, ok := metricListRaw.Value.([]dto.Metrics)
+		if !ok {
+			panic("SendMetrics: metricListRaw is not []dto.Metrics")
+		}
+		metricQueue.Remove(metricListRaw)
+
+		if nil != metricList {
+			_ = client.SendBatch(metricList)
 		}
 
 		time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
