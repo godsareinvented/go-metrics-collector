@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/godsareinvented/go-metrics-collector/internal/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
@@ -23,7 +22,7 @@ func GetStorageAndConfigurator(sc StorageConfig) (interfaces.StorageInterface, i
 		nameIndex := make(map[string]int)
 		return mem_storage.NewInstance(idIndex, nameIndex), &mem_storage.MemStorageConfigurator{}, nil
 	case dictionary.PostgresqlStorage:
-		db, err := getPostgreSQLOpenedConnection(sc)
+		db, err := postgressql.GetOpenedConnectionWithRetry(sc.DatabaseDSN)
 		if nil != err {
 			return nil, nil, err
 		}
@@ -31,17 +30,4 @@ func GetStorageAndConfigurator(sc StorageConfig) (interfaces.StorageInterface, i
 	default:
 		return nil, nil, errors.New("unknown storage type")
 	}
-}
-
-func getPostgreSQLOpenedConnection(sc StorageConfig) (*sql.DB, error) {
-	if "" == sc.DatabaseDSN {
-		return nil, errors.New("DATABASE_DSN is empty")
-	}
-
-	db, err := sql.Open("pgx", sc.DatabaseDSN)
-	if nil != err {
-		return nil, err
-	}
-
-	return db, nil
 }

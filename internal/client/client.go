@@ -28,6 +28,7 @@ func (s *Client) sendRequest(request *resty.Request) error {
 	return err
 }
 
+// NewBaseClient unused
 func NewBaseClient() interfaces.Client {
 	client := resty.New().SetTimeout(2 * time.Second)
 
