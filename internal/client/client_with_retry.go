@@ -8,17 +8,16 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/service/retry"
-	"github.com/godsareinvented/go-metrics-collector/internal/service/retry/strategy"
+	"github.com/godsareinvented/go-metrics-collector/internal/service/retry/prepared_option"
 	"time"
 )
 
 type ClientWithRetry struct {
-	client       resty.Client
-	retryService retry.RetryService
+	client resty.Client
 }
 
-func (s *ClientWithRetry) Send(metricDTO dto.Metrics) error {
-	return s.sendRequest(request.GetUpdateMetricJsonRequest(metricDTO, &s.client))
+func (s *ClientWithRetry) Send(metric dto.Metrics) error {
+	return s.sendRequest(request.GetUpdateMetricJsonRequest(metric, &s.client))
 }
 
 func (s *ClientWithRetry) SendBatch(metrics []dto.Metrics) error {
@@ -32,7 +31,7 @@ func (s *ClientWithRetry) sendRequest(request *resty.Request) error {
 		return err, nil != err
 	}
 
-	err := s.retryService.DoWithRetry(context.Background(), callback)
+	err := retry.DoWithRetry(context.Background(), prepared_option.DefaultFixedDelayListOptions, callback)
 	if nil != err {
 		return err
 	}
@@ -42,10 +41,8 @@ func (s *ClientWithRetry) sendRequest(request *resty.Request) error {
 
 func NewClientWithRetry() interfaces.Client {
 	client := resty.New().SetTimeout(2 * time.Second)
-	retryService := retry.NewInstance(strategy.NewDefaultFixedIntervalStrategy())
 
 	return &ClientWithRetry{
-		client:       *client,
-		retryService: retryService,
+		client: *client,
 	}
 }

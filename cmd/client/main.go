@@ -38,10 +38,13 @@ func CollectMetrics(metricDTOList *[]dto.Metrics, metricManager *manager.MetricM
 	}
 }
 
-func SendMetrics(metricDTOList *[]dto.Metrics, client interfaces.Client) {
+// SendMetrics todo: Не возникнет из-за ретрая ситуации, когда старая горутина, которая недлостучалась до сервера,
+// SendMetrics todo: отправит данные на сервер после следующей горутины, успешно достучавшейся до сервера?..
+// SendMetrics todo: При этом, нужно держать список собранных метрик, потому что важно передавать метрики с типом counter последовательно.
+func SendMetrics(metricList *[]dto.Metrics, client interfaces.Client) {
 	for {
-		if nil != *metricDTOList {
-			_ = client.SendBatch(*metricDTOList)
+		if nil != *metricList {
+			_ = client.SendBatch(*metricList)
 		}
 
 		time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)

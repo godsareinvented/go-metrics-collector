@@ -13,8 +13,8 @@ type Client struct {
 	client resty.Client
 }
 
-func (s *Client) Send(metricDTO dto.Metrics) error {
-	return s.sendRequest(request.GetUpdateMetricJsonRequest(metricDTO, &s.client))
+func (s *Client) Send(metric dto.Metrics) error {
+	return s.sendRequest(request.GetUpdateMetricJsonRequest(metric, &s.client))
 }
 
 func (s *Client) SendBatch(metrics []dto.Metrics) error {
