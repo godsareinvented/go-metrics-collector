@@ -7,14 +7,13 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/retry"
-	"github.com/oldhanasong/go-metrics-collector/internal/service/retry/strategy"
+	"github.com/oldhanasong/go-metrics-collector/internal/service/retry/prepared_option"
 	"time"
 )
 
 type ClientWithRetry struct {
-	client       resty.Client
-	retryService retry.RetryService
-	decorators   []interfaces.Decorator
+	client     resty.Client
+	decorators []interfaces.Decorator
 }
 
 func (s *ClientWithRetry) Send(metrics dto.Metrics) error {
@@ -38,7 +37,7 @@ func (s *ClientWithRetry) sendRequest(r *resty.Request) error {
 		_, err := r.Execute(r.Method, r.URL)
 		return err, err != nil
 	}
-	if err := s.retryService.DoWithRetry(context.Background(), callback); err != nil {
+	if err := retry.DoWithRetry(context.Background(), prepared_option.DefaultFixedDelayListOptions, callback); err != nil {
 		return err
 	}
 
@@ -54,11 +53,9 @@ func (s *ClientWithRetry) prepareRequest(r *resty.Request) *resty.Request {
 
 func NewClientWithRetry() interfaces.Client {
 	client := resty.New().SetTimeout(2 * time.Second)
-	retryService := retry.NewInstance(strategy.NewDefaultFixedIntervalStrategy())
 
 	return &ClientWithRetry{
-		client:       *client,
-		decorators:   make([]interfaces.Decorator, 0),
-		retryService: retryService,
+		client:     *client,
+		decorators: make([]interfaces.Decorator, 0),
 	}
 }
