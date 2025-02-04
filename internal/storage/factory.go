@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"database/sql"
 	"errors"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -21,7 +20,7 @@ func CreateStorageAndConfigurator(c Config) (interfaces.Storage, interfaces.Stor
 	case dictionary.MemStorage:
 		return mem_storage.NewStorage(), mem_storage.NewConfigurator(), nil
 	case dictionary.PostgresqlStorage:
-		db, err := sql.Open("pgx", c.DSN)
+		db, err := postgres.OpenConnectionWithRetry(c.DSN)
 		if err != nil {
 			return nil, nil, err
 		}
