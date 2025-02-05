@@ -26,6 +26,10 @@ func DoWithRetry(ctx context.Context, retryOpts dto.RetryOptions, callback UserD
 
 	var iter uint = 0
 	for {
+		if iter >= retryOpts.Attempts {
+			return fmt.Errorf("%w: %v", ErrNonExecution, lastCallbackErr)
+		}
+
 		delay, err := getNextDelay(iter, retryOpts)
 		if nil != err {
 			return err
