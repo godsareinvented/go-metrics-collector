@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/oldhanasong/go-metrics-collector/internal/client"
-	"github.com/oldhanasong/go-metrics-collector/internal/client/decorator"
-	"github.com/oldhanasong/go-metrics-collector/internal/config"
-	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
-	"github.com/oldhanasong/go-metrics-collector/internal/service/metric"
-	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/data_collector"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/client"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/client/decorator"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/service/metric"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/service/metric/data_collector"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
 )
 
 func main() {

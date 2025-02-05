@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/oldhanasong/go-metrics-collector/internal/config"
-	"github.com/oldhanasong/go-metrics-collector/internal/server"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/callback"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/server"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/server/callback"
 )
 
 func main() {
