@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/config"
-	"github.com/godsareinvented/go-metrics-collector/internal/server"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/callback"
+	"github.com/godsareinvented/go-metrics-collector/internal/server/config"
+	"github.com/godsareinvented/go-metrics-collector/internal/server/server"
+	"github.com/godsareinvented/go-metrics-collector/internal/server/server/callback"
 )
 
 func main() {
