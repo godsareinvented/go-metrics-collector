@@ -69,6 +69,7 @@ Accept-Encoding: gzip
 POST {{domain}}:{{port}}/updates/
 Content-Type: application/json
 Accept-Encoding: gzip
+HashSHA256: a16b8ae1123feea4e2c8dea5e9a6d3d0f5a6a9b33419105ca45187f95d8513e5
 
 [
   {

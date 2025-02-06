@@ -3,7 +3,6 @@ package parser
 import (
 	"encoding/json"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
-	"io"
 	"net/http"
 )
 
@@ -11,32 +10,22 @@ type JsonParser struct{}
 
 // GetMetricDTO todo: Убрать в будущем значения по умолчанию для целочисленного и вещественного значений.
 func (jp *JsonParser) GetMetricDTO(request *http.Request) (dto.Metrics, error) {
-	var metricDTO = dto.Metrics{}
+	var metric = dto.Metrics{}
 
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		return metricDTO, err
+	err := json.NewDecoder(request.Body).Decode(&metric)
+	if nil != err {
+		return metric, err
 	}
 
-	err = json.Unmarshal(body, &metricDTO)
-	if err != nil {
-		return metricDTO, err
-	}
-
-	return metricDTO, nil
+	return metric, nil
 }
 
 func (jp *JsonParser) GetMetricBatch(request *http.Request) ([]dto.Metrics, error) {
 	var metrics []dto.Metrics
 
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		return metrics, err
-	}
-
-	err = json.Unmarshal(body, &metrics)
-	if err != nil {
-		return metrics, err
+	err := json.NewDecoder(request.Body).Decode(&metrics)
+	if nil != err {
+		return nil, err
 	}
 
 	return metrics, nil
