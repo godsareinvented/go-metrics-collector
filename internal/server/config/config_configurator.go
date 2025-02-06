@@ -52,6 +52,7 @@ func parseFlags() {
 	flag.StringVar(&Configuration.FileStoragePath, "f", getFileStoragePathDefaultValue(), "Путь до файла, куда сохраняются текущие значения")
 	flag.BoolVar(&Configuration.Restore, "e", true, "Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера")
 	flag.StringVar(&Configuration.DatabaseDSN, "d", "", "Адрес подключения к БД")
+	flag.StringVar(&Configuration.HashKey, "k", "", "Ключ для вычисления хэша")
 
 	flag.Parse()
 	// todo: Отрицательные значения?

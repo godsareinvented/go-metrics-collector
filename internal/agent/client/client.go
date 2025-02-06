@@ -2,8 +2,7 @@ package client
 
 import (
 	"github.com/go-resty/resty"
-	"github.com/godsareinvented/go-metrics-collector/internal/agent/client/decorator"
-	request2 "github.com/godsareinvented/go-metrics-collector/internal/agent/client/request"
+	requestPackage "github.com/godsareinvented/go-metrics-collector/internal/agent/client/request"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 	"time"
@@ -14,15 +13,15 @@ type Client struct {
 }
 
 func (s *Client) Send(metric dto.Metrics) error {
-	return s.sendRequest(request2.GetUpdateMetricJsonRequest(metric, &s.client))
+	return s.sendRequest(requestPackage.GetUpdateMetricJsonRequest(metric, &s.client))
 }
 
 func (s *Client) SendBatch(metrics []dto.Metrics) error {
-	return s.sendRequest(request2.GetUpdateMetricBatchRequest(metrics, &s.client))
+	return s.sendRequest(requestPackage.GetUpdateMetricBatchRequest(metrics, &s.client))
 }
 
 func (s *Client) sendRequest(request *resty.Request) error {
-	r := decorator.GzipCompress(request)
+	r := requestPackage.GetWrappedRequest(request)
 
 	_, err := r.Execute(r.Method, r.URL)
 	return err
