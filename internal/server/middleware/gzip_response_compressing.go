@@ -22,6 +22,7 @@ func (w bufferResponseWriter) Write(b []byte) (int, error) {
 
 func (w bufferResponseWriter) WriteHeader(statusCode int) {
 	*w.statusCode = statusCode
+	w.ResponseWriter.WriteHeader(statusCode)
 }
 
 func GzipResponseCompressing(handlerFunc http.Handler) http.Handler {
