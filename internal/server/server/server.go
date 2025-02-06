@@ -53,6 +53,8 @@ func (s *Server) createAndConfigureRouter(ctx context.Context) {
 
 	s.router.Use(middleware.WithLogging)
 	s.router.Use(middleware.GzipRequestDecompressing)
+	s.router.Use(middleware.CheckRequestSign)
+	s.router.Use(middleware.SigningResponse)
 	s.router.Use(middleware.GzipResponseCompressing)
 
 	s.router.Route("/", func(r chi.Router) {
