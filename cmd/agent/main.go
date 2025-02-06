@@ -16,6 +16,7 @@ func main() {
 
 	c := client.NewClientWithRetry()
 	c.Use(decorator.GzipCompress)
+	c.Use(decorator.HashCalculation)
 
 	metricManager := metric.MetricManager{
 		MetricList:          dictionary.MetricNameList[:],

@@ -37,6 +37,7 @@ func parseFlags() {
 	flag.StringVar(&Configuration.Endpoint, "a", "localhost:8080", "Адрес эндпоинта HTTP-сервера")
 	flag.IntVar(&reportInterval, "r", 10, "Частота отправки метрик на сервер")
 	flag.IntVar(&pollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
+	flag.StringVar(&Configuration.HashKey, "k", "", "Ключ для вычисления хэша")
 
 	flag.Parse()
 
