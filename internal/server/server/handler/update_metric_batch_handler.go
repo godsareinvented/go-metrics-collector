@@ -27,8 +27,9 @@ func UpdateMetricBatchMetric(ctx context.Context) http.HandlerFunc {
 		}
 
 		// Валидация корректности данных метрики, инъекций.
+		v := validator.New(validator.WithRequiredStructEnabled())
 		for _, metric := range metricBatch {
-			err = validator.New(validator.WithRequiredStructEnabled()).Struct(metric)
+			err = v.Struct(metric)
 			if nil != err {
 				message, statusCode := ProcessValidationError(err)
 				http.Error(responseWriter, message, statusCode)
