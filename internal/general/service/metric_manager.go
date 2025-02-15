@@ -72,9 +72,9 @@ func (metricManager *MetricManager) ImportFrom(ctx context.Context, permanentSto
 	if nil != err {
 		return err
 	}
-
-	for _, metric := range metricList {
-		metricManager.UpdateMetric(ctx, metric)
+	err = config.Configuration.Repository.UpdateMetricBatch(ctx, metricList)
+	if nil != err {
+		return err
 	}
 
 	return nil
