@@ -11,11 +11,16 @@ import (
 
 type srBufferResponseWriter struct {
 	http.ResponseWriter
-	buffer *bytes.Buffer
+	buffer     *bytes.Buffer
+	statusCode int
 }
 
 func (w srBufferResponseWriter) Write(b []byte) (int, error) {
 	return w.buffer.Write(b)
+}
+
+func (w srBufferResponseWriter) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
 }
 
 func SigningResponse(handlerFunc http.Handler) http.Handler {
@@ -28,6 +33,7 @@ func SigningResponse(handlerFunc http.Handler) http.Handler {
 		recorder := srBufferResponseWriter{
 			ResponseWriter: responseWriter,
 			buffer:         &bytes.Buffer{},
+			statusCode:     http.StatusOK,
 		}
 		handlerFunc.ServeHTTP(&recorder, request)
 
@@ -41,6 +47,7 @@ func SigningResponse(handlerFunc http.Handler) http.Handler {
 		dst := h.Sum(nil)
 
 		responseWriter.Header().Set("HashSHA256", hex.EncodeToString(dst))
+		responseWriter.WriteHeader(recorder.statusCode)
 		_, _ = responseWriter.Write(recorder.buffer.Bytes())
 	}
 	return http.HandlerFunc(fn)
