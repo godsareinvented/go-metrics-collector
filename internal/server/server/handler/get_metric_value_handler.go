@@ -37,8 +37,8 @@ func GetMetric(ctx context.Context) http.HandlerFunc {
 
 		if isSet {
 			preparedMetricValue := resultingMetric.GetFormattedValue()
-			_, _ = responseWriter.Write([]byte(preparedMetricValue))
 			responseWriter.WriteHeader(http.StatusOK)
+			_, _ = responseWriter.Write([]byte(preparedMetricValue))
 			return
 		}
 
