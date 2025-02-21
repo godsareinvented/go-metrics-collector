@@ -3,8 +3,8 @@ package callback
 import (
 	"context"
 	"fmt"
-	"github.com/godsareinvented/go-metrics-collector/internal/general/service"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/config"
+	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
 )
 
 func OnServerStoppedCallback(ctx context.Context) error {
@@ -35,7 +35,7 @@ func exportMetricsToPermanentStorage(ctx context.Context) error {
 		return nil
 	}
 
-	metricManager := service.MetricManager{}
+	metricManager := metric.MetricManager{}
 	err := metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 	(*config.Configuration.PermanentStorage).Close()
 

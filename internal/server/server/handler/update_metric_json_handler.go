@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/general/service"
+	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric/parser"
 	"net/http"
 )
@@ -34,7 +34,7 @@ func UpdateMetricJson(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		metricManager := service.MetricManager{}
+		metricManager := metric.MetricManager{}
 		metricManager.UpdateMetric(requestCtx, metricDTO)
 
 		responseWriter.Header().Set("Content-Type", "application/json")

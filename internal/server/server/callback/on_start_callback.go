@@ -3,8 +3,8 @@ package callback
 import (
 	"context"
 	"fmt"
-	"github.com/godsareinvented/go-metrics-collector/internal/general/service"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/config"
+	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func initExportTask(ctx context.Context) {
 }
 
 func exportTask(ctx context.Context) {
-	metricManager := service.MetricManager{}
+	metricManager := metric.MetricManager{}
 	ticker := time.NewTicker(time.Duration(config.Configuration.StoreInterval) * time.Second)
 	defer ticker.Stop()
 
@@ -44,6 +44,6 @@ func importMetricsFromPermanentStorage(ctx context.Context) error {
 		return nil
 	}
 
-	metricManager := service.MetricManager{}
+	metricManager := metric.MetricManager{}
 	return metricManager.ImportFrom(ctx, config.Configuration.PermanentStorage)
 }

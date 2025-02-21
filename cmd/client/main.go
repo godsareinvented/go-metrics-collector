@@ -5,10 +5,9 @@ import (
 	clientPackage "github.com/godsareinvented/go-metrics-collector/internal/agent/client"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
-	metricDataCollector "github.com/godsareinvented/go-metrics-collector/internal/agent/service/metric"
+	"github.com/godsareinvented/go-metrics-collector/internal/agent/service/metric"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
-	"github.com/godsareinvented/go-metrics-collector/internal/general/service"
 	"time"
 )
 
@@ -19,9 +18,9 @@ func main() {
 
 	var metricQueue = list.New()
 	client := clientPackage.NewClientWithRetry()
-	metricManager := service.MetricManager{
+	metricManager := metric.MetricManager{
 		MetricList:    dictionary.MetricNameList[:],
-		DataCollector: &metricDataCollector.MetricDataCollector{},
+		DataCollector: &metric.MetricDataCollector{},
 	}
 	metricManager.Init()
 
@@ -31,7 +30,7 @@ func main() {
 	select {}
 }
 
-func CollectMetrics(metricQueue *list.List, metricManager *service.MetricManager) {
+func CollectMetrics(metricQueue *list.List, metricManager *metric.MetricManager) {
 	for {
 		// todo: Обернуть элемент очереди в какую-то iterable структуру? Типа, пакет метрик..
 		metricQueue.PushBack(metricManager.Collect())
