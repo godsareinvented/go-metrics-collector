@@ -6,13 +6,15 @@ import (
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 )
 
-type HeapObjectsStrategy struct{}
+type HeapObjectsStrategy struct {
+	value float64
+}
 
-func (strategy *HeapObjectsStrategy) GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics {
-	var value = float64(metricData.MemStats.HeapObjects)
-	return generaldto.Metrics{
-		ID:    metricName,
-		MType: dictionary.GaugeMetricType,
-		Value: &value,
-	}
+func (strategy *HeapObjectsStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+	strategy.value = float64(metricData.MemStats.HeapObjects)
+
+	metric.ID = dictionary.HeapObjectsMetricName
+	metric.MType = dictionary.GaugeMetricType
+	metric.Delta = nil
+	metric.Value = &strategy.value
 }

@@ -6,13 +6,15 @@ import (
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 )
 
-type MSpanInuseStrategy struct{}
+type MSpanInuseStrategy struct {
+	value float64
+}
 
-func (strategy *MSpanInuseStrategy) GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics {
-	var value = float64(metricData.MemStats.MSpanInuse)
-	return generaldto.Metrics{
-		ID:    metricName,
-		MType: dictionary.GaugeMetricType,
-		Value: &value,
-	}
+func (strategy *MSpanInuseStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+	strategy.value = float64(metricData.MemStats.MSpanInuse)
+
+	metric.ID = dictionary.MSpanInuseMetricName
+	metric.MType = dictionary.GaugeMetricType
+	metric.Delta = nil
+	metric.Value = &strategy.value
 }

@@ -6,13 +6,15 @@ import (
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 )
 
-type NextGCStrategy struct{}
+type NextGCStrategy struct {
+	value float64
+}
 
-func (strategy *NextGCStrategy) GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics {
-	var value = float64(metricData.MemStats.NextGC)
-	return generaldto.Metrics{
-		ID:    metricName,
-		MType: dictionary.GaugeMetricType,
-		Value: &value,
-	}
+func (strategy *NextGCStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+	strategy.value = float64(metricData.MemStats.NextGC)
+
+	metric.ID = dictionary.NextGCMetricName
+	metric.MType = dictionary.GaugeMetricType
+	metric.Delta = nil
+	metric.Value = &strategy.value
 }

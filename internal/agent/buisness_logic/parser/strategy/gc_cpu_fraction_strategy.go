@@ -8,11 +8,9 @@ import (
 
 type GCCPUFractionStrategy struct{}
 
-func (strategy *GCCPUFractionStrategy) GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics {
-	var value = metricData.MemStats.GCCPUFraction
-	return generaldto.Metrics{
-		ID:    metricName,
-		MType: dictionary.GaugeMetricType,
-		Value: &value,
-	}
+func (strategy *GCCPUFractionStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+	metric.ID = dictionary.GCCPUFractionMetricName
+	metric.MType = dictionary.GaugeMetricType
+	metric.Delta = nil
+	metric.Value = &metricData.MemStats.GCCPUFraction
 }

@@ -6,5 +6,5 @@ import (
 )
 
 type ParsingStrategy interface {
-	GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics
+	GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData)
 }

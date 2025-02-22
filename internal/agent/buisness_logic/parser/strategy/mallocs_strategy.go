@@ -6,13 +6,15 @@ import (
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 )
 
-type MallocsStrategy struct{}
+type MallocsStrategy struct {
+	value float64
+}
 
-func (strategy *MallocsStrategy) GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics {
-	var value = float64(metricData.MemStats.Mallocs)
-	return generaldto.Metrics{
-		ID:    metricName,
-		MType: dictionary.GaugeMetricType,
-		Value: &value,
-	}
+func (strategy *MallocsStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+	strategy.value = float64(metricData.MemStats.Mallocs)
+
+	metric.ID = dictionary.MallocsMetricName
+	metric.MType = dictionary.GaugeMetricType
+	metric.Delta = nil
+	metric.Value = &strategy.value
 }

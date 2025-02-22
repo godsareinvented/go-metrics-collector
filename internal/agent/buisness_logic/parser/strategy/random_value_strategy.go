@@ -8,10 +8,9 @@ import (
 
 type RandomValueStrategy struct{}
 
-func (strategy *RandomValueStrategy) GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics {
-	return generaldto.Metrics{
-		ID:    metricName,
-		MType: dictionary.GaugeMetricType,
-		Value: &metricData.RandomValue,
-	}
+func (strategy *RandomValueStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+	metric.ID = dictionary.RandomValueMetricName
+	metric.MType = dictionary.GaugeMetricType
+	metric.Delta = nil
+	metric.Value = &metricData.RandomValue
 }

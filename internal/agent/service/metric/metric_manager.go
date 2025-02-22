@@ -2,62 +2,71 @@ package metric
 
 import (
 	"context"
+	"errors"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/buisness_logic/parser"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
 	agentdto "github.com/oldhanasong/go-metrics-collector/internal/agent/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/interfaces"
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
+	"sync"
 	"time"
 )
 
-type MetricManager struct {
-	MetricList          []string
-	MetricDataCollector interfaces.MetricDataCollector
-	Client              interfaces.Client
-	strategies          map[string]interfaces.ParsingStrategy
-}
+type (
+	interimData struct {
+		err           error
+		metric        generaldto.Metrics
+		metricList    []generaldto.Metrics
+		collectedData agentdto.CollectedMetricData
+		strategyMap   map[string]interfaces.ParsingStrategy
+	}
 
-var (
-	metricList []generaldto.Metrics
+	MetricManager struct {
+		metricsToCollect []string
+		dataCollector    interfaces.MetricDataCollector
+		client           interfaces.Client
+		pool             *sync.Pool
+	}
 )
 
-func (metricManager *MetricManager) CollectAndSend(ctx context.Context) {
-	if metricManager.MetricList == nil {
-		panic("metric list is empty")
-	}
-	if metricManager.Client == nil {
-		panic("client is required")
+var (
+	ErrNotInitialised   = errors.New("dependencies are not initialized")
+	ErrInvalidArguments = errors.New("not initialized metric list")
+)
+
+func (metricManager *MetricManager) CollectAndSend(ctx context.Context) error {
+	data := metricManager.pool.Get().(*interimData)
+	if metricManager.metricsToCollect == nil || len(metricManager.metricsToCollect) == 0 || metricManager.dataCollector == nil || data.strategyMap == nil {
+		return ErrNotInitialised
 	}
 
 	go metricManager.collect(ctx)
 	go metricManager.send(ctx)
-}
 
-func (metricManager *MetricManager) Init() {
-	metricManager.strategies = make(map[string]interfaces.ParsingStrategy)
-
-	for _, metricName := range metricManager.MetricList {
-		metricManager.strategies[metricName] = parser.GetStrategy(metricName)
-	}
+	return nil
 }
 
 func (metricManager *MetricManager) collect(ctx context.Context) {
-	var metricCollectedData agentdto.CollectedMetricData
+	var data *interimData
+	var metricName string
 	var metrics []generaldto.Metrics
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			metricManager.MetricDataCollector.CollectMetricData(&metricCollectedData)
+			data = metricManager.pool.Get().(*interimData)
 
-			metrics = make([]generaldto.Metrics, 0, len(metricManager.MetricList))
-			for _, metricName := range metricManager.MetricList {
-				strategy := metricManager.strategies[metricName]
-				m := strategy.GetMetric(metricName, metricCollectedData)
-				metrics = append(metrics, m)
+			metricManager.dataCollector.CollectMetricData(&data.collectedData)
+
+			metrics = make([]generaldto.Metrics, 0, len(metricManager.metricsToCollect))
+			for _, metricName = range metricManager.metricsToCollect {
+				data.strategyMap[metricName].GetMetric(&data.metric, &data.collectedData)
+				metrics = append(metrics, data.metric)
 			}
-			metricList = metrics
+			data.metricList = metrics
+			metricManager.pool.Put(interface{}(data))
 
 			time.Sleep(config.Configuration.PollInterval * time.Second)
 		}
@@ -70,9 +79,54 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			_ = metricManager.Client.SendBatch(metricList)
+			data := metricManager.pool.Get().(*interimData)
+			_ = metricManager.client.SendBatch(data.metricList)
 
 			time.Sleep(config.Configuration.ReportInterval * time.Second)
 		}
 	}
+}
+
+func New(metricList []string, dataCollector interfaces.MetricDataCollector, client interfaces.Client) (MetricManager, error) {
+	if len(metricList) == 0 || dataCollector == nil || client == nil {
+		return MetricManager{}, ErrInvalidArguments
+	}
+
+	var err error
+	pool := &sync.Pool{
+		New: func() interface{} {
+			s := interimData{}
+			s.metricList = make([]generaldto.Metrics, 0, len(metricList))
+			err = initStrategies(&s.strategyMap, metricList)
+			return &s
+		},
+	}
+
+	pool.New()
+	if nil != err {
+		return MetricManager{}, err
+	}
+
+	metricManager := MetricManager{
+		metricsToCollect: metricList,
+		dataCollector:    dataCollector,
+		client:           client,
+		pool:             pool,
+	}
+
+	return metricManager, nil
+}
+
+func initStrategies(strategyMap *map[string]interfaces.ParsingStrategy, metricNames []string) error {
+	*strategyMap = make(map[string]interfaces.ParsingStrategy, len(metricNames))
+
+	var err error
+	for _, metricName := range metricNames {
+		(*strategyMap)[metricName], err = parser.GetStrategy(metricName)
+		if nil != err {
+			return err
+		}
+	}
+
+	return nil
 }

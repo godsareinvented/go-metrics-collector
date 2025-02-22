@@ -59,9 +59,9 @@ func TestCollectAndSend(t *testing.T) {
 	c.Use(decorator.GzipCompress)
 
 	metricManager := MetricManager{
-		MetricList:          dictionary.MetricNameList[:],
-		MetricDataCollector: &data_collector.MetricDataCollector{},
-		Client:              c,
+		metricsToCollect: dictionary.MetricNameList[:],
+		dataCollector:    &data_collector.MetricDataCollector{},
+		client:           c,
 	}
 	metricManager.Init()
 

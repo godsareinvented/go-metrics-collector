@@ -8,11 +8,9 @@ import (
 
 type PollCountStrategy struct{}
 
-func (strategy *PollCountStrategy) GetMetric(metricName string, metricData agentdto.CollectedMetricData) generaldto.Metrics {
-	var value = metricData.PollCount
-	return generaldto.Metrics{
-		ID:    metricName,
-		MType: dictionary.CounterMetricType,
-		Delta: &value,
-	}
+func (strategy *PollCountStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+	metric.ID = dictionary.PollCountMetricName
+	metric.MType = dictionary.CounterMetricType
+	metric.Delta = &metricData.PollCount
+	metric.Value = nil
 }

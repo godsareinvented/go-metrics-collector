@@ -25,14 +25,14 @@
 7. [metric_manager](internal/server/service/metric/metric_manager.go:#L48) Упростить и улучшить именование методов и
    структур.
 8. [metric_manager](internal/server/service/metric/metric_manager.go) Общение между горутинами необходимо переписать на
-   каналы
-    вместо использования переменной пакета.
+   каналы вместо использования переменной пакета.
+9. [factory](internal/agent/buisness_logic/parser/factory.go:#L11) Необходимо сделать описания ошибок более говорящими.
 
 ---
 
 ### Валидация
 
-9. [custom_func](internal/general/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и
+10. [custom_func](internal/general/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и
    ```Float```,
    поддерживающие проверку, что число во входной строке не больше ```math.MaxInt64``` и ```math.MaxFloat64```
    (*плюс поддержка отрицательных значений через регулярку*)\
@@ -46,18 +46,18 @@
 
 ### Хранилища
 
-10. [postgres/storage](internal/server/storage/postgres/storage.go:#L155) Следует ли добавить в будущем контекст с
+11. [postgres/storage](internal/server/storage/postgres/storage.go:#L155) Следует ли добавить в будущем контекст с
     дедлайном?
 
 ---
 
 ### Кодстайл
 
-11. [metric_manager_test](internal/server/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
+12. [metric_manager_test](internal/server/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
    ```if metric.Type == dictionary.GaugeMetricType { // ... } else``` на switch с обработкой ситуации в ```default```
    -секции,
    что метрика имеет некорректный тип
-12. [update_metric_batch_handler](internal/server/handler/update_metric_batch_handler.go:#L29) Нужно пересмотреть
+13. [update_metric_batch_handler](internal/server/handler/update_metric_batch_handler.go:#L29) Нужно пересмотреть
     инициализацию объектов
     (убрать постоянное выделение памяти в обработчиках)
 
@@ -65,6 +65,6 @@
 
 ### Проблемы сервиса
 
-13. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
+14. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
 
 ---

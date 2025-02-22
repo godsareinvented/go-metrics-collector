@@ -1,13 +1,16 @@
 package parser
 
 import (
+	"errors"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/buisness_logic/parser/strategy"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
 )
 
-func GetStrategy(metricName string) interfaces.ParsingStrategy {
-	strategyMap := map[string]interfaces.ParsingStrategy{
+var (
+	ErrUnknownMetricName = errors.New("unknown metric name")
+
+	strategyMap = map[string]interfaces.ParsingStrategy{
 		dictionary.AllocMetricName:         &strategy.AllocStrategy{},
 		dictionary.BuckHashSysMetricName:   &strategy.BuckHashSysStrategy{},
 		dictionary.FreesMetricName:         &strategy.FreesStrategy{},
@@ -38,10 +41,12 @@ func GetStrategy(metricName string) interfaces.ParsingStrategy {
 		dictionary.PollCountMetricName:     &strategy.PollCountStrategy{},
 		dictionary.RandomValueMetricName:   &strategy.RandomValueStrategy{},
 	}
+)
 
+func GetStrategy(metricName string) (interfaces.ParsingStrategy, error) {
 	if _, ok := strategyMap[metricName]; !ok {
-		panic("unknown metric type")
+		return nil, ErrUnknownMetricName
 	}
 
-	return strategyMap[metricName]
+	return strategyMap[metricName], nil
 }

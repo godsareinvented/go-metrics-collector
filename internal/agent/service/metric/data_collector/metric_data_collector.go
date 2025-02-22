@@ -7,16 +7,22 @@ import (
 )
 
 type MetricDataCollector struct {
+	memStats  runtime.MemStats
 	pollCount int64
 }
 
 func (metricCollector *MetricDataCollector) CollectMetricData(metricData *dto.CollectedMetricData) {
 	metricCollector.pollCount += 1
 
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
+	runtime.ReadMemStats(&metricCollector.memStats)
 
 	metricData.PollCount = metricCollector.pollCount
-	metricData.MemStats = memStats
+	metricData.MemStats = metricCollector.memStats
 	metricData.RandomValue = rand.Float64()
+}
+
+func New() *MetricDataCollector {
+	return &MetricDataCollector{
+		pollCount: 1,
+	}
 }
