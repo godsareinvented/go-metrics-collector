@@ -8,10 +8,10 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 )
 
-func GetUpdateMetricBatchRequest(metrics []dto.Metrics, client *resty.Client) *resty.Request {
+func GetUpdateMetricBatchRequest(metrics *[]dto.Metrics, client *resty.Client) *resty.Request {
 	request := client.R()
 
-	body, err := json.Marshal(metrics)
+	body, err := json.Marshal(*metrics)
 	if nil != err {
 		panic(err)
 	}

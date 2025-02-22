@@ -1,18 +1,22 @@
 package strategy
 
 import (
-	dto2 "github.com/godsareinvented/go-metrics-collector/internal/agent/dto"
+	agentDto "github.com/godsareinvented/go-metrics-collector/internal/agent/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 )
 
 type HeapAllocStrategy struct{}
 
-func (strategy *HeapAllocStrategy) GetMetric(metricName string, metricData dto2.CollectedMetricData) dto.Metrics {
-	var value = float64(metricData.MemStats.HeapAlloc)
-	return dto.Metrics{
-		MType: dictionary.GaugeMetricType,
-		MName: metricName,
-		Value: &value,
+func (strategy *HeapAllocStrategy) ParseMetric(metric *dto.Metrics, metricData *agentDto.CollectedMetricData) error {
+	if isMemStatEmpty(&metricData.MemStats) {
+		return ErrEmptyCollectedData
 	}
+
+	var value = float64(metricData.MemStats.HeapAlloc)
+	metric.MType = dictionary.GaugeMetricType
+	metric.MName = dictionary.HeapAllocMetricName
+	metric.Value = &value
+
+	return nil
 }

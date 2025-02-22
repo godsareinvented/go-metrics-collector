@@ -19,7 +19,7 @@ func (s *ClientWithRetry) Send(metric dto.Metrics) error {
 	return s.sendRequest(requestPackage.GetUpdateMetricJsonRequest(metric, &s.client))
 }
 
-func (s *ClientWithRetry) SendBatch(metrics []dto.Metrics) error {
+func (s *ClientWithRetry) SendBatch(metrics *[]dto.Metrics) error {
 	return s.sendRequest(requestPackage.GetUpdateMetricBatchRequest(metrics, &s.client))
 }
 
@@ -39,7 +39,7 @@ func (s *ClientWithRetry) sendRequest(request *resty.Request) error {
 }
 
 func NewClientWithRetry() interfaces.Client {
-	client := resty.New().SetTimeout(20 * time.Second)
+	client := resty.New().SetTimeout(2 * time.Second)
 
 	return &ClientWithRetry{
 		client: *client,

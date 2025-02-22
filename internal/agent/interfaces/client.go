@@ -6,5 +6,5 @@ import (
 
 type Client interface {
 	Send(metricDTO dto.Metrics) error
-	SendBatch(metrics []dto.Metrics) error
+	SendBatch(metrics *[]dto.Metrics) error
 }

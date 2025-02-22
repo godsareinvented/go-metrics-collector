@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"errors"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/buisness_logic/parser"
 	agentDto "github.com/godsareinvented/go-metrics-collector/internal/agent/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
@@ -8,38 +9,76 @@ import (
 )
 
 type MetricManager struct {
-	MetricList    []string
-	DataCollector interfaces.MetricDataCollectorInterface
-	strategies    map[string]interfaces.ParsingStrategyInterface
+	metricListToCollect []string
+	dataCollector       interfaces.MetricDataCollectorInterface
 }
 
-func (metricManager *MetricManager) Collect() []dto.Metrics {
-	if nil == metricManager.DataCollector {
-		panic("nil DataCollector")
+var (
+	ErrNoMetricDataCollector    = errors.New("no metric data collector found")
+	ErrNotInitializedResultList = errors.New("not initialized metric list")
+	ErrEmptyMetricNameList      = errors.New("empty metric name list")
+
+	err                 error
+	strategies          map[string]interfaces.ParsingStrategyInterface
+	metric              dto.Metrics
+	metricList          []dto.Metrics
+	collectedMetricData agentDto.CollectedMetricData
+)
+
+func (m *MetricManager) Collect() (*[]dto.Metrics, error) {
+	if nil == m.dataCollector {
+		return nil, ErrNoMetricDataCollector
+	}
+	if nil == metricList {
+		return nil, ErrNotInitializedResultList
 	}
 
-	var metric dto.Metrics
-	var metricList []dto.Metrics
-	var collectedMetricData agentDto.CollectedMetricData
+	collectedMetricData = agentDto.CollectedMetricData{}
+	m.dataCollector.CollectMetricData(&collectedMetricData)
 
-	metricManager.DataCollector.CollectMetricData(&collectedMetricData)
-
-	for _, metricName := range metricManager.MetricList {
-		metric = metricManager.strategies[metricName].GetMetric(metricName, collectedMetricData)
+	metricList = metricList[:0]
+	for _, metricName := range m.metricListToCollect {
+		metric = dto.Metrics{}
+		err = strategies[metricName].ParseMetric(&metric, &collectedMetricData)
+		if nil != err {
+			return nil, err
+		}
 		metricList = append(metricList, metric)
 	}
 
-	return metricList
+	return &metricList, nil
 }
 
-func (metricManager *MetricManager) Init() {
-	metricManager.initStrategyList()
-}
+func (m *MetricManager) initStrategies() error {
+	strategies = make(map[string]interfaces.ParsingStrategyInterface)
 
-func (metricManager *MetricManager) initStrategyList() {
-	metricManager.strategies = make(map[string]interfaces.ParsingStrategyInterface)
-
-	for _, metricName := range metricManager.MetricList {
-		metricManager.strategies[metricName] = parser.GetStrategy(metricName)
+	var err error
+	for _, metricName := range m.metricListToCollect {
+		strategies[metricName], err = parser.GetStrategy(metricName)
+		if nil != err {
+			return err
+		}
 	}
+
+	return nil
+}
+
+func NewInstance(metricNameList []string, dataCollector interfaces.MetricDataCollectorInterface) (MetricManager, error) {
+	if len(metricNameList) == 0 {
+		return MetricManager{}, ErrEmptyMetricNameList
+	}
+
+	metricManager := MetricManager{
+		metricListToCollect: metricNameList,
+		dataCollector:       dataCollector,
+	}
+
+	metricList = make([]dto.Metrics, 0, len(metricList))
+
+	err = metricManager.initStrategies()
+	if nil != err {
+		return MetricManager{}, err
+	}
+
+	return metricManager, nil
 }

@@ -18,11 +18,13 @@ func main() {
 
 	var metricQueue = list.New()
 	client := clientPackage.NewClientWithRetry()
-	metricManager := metric.MetricManager{
-		MetricList:    dictionary.MetricNameList[:],
-		DataCollector: &metric.MetricDataCollector{},
+	metricManager, err := metric.NewInstance(
+		dictionary.MetricNameList[:],
+		metric.NewDataCollector(),
+	)
+	if nil != err {
+		panic(err)
 	}
-	metricManager.Init()
 
 	go CollectMetrics(metricQueue, &metricManager)
 	go SendMetrics(metricQueue, client)
@@ -33,7 +35,11 @@ func main() {
 func CollectMetrics(metricQueue *list.List, metricManager *metric.MetricManager) {
 	for {
 		// todo: Обернуть элемент очереди в какую-то iterable структуру? Типа, пакет метрик..
-		metricQueue.PushBack(metricManager.Collect())
+		metricList, err := metricManager.Collect()
+		if nil != err {
+			panic(err)
+		}
+		metricQueue.PushBack(metricList)
 
 		time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
 	}
@@ -47,7 +53,7 @@ func SendMetrics(metricQueue *list.List, client interfaces.Client) {
 			continue
 		}
 
-		metricList, ok := metricListRaw.Value.([]dto.Metrics)
+		metricList, ok := metricListRaw.Value.(*[]dto.Metrics)
 		if !ok {
 			panic("SendMetrics: metricListRaw is not []dto.Metrics")
 		}

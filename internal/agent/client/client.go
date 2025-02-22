@@ -16,7 +16,7 @@ func (s *Client) Send(metric dto.Metrics) error {
 	return s.sendRequest(requestPackage.GetUpdateMetricJsonRequest(metric, &s.client))
 }
 
-func (s *Client) SendBatch(metrics []dto.Metrics) error {
+func (s *Client) SendBatch(metrics *[]dto.Metrics) error {
 	return s.sendRequest(requestPackage.GetUpdateMetricBatchRequest(metrics, &s.client))
 }
 

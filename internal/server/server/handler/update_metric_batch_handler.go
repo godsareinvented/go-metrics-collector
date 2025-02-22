@@ -14,6 +14,7 @@ func UpdateMetricBatchMetric(ctx context.Context) http.HandlerFunc {
 		requestCtx, cancel := context.WithCancel(request.Context())
 		defer cancel()
 
+		// todo: Утечка памяти? Горутина будет вечно ожидать закрытия канала. Горутина завершиться при завершении main или при завершении и UpdateMetricBatchMetric тоже?
 		go func() {
 			<-ctx.Done()
 			cancel()
