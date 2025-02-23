@@ -63,7 +63,7 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 		default:
 			data = metricManager.pool.Get().(*interimData)
 
-			metricManager.dataCollector.CollectMetricData(&data.collectedData)
+			_ = metricManager.dataCollector.CollectMetricData(&data.collectedData)
 
 			metrics = make([]generaldto.Metrics, 0, len(metricManager.metricsToCollect))
 			for _, metricName = range metricManager.metricsToCollect {

@@ -5,5 +5,5 @@ import (
 )
 
 type MetricDataCollector interface {
-	CollectMetricData(*dto.CollectedMetricData)
+	CollectMetricData(*dto.CollectedMetricData) error
 }

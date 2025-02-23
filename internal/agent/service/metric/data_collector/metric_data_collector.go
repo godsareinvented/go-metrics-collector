@@ -2,23 +2,50 @@ package data_collector
 
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/dto"
+	"github.com/shirou/gopsutil/v3/mem"
 	"math/rand/v2"
 	"runtime"
+	"sync"
 )
 
 type MetricDataCollector struct {
-	memStats  runtime.MemStats
-	pollCount int64
+	wg                sync.WaitGroup
+	virtualMemoryStat *mem.VirtualMemoryStat
+	pollCount         int64
 }
 
-func (metricCollector *MetricDataCollector) CollectMetricData(metricData *dto.CollectedMetricData) {
-	metricCollector.pollCount += 1
+func (collector *MetricDataCollector) CollectMetricData(metricData *dto.CollectedMetricData) error {
+	collector.wg.Add(2)
 
-	runtime.ReadMemStats(&metricCollector.memStats)
-
-	metricData.PollCount = metricCollector.pollCount
-	metricData.MemStats = metricCollector.memStats
+	var mcErr error
+	go collector.CollectMemStats(metricData)
+	go collector.CollectVirtualMemoryStats(metricData, &mcErr)
+	metricData.PollCount = collector.pollCount
 	metricData.RandomValue = rand.Float64()
+
+	collector.wg.Wait()
+
+	if nil != mcErr {
+		return mcErr
+	}
+	return nil
+}
+
+func (collector *MetricDataCollector) CollectMemStats(metricData *dto.CollectedMetricData) {
+	runtime.ReadMemStats(&metricData.MemStats)
+	collector.wg.Done()
+}
+
+func (collector *MetricDataCollector) CollectVirtualMemoryStats(metricData *dto.CollectedMetricData, parentErr *error) {
+	virtualMemoryStat, err := mem.VirtualMemory()
+	if nil != err {
+		*parentErr = err
+		collector.wg.Done()
+		return
+	}
+
+	metricData.VirtualMemoryStats = *virtualMemoryStat
+	collector.wg.Done()
 }
 
 func New() *MetricDataCollector {
