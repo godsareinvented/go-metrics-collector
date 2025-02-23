@@ -1,9 +1,13 @@
 package dto
 
-import "runtime"
+import (
+	"github.com/shirou/gopsutil/v3/mem"
+	"runtime"
+)
 
 type CollectedMetricData struct {
-	MemStats    runtime.MemStats
-	PollCount   int64
-	RandomValue float64
+	MemStats           runtime.MemStats
+	VirtualMemoryStats mem.VirtualMemoryStat
+	PollCount          int64
+	RandomValue        float64
 }

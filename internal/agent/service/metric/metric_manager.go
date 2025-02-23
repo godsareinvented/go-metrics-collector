@@ -34,7 +34,10 @@ func (m *MetricManager) Collect() (*[]dto.Metrics, error) {
 	}
 
 	collectedMetricData = agentDto.CollectedMetricData{}
-	m.dataCollector.CollectMetricData(&collectedMetricData)
+	err = m.dataCollector.CollectMetricData(&collectedMetricData)
+	if nil != err {
+		return nil, err
+	}
 
 	metricList = metricList[:0]
 	for _, metricName := range m.metricListToCollect {
