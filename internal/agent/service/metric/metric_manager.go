@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"context"
 	"errors"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/buisness_logic/parser"
 	agentDto "github.com/godsareinvented/go-metrics-collector/internal/agent/dto"
@@ -8,6 +9,7 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 )
 
+// MetricManager todo: Перенести код из client/main.go сюда.
 type MetricManager struct {
 	metricListToCollect []string
 	dataCollector       interfaces.MetricDataCollectorInterface
@@ -25,7 +27,7 @@ var (
 	collectedMetricData agentDto.CollectedMetricData
 )
 
-func (m *MetricManager) Collect() (*[]dto.Metrics, error) {
+func (m *MetricManager) Collect(ctx context.Context) (*[]dto.Metrics, error) {
 	if nil == m.dataCollector {
 		return nil, ErrNoMetricDataCollector
 	}
@@ -34,7 +36,7 @@ func (m *MetricManager) Collect() (*[]dto.Metrics, error) {
 	}
 
 	collectedMetricData = agentDto.CollectedMetricData{}
-	err = m.dataCollector.CollectMetricData(&collectedMetricData)
+	err = m.dataCollector.CollectMetricData(ctx, &collectedMetricData)
 	if nil != err {
 		return nil, err
 	}
@@ -66,7 +68,7 @@ func (m *MetricManager) initStrategies() error {
 	return nil
 }
 
-func NewInstance(metricNameList []string, dataCollector interfaces.MetricDataCollectorInterface) (MetricManager, error) {
+func NewInstance(dataCollector interfaces.MetricDataCollectorInterface, metricNameList []string) (MetricManager, error) {
 	if len(metricNameList) == 0 {
 		return MetricManager{}, ErrEmptyMetricNameList
 	}

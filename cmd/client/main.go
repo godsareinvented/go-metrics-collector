@@ -2,40 +2,45 @@ package main
 
 import (
 	"container/list"
+	"context"
 	clientPackage "github.com/godsareinvented/go-metrics-collector/internal/agent/client"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/service/metric"
-	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 	"time"
 )
 
 // todo: Добавить в будущем аналогично серверу контекст.
 func main() {
-	configConfigurator := config.ConfigConfigurator{}
-	configConfigurator.ParseConfig()
+	ctx := context.Background()
 
-	var metricQueue = list.New()
-	client := clientPackage.NewClientWithRetry()
+	configConfigurator := config.ConfigConfigurator{}
+	err := configConfigurator.ParseConfig()
+	if nil != err {
+		panic(err)
+	}
+
 	metricManager, err := metric.NewInstance(
-		dictionary.MetricNameList[:],
 		metric.NewDataCollector(),
+		config.Configuration.MetricNameList,
 	)
 	if nil != err {
 		panic(err)
 	}
 
-	go CollectMetrics(metricQueue, &metricManager)
+	metricQueue := list.New()
+	client := clientPackage.NewClientWithRetry()
+	go CollectMetrics(ctx, metricQueue, &metricManager)
 	go SendMetrics(metricQueue, client)
 
 	select {}
 }
 
-func CollectMetrics(metricQueue *list.List, metricManager *metric.MetricManager) {
+func CollectMetrics(ctx context.Context, metricQueue *list.List, metricManager *metric.MetricManager) {
 	for {
 		// todo: Обернуть элемент очереди в какую-то iterable структуру? Типа, пакет метрик..
-		metricList, err := metricManager.Collect()
+		metricList, err := metricManager.Collect(ctx)
 		if nil != err {
 			panic(err)
 		}

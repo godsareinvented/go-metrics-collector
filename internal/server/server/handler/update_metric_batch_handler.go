@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
+	metricPackage "github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric/parser"
 	"net/http"
 )
@@ -27,6 +27,7 @@ func UpdateMetricBatchMetric(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
+		// todo: Усилить валидацию сущностей метрик. Проверять, что задано нужное значение метрики, соответствующее типу.
 		// Валидация корректности данных метрики, инъекций.
 		v := validator.New(validator.WithRequiredStructEnabled())
 		for _, metric := range metricBatch {
@@ -39,7 +40,7 @@ func UpdateMetricBatchMetric(ctx context.Context) http.HandlerFunc {
 		}
 
 		if nil != metricBatch {
-			metricManager := metric.MetricManager{}
+			metricManager := metricPackage.MetricManager{}
 			metricManager.UpdateMetrics(requestCtx, metricBatch)
 		}
 

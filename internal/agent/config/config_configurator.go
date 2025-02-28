@@ -1,13 +1,17 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"github.com/caarlos0/env"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary/decorator"
+	"github.com/shirou/gopsutil/v3/cpu"
 )
 
 type ConfigConfigurator struct{}
 
-func (c *ConfigConfigurator) ParseConfig() {
+func (c *ConfigConfigurator) ParseConfig() error {
 	Configuration = Config{
 		GzipAcceptedContentTypes: []string{"application/json", "text/html"},
 		GzipMinContentLength:     1400,
@@ -16,8 +20,17 @@ func (c *ConfigConfigurator) ParseConfig() {
 	parseFlags()
 	err := parseEnv()
 	if nil != err {
-		panic("Error parsing env: " + err.Error())
+		return errors.New("Error parsing environment variables: " + err.Error())
 	}
+	err = setLogicalCpuNumber()
+	if nil != err {
+		return err
+	}
+	err = generateMetricNameList()
+	if nil != err {
+		return err
+	}
+	return nil
 }
 
 func parseFlags() {
@@ -32,4 +45,24 @@ func parseFlags() {
 
 func parseEnv() error {
 	return env.Parse(&Configuration)
+}
+
+func setLogicalCpuNumber() error {
+	count, err := cpu.Counts(true)
+	if nil != err {
+		return err
+	}
+
+	Configuration.LogicalCpuCount = count
+	return nil
+}
+
+func generateMetricNameList() error {
+	metricNameList, err := decorator.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], Configuration.LogicalCpuCount)
+	if nil != err {
+		return err
+	}
+
+	Configuration.MetricNameList = metricNameList
+	return nil
 }

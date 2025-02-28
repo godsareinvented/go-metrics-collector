@@ -5,15 +5,15 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/buisness_logic/parser/strategy"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary"
+	"strconv"
+	"strings"
 )
 
 var (
 	// ErrUnknownMetricName todo: Надо сделать текст во всех ошибках более говорящим.
 	ErrUnknownMetricName = errors.New("unknown metric name")
-)
 
-func GetStrategy(metricName string) (interfaces.ParsingStrategyInterface, error) {
-	strategyMap := map[string]interfaces.ParsingStrategyInterface{
+	strategyMap = map[string]interfaces.ParsingStrategyInterface{
 		dictionary.AllocMetricName:         &strategy.AllocStrategy{},
 		dictionary.BuckHashSysMetricName:   &strategy.BuckHashSysStrategy{},
 		dictionary.FreesMetricName:         &strategy.FreesStrategy{},
@@ -43,11 +43,48 @@ func GetStrategy(metricName string) (interfaces.ParsingStrategyInterface, error)
 		dictionary.TotalAllocMetricName:    &strategy.TotalAllockStrategy{},
 		dictionary.PollCountMetricName:     &strategy.PollCountStrategy{},
 		dictionary.RandomValueMetricName:   &strategy.RandomValueStrategy{},
+		dictionary.TotalMemoryMetricName:   &strategy.TotalMemoryStrategy{},
+		dictionary.FreeMemoryMetricName:    &strategy.FreeMemoryStrategy{},
+	}
+)
+
+func GetStrategy(metricName string) (interfaces.ParsingStrategyInterface, error) {
+	if parsingStrategy, ok := getStrategyFromMap(metricName); ok {
+		return parsingStrategy, nil
 	}
 
-	if _, ok := strategyMap[metricName]; !ok {
-		return nil, ErrUnknownMetricName
+	if parsingStrategy, ok := getParsedCpuUtilizationStrategy(metricName); ok {
+		return parsingStrategy, nil
 	}
 
-	return strategyMap[metricName], nil
+	return nil, ErrUnknownMetricName
+}
+
+func getStrategyFromMap(metricName string) (interfaces.ParsingStrategyInterface, bool) {
+	if _, ok := strategyMap[metricName]; ok {
+		return strategyMap[metricName], true
+	}
+	return nil, false
+}
+
+// CPUutilizaition0, CPUutilizaition1,..
+// ref: dictionary.CPUutilizationMetricName
+func getParsedCpuUtilizationStrategy(metricName string) (interfaces.ParsingStrategyInterface, bool) {
+	logicalCpuNumber, ok := getLogicalCpuNumberFromMetricName(metricName)
+	if !ok {
+		return nil, false
+	}
+	return strategy.NewCPUutilizationStrategy(logicalCpuNumber, metricName), true
+}
+
+func getLogicalCpuNumberFromMetricName(metricName string) (uint, bool) {
+	subStrings := strings.Split(metricName, dictionary.CPUutilizationMetricName)
+	if len(subStrings) != 2 {
+		return 0, false
+	}
+	logicalCpuNumber, err := strconv.ParseUint(subStrings[1], 10, 8)
+	if nil != err {
+		return 0, false
+	}
+	return uint(logicalCpuNumber), true
 }
