@@ -1,9 +1,14 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"github.com/caarlos0/env"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary/decorator"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/logger"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"go.uber.org/multierr"
 	"sync"
 	"time"
 )
@@ -16,7 +21,8 @@ var (
 	once sync.Once
 )
 
-func (c *ConfigConfigurator) ParseConfig() {
+func (c *ConfigConfigurator) ParseConfig() error {
+	var resErr error
 	once.Do(func() {
 		Configuration = Config{
 			GzipAcceptedContentTypes: []string{"application/json", "text/html"},
@@ -25,10 +31,23 @@ func (c *ConfigConfigurator) ParseConfig() {
 		}
 
 		parseFlags()
+
 		if err := parseEnv(); err != nil {
-			panic("Error parsing environment variables")
+			resErr = multierr.Append(errors.New("error parsing environment variables"), err)
+			return
+		}
+
+		if err := setLogicalCpuNumber(); err != nil {
+			resErr = err
+			return
+		}
+
+		if err := generateMetricNameList(); err != nil {
+			resErr = err
+			return
 		}
 	})
+	return resErr
 }
 
 func parseFlags() {
@@ -47,4 +66,24 @@ func parseFlags() {
 
 func parseEnv() error {
 	return env.Parse(&Configuration)
+}
+
+func setLogicalCpuNumber() error {
+	count, err := cpu.Counts(true)
+	if nil != err {
+		return err
+	}
+
+	Configuration.LogicalCpuCount = count
+	return nil
+}
+
+func generateMetricNameList() error {
+	metricNameList, err := decorator.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], Configuration.LogicalCpuCount)
+	if nil != err {
+		return err
+	}
+
+	Configuration.MetricsToCollect = metricNameList
+	return nil
 }

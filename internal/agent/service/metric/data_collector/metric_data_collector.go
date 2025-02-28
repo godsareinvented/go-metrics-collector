@@ -1,7 +1,9 @@
 package data_collector
 
 import (
+	"context"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/dto"
+	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"math/rand/v2"
 	"runtime"
@@ -19,7 +21,7 @@ func (collector *MetricDataCollector) Collect(metricData *dto.CollectedMetricDat
 
 	var mcErr error
 	go collector.CollectMemStats(metricData)
-	go collector.CollectVirtualMemoryStats(metricData, &mcErr)
+	go collector.CollectVirtualMemoryStatsAndCpuUtilization(metricData, &mcErr)
 	metricData.PollCount = collector.pollCount
 	metricData.RandomValue = rand.Float64()
 
@@ -36,17 +38,20 @@ func (collector *MetricDataCollector) CollectMemStats(metricData *dto.CollectedM
 	collector.wg.Done()
 }
 
-func (collector *MetricDataCollector) CollectVirtualMemoryStats(metricData *dto.CollectedMetricData, parentErr *error) {
+func (collector *MetricDataCollector) CollectVirtualMemoryStatsAndCpuUtilization(metricData *dto.CollectedMetricData, parentErr *error) {
 	defer collector.wg.Done()
 
 	virtualMemoryStat, err := mem.VirtualMemory()
 	if nil != err {
 		*parentErr = err
-		collector.wg.Done()
 		return
 	}
-
 	metricData.VirtualMemoryStats = *virtualMemoryStat
+
+	if metricData.CPUPercentList, err = cpu.PercentWithContext(context.Background(), 0, true); nil != err {
+		*parentErr = err
+		return
+	}
 }
 
 func New() *MetricDataCollector {

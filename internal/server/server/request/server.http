@@ -225,6 +225,36 @@ HashSHA256: a16b8ae1123feea4e2c8dea5e9a6d3d0f5a6a9b33419105ca45187f95d8513e5
 
 ###
 
+# Обновление пачкм метрик (CPUutilization) /updates
+POST {{domain}}:{{port}}/updates/
+Content-Type: application/json
+Accept-Encoding: gzip
+
+[
+  {
+    "type": "gauge",
+    "name": "CPUutilization0",
+    "value": 0.34
+  }
+]
+
+###
+
+# Обновление пачкм метрик (CPUutilization) /updates
+POST {{domain}}:{{port}}/updates/
+Content-Type: application/json
+Accept-Encoding: gzip
+
+[
+  {
+    "type": "gauge",
+    "name": "CPUutilization0",
+    "value": 0.34
+  }
+]
+
+###
+
 
 # 2. ПОЛУЧЕНИЕ ЗНАЧЕНИЯ МЕТРИКИ
 

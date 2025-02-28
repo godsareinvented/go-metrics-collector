@@ -13,6 +13,8 @@ type Config struct {
 	GzipAcceptedContentTypes []string      // Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера
 	GzipMinContentLength     int           // Минимальный размер тела ответа сервера, при котором будет происходить сжатие
 	Logger                   *zap.Logger   // Логгер
+	LogicalCpuCount          int           // Количество логических процессоров на текущей машине.
+	MetricsToCollect         []string      // Список названий метрик, собираемый агентом. Список генерируемый.
 }
 
 var Configuration Config

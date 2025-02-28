@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/hashicorp/go-multierror"
-	"github.com/oldhanasong/go-metrics-collector/internal/agent/buisness_logic/parser"
+	factory "github.com/oldhanasong/go-metrics-collector/internal/agent/buisness_logic/parser"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
 	agentdto "github.com/oldhanasong/go-metrics-collector/internal/agent/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/interfaces"
@@ -160,8 +160,7 @@ func initStrategies(strategyMap *map[string]interfaces.ParsingStrategy, metricNa
 
 	var err error
 	for _, metricName := range metricNames {
-		(*strategyMap)[metricName], err = parser.GetStrategy(metricName)
-		if err != nil {
+		if (*strategyMap)[metricName], err = factory.Strategy(metricName); err != nil {
 			return err
 		}
 	}

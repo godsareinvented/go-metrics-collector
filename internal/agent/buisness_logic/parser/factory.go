@@ -5,6 +5,8 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/buisness_logic/parser/strategy"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -40,13 +42,48 @@ var (
 		dictionary.TotalAllocMetricName:    &strategy.TotalAllocStrategy{},
 		dictionary.PollCountMetricName:     &strategy.PollCountStrategy{},
 		dictionary.RandomValueMetricName:   &strategy.RandomValueStrategy{},
+		dictionary.TotalMemoryMetricName:   &strategy.TotalMemoryStrategy{},
+		dictionary.FreeMemoryMetricName:    &strategy.FreeMemoryStrategy{},
 	}
 )
 
-func GetStrategy(metricName string) (interfaces.ParsingStrategy, error) {
-	if _, ok := strategyMap[metricName]; !ok {
-		return nil, ErrUnknownMetricName
+func Strategy(metricName string) (interfaces.ParsingStrategy, error) {
+	if parsingStrategy, ok := strategyFromMap(metricName); ok {
+		return parsingStrategy, nil
 	}
 
-	return strategyMap[metricName], nil
+	if parsingStrategy, ok := parsedCpuUtilizationStrategy(metricName); ok {
+		return parsingStrategy, nil
+	}
+
+	return nil, ErrUnknownMetricName
+}
+
+func strategyFromMap(metricName string) (interfaces.ParsingStrategy, bool) {
+	if _, ok := strategyMap[metricName]; ok {
+		return strategyMap[metricName], true
+	}
+	return nil, false
+}
+
+// CPUutilizaition0, CPUutilizaition1,..
+// ref: dictionary.CPUutilizationMetricName
+func parsedCpuUtilizationStrategy(metricName string) (interfaces.ParsingStrategy, bool) {
+	logicalCpuNumber, ok := getLogicalCpuNumberFromMetricName(metricName)
+	if !ok {
+		return nil, false
+	}
+	return strategy.NewCpuUtilizationStrategy(logicalCpuNumber, metricName), true
+}
+
+func getLogicalCpuNumberFromMetricName(metricName string) (uint, bool) {
+	subStrings := strings.Split(metricName, dictionary.CpuUtilizationMetricName)
+	if len(subStrings) != 2 {
+		return 0, false
+	}
+	logicalCpuNumber, err := strconv.ParseUint(subStrings[1], 10, 8)
+	if nil != err {
+		return 0, false
+	}
+	return uint(logicalCpuNumber), true
 }

@@ -7,18 +7,19 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/agent/service/metric"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/service/metric/data_collector"
-	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
 )
 
 func main() {
 	configConfigurator := config.ConfigConfigurator{}
-	configConfigurator.ParseConfig()
+	if err := configConfigurator.ParseConfig(); err != nil {
+		panic(err)
+	}
 
 	c := client.NewClientWithRetry()
 	c.Use(decorator.GzipCompress)
 	c.Use(decorator.HashCalculation)
 
-	metricManager, err := manager.New(dictionary.MetricNameList[:], data_collector.New(), c)
+	metricManager, err := manager.New(config.Configuration.MetricsToCollect, data_collector.New(), c)
 	if err != nil {
 		panic(err)
 	}

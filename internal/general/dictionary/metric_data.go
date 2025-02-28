@@ -1,41 +1,44 @@
 package dictionary
 
 const (
-	AllocMetricName         = "Alloc"
-	BuckHashSysMetricName   = "BuckHashSys"
-	FreesMetricName         = "Frees"
-	GCCPUFractionMetricName = "GCCPUFraction"
-	GCSysMetricName         = "GCSys"
-	HeapAllocMetricName     = "HeapAlloc"
-	HeapIdleMetricName      = "HeapIdle"
-	HeapInuseMetricName     = "HeapInuse"
-	HeapObjectsMetricName   = "HeapObjects"
-	HeapReleasedMetricName  = "HeapReleased"
-	HeapSysMetricName       = "HeapSys"
-	LastGCMetricName        = "LastGC"
-	LookupsMetricName       = "Lookups"
-	MCacheInuseMetricName   = "MCacheInuse"
-	MCacheSysMetricName     = "MCacheSys"
-	MSpanInuseMetricName    = "MSpanInuse"
-	MSpanSysMetricName      = "MSpanSys"
-	MallocsMetricName       = "Mallocs"
-	NextGCMetricName        = "NextGC"
-	NumForcedGCMetricName   = "NumForcedGC"
-	NumGCMetricName         = "NumGC"
-	OtherSysMetricName      = "OtherSys"
-	PauseTotalNsMetricName  = "PauseTotalNs"
-	StackInuseMetricName    = "StackInuse"
-	StackSysMetricName      = "StackSys"
-	SysMetricName           = "Sys"
-	TotalAllocMetricName    = "TotalAlloc"
-	PollCountMetricName     = "PollCount"
-	RandomValueMetricName   = "RandomValue"
+	AllocMetricName          = "Alloc"
+	BuckHashSysMetricName    = "BuckHashSys"
+	FreesMetricName          = "Frees"
+	GCCPUFractionMetricName  = "GCCPUFraction"
+	GCSysMetricName          = "GCSys"
+	HeapAllocMetricName      = "HeapAlloc"
+	HeapIdleMetricName       = "HeapIdle"
+	HeapInuseMetricName      = "HeapInuse"
+	HeapObjectsMetricName    = "HeapObjects"
+	HeapReleasedMetricName   = "HeapReleased"
+	HeapSysMetricName        = "HeapSys"
+	LastGCMetricName         = "LastGC"
+	LookupsMetricName        = "Lookups"
+	MCacheInuseMetricName    = "MCacheInuse"
+	MCacheSysMetricName      = "MCacheSys"
+	MSpanInuseMetricName     = "MSpanInuse"
+	MSpanSysMetricName       = "MSpanSys"
+	MallocsMetricName        = "Mallocs"
+	NextGCMetricName         = "NextGC"
+	NumForcedGCMetricName    = "NumForcedGC"
+	NumGCMetricName          = "NumGC"
+	OtherSysMetricName       = "OtherSys"
+	PauseTotalNsMetricName   = "PauseTotalNs"
+	StackInuseMetricName     = "StackInuse"
+	StackSysMetricName       = "StackSys"
+	SysMetricName            = "Sys"
+	TotalAllocMetricName     = "TotalAlloc"
+	PollCountMetricName      = "PollCount"
+	RandomValueMetricName    = "RandomValue"
+	TotalMemoryMetricName    = "TotalMemory"
+	FreeMemoryMetricName     = "FreeMemory"
+	CpuUtilizationMetricName = "CPUutilization"
 
 	GaugeMetricType   = "gauge"
 	CounterMetricType = "counter"
 )
 
-var MetricNameList = [29]string{
+var MetricNameList = [31]string{
 	AllocMetricName,
 	BuckHashSysMetricName,
 	FreesMetricName,
@@ -65,4 +68,6 @@ var MetricNameList = [29]string{
 	TotalAllocMetricName,
 	PollCountMetricName,
 	RandomValueMetricName,
+	TotalMemoryMetricName,
+	FreeMemoryMetricName,
 }
