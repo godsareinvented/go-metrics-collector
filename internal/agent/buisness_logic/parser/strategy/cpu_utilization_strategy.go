@@ -12,7 +12,7 @@ type CpuUtilizationStrategy struct {
 	metricName       string
 }
 
-func (strategy *CpuUtilizationStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *CpuUtilizationStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	metric.ID = strategy.metricName
 	metric.MType = dictionary.GaugeMetricType
 	metric.Delta = nil

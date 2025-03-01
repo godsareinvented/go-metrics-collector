@@ -10,7 +10,7 @@ type LastGCStrategy struct {
 	value float64
 }
 
-func (strategy *LastGCStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *LastGCStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.LastGC)
 
 	metric.ID = dictionary.LastGCMetricName

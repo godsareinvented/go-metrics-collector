@@ -10,7 +10,7 @@ type TotalAllocStrategy struct {
 	value float64
 }
 
-func (strategy *TotalAllocStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *TotalAllocStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.TotalAlloc)
 
 	metric.ID = dictionary.TotalAllocMetricName

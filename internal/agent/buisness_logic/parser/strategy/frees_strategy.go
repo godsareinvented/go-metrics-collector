@@ -10,7 +10,7 @@ type FreesStrategy struct {
 	value float64
 }
 
-func (strategy *FreesStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *FreesStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.Frees)
 
 	metric.ID = dictionary.FreesMetricName

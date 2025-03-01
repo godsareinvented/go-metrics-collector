@@ -171,7 +171,7 @@ func TestGetMetric(t *testing.T) {
 		var collectedData agentdto.CollectedMetricData
 
 		for _, test := range tests {
-			test.strategy.GetMetric(&metric, &collectedData)
+			test.strategy.FillMetric(&metric, &collectedData)
 			assert.Equal(t, test.want, metric)
 		}
 	})

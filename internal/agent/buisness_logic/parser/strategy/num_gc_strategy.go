@@ -10,7 +10,7 @@ type NumGCStrategy struct {
 	value float64
 }
 
-func (strategy *NumGCStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *NumGCStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.NumGC)
 
 	metric.ID = dictionary.NumGCMetricName

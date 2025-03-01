@@ -10,7 +10,7 @@ type MSpanSysStrategy struct {
 	value float64
 }
 
-func (strategy *MSpanSysStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *MSpanSysStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.MSpanSys)
 
 	metric.ID = dictionary.MSpanSysMetricName

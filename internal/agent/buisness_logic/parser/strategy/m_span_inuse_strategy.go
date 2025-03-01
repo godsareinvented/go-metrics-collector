@@ -10,7 +10,7 @@ type MSpanInuseStrategy struct {
 	value float64
 }
 
-func (strategy *MSpanInuseStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *MSpanInuseStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.MSpanInuse)
 
 	metric.ID = dictionary.MSpanInuseMetricName

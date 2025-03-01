@@ -10,7 +10,7 @@ type SysStrategy struct {
 	value float64
 }
 
-func (strategy *SysStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *SysStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.Sys)
 
 	metric.ID = dictionary.SysMetricName

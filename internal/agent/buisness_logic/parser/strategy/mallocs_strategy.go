@@ -10,7 +10,7 @@ type MallocsStrategy struct {
 	value float64
 }
 
-func (strategy *MallocsStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *MallocsStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.Mallocs)
 
 	metric.ID = dictionary.MallocsMetricName

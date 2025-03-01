@@ -10,6 +10,7 @@ type Config struct {
 	ReportInterval           time.Duration `env:"REPORT_INTERVAL"` // Частота отправки метрик на сервер.
 	PollInterval             time.Duration `env:"POLL_INTERVAL"`   // Частота опроса метрик из пакета runtime.
 	HashKey                  string        `env:"KEY"`             // Ключ для вычисления хеша.
+	RateLimit                int           `env:"RATE_LIMIT"`      // Количество одновременно исходящих запросов на сервер (количество воркеров).
 	GzipAcceptedContentTypes []string      // Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера
 	GzipMinContentLength     int           // Минимальный размер тела ответа сервера, при котором будет происходить сжатие
 	Logger                   *zap.Logger   // Логгер

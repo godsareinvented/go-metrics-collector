@@ -10,7 +10,7 @@ type HeapReleasedStrategy struct {
 	value float64
 }
 
-func (strategy *HeapReleasedStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *HeapReleasedStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.HeapReleased)
 
 	metric.ID = dictionary.HeapReleasedMetricName

@@ -10,7 +10,7 @@ type TotalMemoryStrategy struct {
 	value float64
 }
 
-func (strategy *TotalMemoryStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *TotalMemoryStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.VirtualMemoryStats.Total)
 
 	metric.ID = dictionary.TotalMemoryMetricName

@@ -9,7 +9,8 @@ import (
 	agentdto "github.com/oldhanasong/go-metrics-collector/internal/agent/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/interfaces"
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
-	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/threading_pattern"
+	"math"
 	"sync"
 	"time"
 )
@@ -48,9 +49,6 @@ func (metricManager *MetricManager) CollectAndSend(ctx context.Context, onDone f
 		return
 	}
 
-	currentCtx := context.Background()
-	currentCtx, cancel := util.CombineContexts(ctx, currentCtx)
-
 	errCh := make(chan error, 1)
 	wg := sync.WaitGroup{}
 
@@ -67,13 +65,15 @@ func (metricManager *MetricManager) CollectAndSend(ctx context.Context, onDone f
 	}(errCh)
 
 	wg.Add(2)
-	metricManager.collect(currentCtx, cancel, &wg, errCh)
-	metricManager.send(currentCtx, &wg, errCh)
+	ch := metricManager.collect(ctx, &wg, errCh)
+	metricManager.send(ch, &wg, errCh)
 }
 
-func (metricManager *MetricManager) collect(ctx context.Context, cancel context.CancelFunc, wg *sync.WaitGroup, errCh chan<- error) {
-	go func(ctx context.Context, cancel context.CancelFunc, wg *sync.WaitGroup, errCh chan<- error) {
-		defer cancel()
+func (metricManager *MetricManager) collect(ctx context.Context, wg *sync.WaitGroup, errCh chan<- error) chan []generaldto.Metrics {
+	ch := collectingChan()
+
+	go func(ctx context.Context, ch chan []generaldto.Metrics, wg *sync.WaitGroup, errCh chan<- error) {
+		defer close(ch)
 		defer wg.Done()
 
 		var data *interimData
@@ -95,34 +95,54 @@ func (metricManager *MetricManager) collect(ctx context.Context, cancel context.
 
 				metrics = make([]generaldto.Metrics, 0, len(metricManager.metricsToCollect))
 				for _, metricName = range metricManager.metricsToCollect {
-					data.strategyMap[metricName].GetMetric(&data.metric, &data.collectedData)
+					data.strategyMap[metricName].FillMetric(&data.metric, &data.collectedData)
 					metrics = append(metrics, data.metric)
 				}
-				data.metricList = metrics
-				metricManager.pool.Put(interface{}(data))
 
-				time.Sleep(config.Configuration.PollInterval * time.Second)
+				ch <- metrics
+
+				sleep(config.Configuration.PollInterval)
 			}
 		}
-	}(ctx, cancel, wg, errCh)
+	}(ctx, ch, wg, errCh)
+
+	return ch
 }
 
-func (metricManager *MetricManager) send(ctx context.Context, wg *sync.WaitGroup, _ chan<- error) {
-	go func(ctx context.Context, wg *sync.WaitGroup) {
+func (metricManager *MetricManager) send(ch <-chan []generaldto.Metrics, wg *sync.WaitGroup, _ chan<- error) {
+	workerCh := make(chan []generaldto.Metrics, config.Configuration.RateLimit)
+	_ = threading_pattern.InitWorkerPool(config.Configuration.RateLimit, workerCh, func(_ int, metricBatch []generaldto.Metrics) {
+		_ = metricManager.client.SendBatch(metricBatch)
+	})
+
+	go func(ch <-chan []generaldto.Metrics, workerCh chan []generaldto.Metrics, wg *sync.WaitGroup) {
+		defer close(workerCh)
 		defer wg.Done()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				data := metricManager.pool.Get().(*interimData)
-				_ = metricManager.client.SendBatch(data.metricList)
+		sleep(config.Configuration.ReportInterval)
 
-				time.Sleep(config.Configuration.ReportInterval * time.Second)
+		var batch []generaldto.Metrics
+		var count int
+		var ok bool
+
+		for {
+			count = batchCount(ch)
+			if count == 0 {
+				sleep(config.Configuration.ReportInterval)
+				continue
 			}
+
+			for i := 0; i < count; i++ {
+				batch, ok = <-ch
+				if !ok {
+					return
+				}
+				workerCh <- batch
+			}
+
+			sleep(config.Configuration.ReportInterval)
 		}
-	}(ctx, wg)
+	}(ch, workerCh, wg)
 }
 
 func New(metricList []string, dataCollector interfaces.MetricDataCollector, client interfaces.Client) (MetricManager, error) {
@@ -166,4 +186,27 @@ func initStrategies(strategyMap *map[string]interfaces.ParsingStrategy, metricNa
 	}
 
 	return nil
+}
+
+func collectingChan() chan []generaldto.Metrics {
+	if config.Configuration.PollInterval == config.Configuration.ReportInterval {
+		return make(chan []generaldto.Metrics)
+	}
+
+	chLen := int(math.Max(
+		1,
+		math.Ceil(config.Configuration.ReportInterval.Seconds()/config.Configuration.PollInterval.Seconds()),
+	))
+
+	return make(chan []generaldto.Metrics, chLen)
+}
+
+func batchCount(ch <-chan []generaldto.Metrics) int {
+	return int(math.Min(float64(config.Configuration.RateLimit), float64(len(ch))))
+}
+
+func sleep(d time.Duration) {
+	if d > 0 {
+		time.Sleep(d * time.Second)
+	}
 }

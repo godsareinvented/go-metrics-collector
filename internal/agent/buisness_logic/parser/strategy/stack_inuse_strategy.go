@@ -10,7 +10,7 @@ type StackInuseStrategy struct {
 	value float64
 }
 
-func (strategy *StackInuseStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *StackInuseStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.StackInuse)
 
 	metric.ID = dictionary.StackInuseMetricName

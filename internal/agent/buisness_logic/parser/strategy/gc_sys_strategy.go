@@ -10,7 +10,7 @@ type GCSysStrategy struct {
 	value float64
 }
 
-func (strategy *GCSysStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *GCSysStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.GCSys)
 
 	metric.ID = dictionary.GCSysMetricName

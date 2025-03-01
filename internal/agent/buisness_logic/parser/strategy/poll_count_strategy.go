@@ -8,7 +8,7 @@ import (
 
 type PollCountStrategy struct{}
 
-func (strategy *PollCountStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *PollCountStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	metric.ID = dictionary.PollCountMetricName
 	metric.MType = dictionary.CounterMetricType
 	metric.Delta = &metricData.PollCount

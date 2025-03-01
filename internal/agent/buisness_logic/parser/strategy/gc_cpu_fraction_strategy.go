@@ -8,7 +8,7 @@ import (
 
 type GCCPUFractionStrategy struct{}
 
-func (strategy *GCCPUFractionStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *GCCPUFractionStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	metric.ID = dictionary.GCCPUFractionMetricName
 	metric.MType = dictionary.GaugeMetricType
 	metric.Delta = nil

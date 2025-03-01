@@ -8,7 +8,7 @@ import (
 
 type RandomValueStrategy struct{}
 
-func (strategy *RandomValueStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *RandomValueStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	metric.ID = dictionary.RandomValueMetricName
 	metric.MType = dictionary.GaugeMetricType
 	metric.Delta = nil

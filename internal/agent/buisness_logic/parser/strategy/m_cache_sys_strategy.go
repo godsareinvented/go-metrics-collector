@@ -10,7 +10,7 @@ type MCacheSysStrategy struct {
 	value float64
 }
 
-func (strategy *MCacheSysStrategy) GetMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
+func (strategy *MCacheSysStrategy) FillMetric(metric *generaldto.Metrics, metricData *agentdto.CollectedMetricData) {
 	strategy.value = float64(metricData.MemStats.MCacheSys)
 
 	metric.ID = dictionary.MCacheSysMetricName
