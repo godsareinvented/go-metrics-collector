@@ -68,7 +68,7 @@ func (m *MetricManager) initStrategies() error {
 	return nil
 }
 
-func NewInstance(dataCollector interfaces.MetricDataCollectorInterface, metricNameList []string) (MetricManager, error) {
+func NewMetricManager(dataCollector interfaces.MetricDataCollectorInterface, metricNameList []string) (MetricManager, error) {
 	if len(metricNameList) == 0 {
 		return MetricManager{}, ErrEmptyMetricNameList
 	}

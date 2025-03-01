@@ -10,7 +10,7 @@ import (
 )
 
 type MemStorage struct {
-	mu         sync.Mutex
+	mu         sync.Mutex // todo: Стоит заменить на RWMutex.
 	entityList [][]byte
 	nameIndex  map[string]int
 	idIndex    map[string]int

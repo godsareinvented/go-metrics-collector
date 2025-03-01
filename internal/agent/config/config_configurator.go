@@ -38,6 +38,7 @@ func parseFlags() {
 	flag.IntVar(&Configuration.ReportInterval, "r", 10, "Частота отправки метрик на сервер")
 	flag.IntVar(&Configuration.PollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
 	flag.StringVar(&Configuration.HashKey, "k", "", "Ключ для вычисления хэша")
+	flag.IntVar(&Configuration.RateLimit, "l", 1, "Количество одновременно исходящих запросов на сервер (количество воркеров)")
 
 	flag.Parse()
 	// todo: Отрицательные значения?

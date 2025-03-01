@@ -1,19 +1,19 @@
 package main
 
 import (
-	"container/list"
 	"context"
 	clientPackage "github.com/godsareinvented/go-metrics-collector/internal/agent/client"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/service/metric"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/threading_pattern"
 	"time"
 )
 
 // todo: Добавить в будущем аналогично серверу контекст.
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	configConfigurator := config.ConfigConfigurator{}
 	err := configConfigurator.ParseConfig()
@@ -21,7 +21,8 @@ func main() {
 		panic(err)
 	}
 
-	metricManager, err := metric.NewInstance(
+	client := clientPackage.NewClientWithRetry()
+	metricManager, err := metric.NewMetricManager(
 		metric.NewDataCollector(),
 		config.Configuration.MetricNameList,
 	)
@@ -29,45 +30,58 @@ func main() {
 		panic(err)
 	}
 
-	metricQueue := list.New()
-	client := clientPackage.NewClientWithRetry()
-	go CollectMetrics(ctx, metricQueue, &metricManager)
-	go SendMetrics(metricQueue, client)
+	errCh := make(chan error)
+	defer close(errCh)
 
-	select {}
-}
+	ch := CollectMetrics(ctx, errCh, &metricManager)
+	SendMetrics(ch, client)
 
-func CollectMetrics(ctx context.Context, metricQueue *list.List, metricManager *metric.MetricManager) {
-	for {
-		// todo: Обернуть элемент очереди в какую-то iterable структуру? Типа, пакет метрик..
-		metricList, err := metricManager.Collect(ctx)
+	select {
+	case err := <-errCh:
 		if nil != err {
+			cancel()
+			close(errCh)
 			panic(err)
 		}
-		metricQueue.PushBack(metricList)
-
-		time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
 	}
 }
 
-func SendMetrics(metricQueue *list.List, client interfaces.Client) {
-	for {
-		metricListRaw := metricQueue.Front()
-		if nil == metricListRaw {
-			time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
-			continue
-		}
+func CollectMetrics(ctx context.Context, errCh chan<- error, metricManager *metric.MetricManager) chan *[]dto.Metrics {
+	ch := make(chan *[]dto.Metrics)
 
-		metricList, ok := metricListRaw.Value.(*[]dto.Metrics)
-		if !ok {
-			panic("SendMetrics: metricListRaw is not []dto.Metrics")
-		}
-		metricQueue.Remove(metricListRaw)
+	go func() {
+		for {
+			metricList, err := metricManager.Collect(ctx)
+			if nil != err {
+				close(ch)
+				errCh <- err
+				return
+			}
+			ch <- metricList
 
-		if nil != metricList {
-			_ = client.SendBatch(metricList)
+			if config.Configuration.PollInterval > 0 {
+				time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
+			}
 		}
+	}()
 
-		time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
-	}
+	return ch
+}
+
+func SendMetrics(inputCh <-chan *[]dto.Metrics, client interfaces.Client) {
+	ch := make(chan *[]dto.Metrics)
+	_ = threading_pattern.InitWorkerPool(config.Configuration.RateLimit, ch, func(_ int, metricList *[]dto.Metrics) {
+		_ = client.SendBatch(metricList)
+	})
+
+	go func() {
+		defer close(ch)
+		for metricList := range inputCh {
+			ch <- metricList
+
+			if config.Configuration.PollInterval > 0 {
+				time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
+			}
+		}
+	}()
 }
