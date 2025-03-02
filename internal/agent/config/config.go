@@ -1,15 +1,33 @@
 package config
 
 type Config struct {
-	Endpoint                 string   `env:"ADDRESS"`         // Адрес эндпоинта HTTP-сервера.
-	ReportInterval           int      `env:"REPORT_INTERVAL"` // Частота отправки метрик на сервер.
-	PollInterval             int      `env:"POLL_INTERVAL"`   // Частота опроса метрик из пакета runtime.
-	HashKey                  string   `env:"KEY"`             // Ключ для вычисления хеша.
-	RateLimit                int      `env:"RATE_LIMIT"`      // Количество одновременно исходящих запросов на сервер (количество воркеров).
-	GzipAcceptedContentTypes []string // Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера.
-	GzipMinContentLength     int      // Минимальный размер тела ответа сервера, при котором будет происходить сжатие.
-	LogicalCpuCount          int      // Колиество логических процессоров на текущей машине.
-	MetricNameList           []string // Список названий метрик, собираемый агентом. Список генерируемый.
+	// Адрес эндпоинта HTTP-сервера
+	Endpoint string `env:"ADDRESS" validate:"required,hostname_port"`
+
+	// Частота отправки метрик на сервер в секундах
+	// Значение поля должно быть >= значению поля PollInterval, т.к. нет смысла отправлять не собранные метрики
+	ReportInterval int `env:"REPORT_INTERVAL" validate:"required,numeric,gte=0,lte=86400,gtefield=PollInterval"`
+
+	// Частота опроса метрик в секундах
+	PollInterval int `env:"POLL_INTERVAL" validate:"required,numeric,gte=0,lte=86400"`
+
+	// Ключ для вычисления хеша (hmac)
+	HashKey string `env:"KEY" validate:"required,hash_key,min=3,max=512"`
+
+	// Количество одновременно исходящих запросов на сервер (количество воркеров)
+	RateLimit int `env:"RATE_LIMIT" validate:"required,numeric,gte=0,lte=10"`
+
+	// Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера
+	GzipAcceptedContentTypes []string `validate:"required,unique,min=1,max=253,dive,oneof=application/json text/html"`
+
+	// Минимальный размер тела ответа сервера, при котором будет происходить сжатие
+	GzipMinContentLength int `validate:"required,numeric,gte=0,lt=10000"`
+
+	// Колиество логических процессоров на текущей машине
+	LogicalCpuCount int `validate:"required,numeric,gte=0,lte=1000"`
+
+	// Список названий метрик, собираемый агентом. Список генерируемый
+	MetricNameList []string `validate:"required,unique,min=1,max=1031,dive,metric_name"`
 }
 
 var Configuration Config

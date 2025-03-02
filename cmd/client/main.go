@@ -16,7 +16,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	configConfigurator := config.ConfigConfigurator{}
-	err := configConfigurator.ParseConfig()
+	err := configConfigurator.ParseConfig(ctx)
 	if nil != err {
 		panic(err)
 	}

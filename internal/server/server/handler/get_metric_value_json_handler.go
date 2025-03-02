@@ -11,8 +11,8 @@ import (
 )
 
 type InputMetrics struct {
-	ID    string `json:"id"   validate:"required,omitempty,required"`
-	MType string `json:"type" validate:"required,contains=gauge|contains=counter"`
+	ID    string `json:"id"   validate:"omitempty"`
+	MType string `json:"type" validate:"required,oneof=gauge counter"`
 }
 
 func GetMetricJson(ctx context.Context) http.HandlerFunc {

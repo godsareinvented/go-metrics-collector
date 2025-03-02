@@ -5,6 +5,8 @@ import (
 	"errors"
 	"flag"
 	"github.com/caarlos0/env"
+	"github.com/go-playground/validator/v10"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/validation/decorator"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/dictionary"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/logger"
@@ -19,7 +21,28 @@ type ConfigConfigurator struct{}
 
 var ErrNotStorageConnectorInterface = errors.New("the postgresql storage doesn't implement the StorageConnectorInterface")
 
-func (c *ConfigConfigurator) ParseConfig() {
+func (c *ConfigConfigurator) GetConfig(ctx context.Context) error {
+	err := parseConfig()
+	if nil != err {
+		return err
+	}
+	err = validateConfiguration(ctx)
+	if nil != err {
+		return err
+	}
+	return nil
+}
+
+func validateConfiguration(ctx context.Context) error {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	validate, err := decorator.GetRegisteredCustomFunctionsValidator(validate)
+	if nil != err {
+		return err
+	}
+	return validate.StructCtx(ctx, Configuration)
+}
+
+func parseConfig() error {
 	Configuration = Config{
 		GzipAcceptedContentTypes: []string{"application/json", "text/html"},
 		GzipMinContentLength:     1400,
@@ -29,21 +52,23 @@ func (c *ConfigConfigurator) ParseConfig() {
 	parseFlags()
 	err := parseEnv()
 	if nil != err {
-		panic("Error parsing env: " + err.Error())
+		return errors.New("Error parsing env: " + err.Error())
 	}
 
 	storage, storageConfigurator, err := getSuitableStorage()
 	if nil != err {
-		panic("Error configuring storage: " + err.Error())
+		return errors.New("Error parsing env: " + err.Error())
 	}
 	err = storageConfigurator.Configure()
 	if nil != err {
-		panic("Error configuring storage: " + err.Error())
+		return errors.New("Error parsing env: " + err.Error())
 	}
 	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
 
 	Configuration.Repository = repository.NewInstance(&storage)
 	Configuration.PermanentStorage = &permanentStorage
+
+	return nil
 }
 
 func parseFlags() {
@@ -55,7 +80,6 @@ func parseFlags() {
 	flag.StringVar(&Configuration.HashKey, "k", "", "Ключ для вычисления хэша")
 
 	flag.Parse()
-	// todo: Отрицательные значения?
 }
 
 func parseEnv() error {

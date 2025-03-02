@@ -7,17 +7,38 @@ import (
 )
 
 type Config struct {
-	Endpoint                 string                       `env:"ADDRESS"`           // Адрес эндпоинта HTTP-сервера.
-	StoreInterval            int                          `env:"STORE_INTERVAL"`    // Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск.
-	FileStoragePath          string                       `env:"FILE_STORAGE_PATH"` // Путь до файла, куда сохраняются текущие значения.
-	Restore                  bool                         `env:"RESTORE"`           // Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера.
-	DatabaseDSN              string                       `env:"DATABASE_DSN"`      // Адрес подключения к БД
-	HashKey                  string                       `env:"KEY"`               // Ключ для вычисления хеша.
-	GzipAcceptedContentTypes []string                     // Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера
-	GzipMinContentLength     int                          // Минимальный размер тела ответа сервера, при котором будет происходить сжатие
-	PermanentStorage         *interfaces.PermanentStorage // Сконфигурированное постоянное хранилище метрик между работой сервера
-	Repository               *repository.Repository       // Сконфигурированный репозиторий
-	Logger                   *zap.Logger                  // Логгер
+	// Адрес эндпоинта HTTP-сервера
+	Endpoint string `env:"ADDRESS" validate:"required,hostname_port"`
+
+	// Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск
+	StoreInterval int `env:"STORE_INTERVAL" validate:"required,numeric,gte=0,lte=86400"`
+
+	// Путь до файла, куда сохраняются текущие значения
+	FileStoragePath string `env:"FILE_STORAGE_PATH" validate:"required,file"`
+
+	// Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера
+	Restore bool `env:"RESTORE" validate:"required"`
+
+	// Адрес подключения к БД
+	DatabaseDSN string `env:"DATABASE_DSN" validate:"omitempty"`
+
+	// Ключ для вычисления хеша (hmac)
+	HashKey string `env:"KEY" validate:"required,hash_key,min=3,max=512"`
+
+	// Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера
+	GzipAcceptedContentTypes []string `validate:"required,unique,min=1,max=253,dive,oneof=application/json text/html"`
+
+	// Минимальный размер тела ответа сервера, при котором будет происходить сжатие
+	GzipMinContentLength int `validate:"required,numeric,gte=0,lt=10000"`
+
+	// Сконфигурированное постоянное хранилище метрик между работой сервера
+	PermanentStorage *interfaces.PermanentStorage `validate:"required"`
+
+	// Сконфигурированный репозиторий
+	Repository *repository.Repository `validate:"required"`
+
+	// Логгер
+	Logger *zap.Logger `validate:"required"`
 }
 
 var Configuration Config

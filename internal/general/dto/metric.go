@@ -8,11 +8,11 @@ import (
 
 // Metrics todo: переписать валидацию. Как создавать группы констреинтов?
 type Metrics struct {
-	ID    string   `json:"id"               validate:"omitempty,required"`
-	MType string   `json:"type"             validate:"required,contains=gauge|contains=counter"`
+	ID    string   `json:"id"               validate:"omitempty"`
+	MType string   `json:"type"             validate:"required,oneof=gauge counter"`
 	MName string   `json:"name"             validate:"required,alphanum"`
-	Delta *int64   `json:"delta,omitempty"  validate:"omitempty,required"`
-	Value *float64 `json:"value,omitempty"  validate:"omitempty,required"`
+	Delta *int64   `json:"delta,omitempty"  validate:"omitempty"`
+	Value *float64 `json:"value,omitempty"  validate:"omitempty"`
 }
 
 func (m Metrics) String() string {

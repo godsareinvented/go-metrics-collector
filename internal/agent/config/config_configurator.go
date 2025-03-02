@@ -1,17 +1,41 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"github.com/caarlos0/env"
+	"github.com/go-playground/validator/v10"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary"
-	"github.com/godsareinvented/go-metrics-collector/internal/general/dictionary/decorator"
+	dictionaryDecorator "github.com/godsareinvented/go-metrics-collector/internal/general/dictionary/decorator"
+	validationDecorator "github.com/godsareinvented/go-metrics-collector/internal/general/validation/decorator"
 	"github.com/shirou/gopsutil/v3/cpu"
 )
 
 type ConfigConfigurator struct{}
 
-func (c *ConfigConfigurator) ParseConfig() error {
+func (c *ConfigConfigurator) ParseConfig(ctx context.Context) error {
+	err := parseConfig()
+	if nil != err {
+		return err
+	}
+	err = validateConfiguration(ctx)
+	if nil != err {
+		return err
+	}
+	return nil
+}
+
+func validateConfiguration(ctx context.Context) error {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	validate, err := validationDecorator.GetRegisteredCustomFunctionsValidator(validate)
+	if nil != err {
+		return err
+	}
+	return validate.StructCtx(ctx, Configuration)
+}
+
+func parseConfig() error {
 	Configuration = Config{
 		GzipAcceptedContentTypes: []string{"application/json", "text/html"},
 		GzipMinContentLength:     1400,
@@ -41,7 +65,6 @@ func parseFlags() {
 	flag.IntVar(&Configuration.RateLimit, "l", 1, "Количество одновременно исходящих запросов на сервер (количество воркеров)")
 
 	flag.Parse()
-	// todo: Отрицательные значения?
 }
 
 func parseEnv() error {
@@ -59,7 +82,7 @@ func setLogicalCpuNumber() error {
 }
 
 func generateMetricNameList() error {
-	metricNameList, err := decorator.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], Configuration.LogicalCpuCount)
+	metricNameList, err := dictionaryDecorator.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], Configuration.LogicalCpuCount)
 	if nil != err {
 		return err
 	}
