@@ -34,12 +34,7 @@ func (c *ConfigConfigurator) GetConfig(ctx context.Context) error {
 }
 
 func validateConfiguration(ctx context.Context) error {
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	validate, err := decorator.GetRegisteredCustomFunctionsValidator(validate)
-	if nil != err {
-		return err
-	}
-	return validate.StructCtx(ctx, Configuration)
+	return Configuration.Validate.StructCtx(ctx, Configuration)
 }
 
 func parseConfig() error {
@@ -63,10 +58,17 @@ func parseConfig() error {
 	if nil != err {
 		return errors.New("Error parsing env: " + err.Error())
 	}
-	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
-
 	Configuration.Repository = repository.NewInstance(&storage)
+
+	permanentStorage := file.NewInstance(Configuration.FileStoragePath)
 	Configuration.PermanentStorage = &permanentStorage
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	validate, err = decorator.GetRegisteredCustomFunctionsValidator(validate)
+	if nil != err {
+		return err
+	}
+	Configuration.Validate = validate
 
 	return nil
 }

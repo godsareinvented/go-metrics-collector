@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
+	"github.com/godsareinvented/go-metrics-collector/internal/server/config"
+	metricPackage "github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric/parser"
 	"net/http"
 )
@@ -20,22 +20,22 @@ func UpdateMetricJson(ctx context.Context) http.HandlerFunc {
 		}()
 
 		requestParser := parser.JsonParser{}
-		metricDTO, err := requestParser.GetMetricDTO(request)
+		metric, err := requestParser.GetMetricDTO(request)
 		if nil != err {
 			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		// Валидация корректности данных метрики, инъекций.
-		err = validator.New(validator.WithRequiredStructEnabled()).Struct(metricDTO)
+		err = config.Configuration.Validate.Struct(metric)
 		if nil != err {
 			message, statusCode := ProcessValidationError(err)
 			http.Error(responseWriter, message, statusCode)
 			return
 		}
 
-		metricManager := metric.MetricManager{}
-		metricManager.UpdateMetric(requestCtx, metricDTO)
+		metricManager := metricPackage.MetricManager{}
+		metricManager.UpdateMetric(requestCtx, metric)
 
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusOK)

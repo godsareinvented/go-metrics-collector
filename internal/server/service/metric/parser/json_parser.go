@@ -8,7 +8,6 @@ import (
 
 type JsonParser struct{}
 
-// GetMetricDTO todo: Убрать в будущем значения по умолчанию для целочисленного и вещественного значений.
 func (jp *JsonParser) GetMetricDTO(request *http.Request) (dto.Metrics, error) {
 	var metric = dto.Metrics{}
 

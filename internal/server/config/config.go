@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/repository"
 	"go.uber.org/zap"
@@ -39,6 +40,9 @@ type Config struct {
 
 	// Логгер
 	Logger *zap.Logger `validate:"required"`
+
+	// Валидатор
+	Validate *validator.Validate `validate:"required"`
 }
 
 var Configuration Config

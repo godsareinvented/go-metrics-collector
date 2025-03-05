@@ -6,13 +6,13 @@ import (
 	"strconv"
 )
 
-// Metrics todo: переписать валидацию. Как создавать группы констреинтов?
+// Metrics todo: При добавлении новых типов метрик необходимо обновлять валидацию сущности.
 type Metrics struct {
 	ID    string   `json:"id"               validate:"omitempty"`
 	MType string   `json:"type"             validate:"required,oneof=gauge counter"`
 	MName string   `json:"name"             validate:"required,alphanum"`
-	Delta *int64   `json:"delta,omitempty"  validate:"omitempty"`
-	Value *float64 `json:"value,omitempty"  validate:"omitempty"`
+	Delta *int64   `json:"delta,omitempty"  validate:"required_if=MType counter,excluded_if=MType gauge"`
+	Value *float64 `json:"value,omitempty"  validate:"required_if=MType gauge,excluded_if=MType counter"`
 }
 
 func (m Metrics) String() string {
