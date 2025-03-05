@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"github.com/go-playground/validator/v10"
 	"net/http"
 	"strings"
@@ -12,4 +13,20 @@ func ProcessValidationError(error error) (string, int) {
 		return "Metric name not passed on or incorrect", http.StatusNotFound
 	}
 	return "incorrect metric data", http.StatusBadRequest
+}
+
+// GetCombinedContext Получение комбинированного контекста, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
+func GetCombinedContext(serverCtx context.Context, requestCtx context.Context) (context.Context, context.CancelFunc) {
+	wrappedRequestCtx, cancel := context.WithCancel(requestCtx)
+
+	go func() {
+		select {
+		case <-serverCtx.Done():
+			cancel()
+		case <-wrappedRequestCtx.Done():
+			return
+		}
+	}()
+
+	return wrappedRequestCtx, cancel
 }

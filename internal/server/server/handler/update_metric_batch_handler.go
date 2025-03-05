@@ -10,15 +10,8 @@ import (
 
 func UpdateMetricBatchMetric(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		// Комбинированный контекст, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
-		requestCtx, cancel := context.WithCancel(request.Context())
+		requestCtx, cancel := GetCombinedContext(ctx, request.Context())
 		defer cancel()
-
-		// todo: Утечка памяти? Горутина будет вечно ожидать закрытия канала. Горутина завершиться при завершении main или при завершении и UpdateMetricBatchMetric тоже?
-		go func() {
-			<-ctx.Done()
-			cancel()
-		}()
 
 		jsonParser := parser.JsonParser{}
 		metricBatch, err := jsonParser.GetMetricBatch(request)

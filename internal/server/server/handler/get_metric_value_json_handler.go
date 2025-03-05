@@ -17,14 +17,8 @@ type InputMetrics struct {
 
 func GetMetricJson(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		// Комбинированный контекст, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
-		requestCtx, cancel := context.WithCancel(request.Context())
+		requestCtx, cancel := GetCombinedContext(ctx, request.Context())
 		defer cancel()
-
-		go func() {
-			<-ctx.Done()
-			cancel()
-		}()
 
 		requestParser := parser.JsonParser{}
 		metric, err := requestParser.GetMetricDTO(request)
