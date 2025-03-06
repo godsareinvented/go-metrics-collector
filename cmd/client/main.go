@@ -79,7 +79,7 @@ func SendMetrics(inputCh <-chan *[]dto.Metrics, client interfaces.Client) {
 		for metricList := range inputCh {
 			ch <- metricList
 
-			if config.Configuration.PollInterval > 0 {
+			if config.Configuration.ReportInterval > 0 {
 				time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
 			}
 		}
