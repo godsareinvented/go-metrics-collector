@@ -28,7 +28,7 @@ func (s *Client) sendRequest(request *resty.Request) error {
 }
 
 // NewBaseClient unused
-func _() interfaces.Client {
+func _() interfaces.ClientInterface {
 	client := resty.New().SetTimeout(2 * time.Second)
 
 	return &Client{

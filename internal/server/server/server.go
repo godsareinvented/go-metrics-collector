@@ -51,9 +51,9 @@ func (s *Server) Stop() {
 		return
 	}
 
-	err := s.OnStop(*s.ctx)
-
 	(*s.cancel)()
+
+	err := s.OnStop(*s.ctx)
 
 	if nil != err {
 		panic("OnStop: " + err.Error())

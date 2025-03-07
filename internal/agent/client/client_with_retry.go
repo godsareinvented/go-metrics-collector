@@ -38,7 +38,7 @@ func (s *ClientWithRetry) sendRequest(request *resty.Request) error {
 	return err
 }
 
-func NewClientWithRetry() interfaces.Client {
+func NewClientWithRetry() interfaces.ClientInterface {
 	client := resty.New().SetTimeout(2 * time.Second)
 
 	return &ClientWithRetry{
