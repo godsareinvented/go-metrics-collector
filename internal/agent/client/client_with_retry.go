@@ -6,31 +6,31 @@ import (
 	requestPackage "github.com/godsareinvented/go-metrics-collector/internal/agent/client/request"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/service/retry"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/service/retry/prepared_option"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/utils/service/retry"
 	"time"
 )
 
 type ClientWithRetry struct {
-	client resty.Client
+	client    resty.Client
+	retryOpts dto.RetryOptions
 }
 
-func (s *ClientWithRetry) Send(metric dto.Metrics) error {
-	return s.sendRequest(requestPackage.GetUpdateMetricJsonRequest(metric, &s.client))
+func (s *ClientWithRetry) Send(ctx context.Context, metric dto.Metrics) error {
+	return s.sendRequest(ctx, requestPackage.GetUpdateMetricJsonRequest(metric, &s.client))
 }
 
-func (s *ClientWithRetry) SendBatch(metrics *[]dto.Metrics) error {
-	return s.sendRequest(requestPackage.GetUpdateMetricBatchRequest(metrics, &s.client))
+func (s *ClientWithRetry) SendBatch(ctx context.Context, metrics *[]dto.Metrics) error {
+	return s.sendRequest(ctx, requestPackage.GetUpdateMetricBatchRequest(metrics, &s.client))
 }
 
-func (s *ClientWithRetry) sendRequest(request *resty.Request) error {
+func (s *ClientWithRetry) sendRequest(ctx context.Context, request *resty.Request) error {
 	r := requestPackage.GetWrappedRequest(request)
 	callback := func() (error, bool) {
-		_, err := r.Execute(r.Method, r.URL)
+		_, err := r.SetContext(ctx).Execute(r.Method, r.URL)
 		return err, nil != err
 	}
 
-	err := retry.DoWithRetry(context.Background(), prepared_option.DefaultFixedDelayListOptions, callback)
+	err := retry.DoWithRetry(ctx, s.retryOpts, callback)
 	if nil != err {
 		return err
 	}
@@ -38,10 +38,11 @@ func (s *ClientWithRetry) sendRequest(request *resty.Request) error {
 	return err
 }
 
-func NewClientWithRetry() interfaces.ClientInterface {
+func NewClientWithRetry(retryOpts dto.RetryOptions) interfaces.ClientInterface {
 	client := resty.New().SetTimeout(2 * time.Second)
 
 	return &ClientWithRetry{
-		client: *client,
+		client:    *client,
+		retryOpts: retryOpts,
 	}
 }

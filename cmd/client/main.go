@@ -7,7 +7,7 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/service/metric"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/utils"
-	"time"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/utils/service/retry/prepared_option"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 		ctx,
 		config.Configuration.MetricNameList,
 		metric.NewDataCollector(),
-		clientPackage.NewClientWithRetry(),
+		clientPackage.NewClientWithRetry(prepared_option.DefaultFixedDelayListOptions),
 	)
 	if nil != err {
 		panic(err)
@@ -31,18 +31,23 @@ func main() {
 
 	wg, errCh := metricManager.CollectAndSend()
 
-	for {
-		select {
-		case errNew, ok := <-errCh:
-			err = utils.WrapErrs(err, errNew)
-			if !ok {
-				err = utils.WrapErrs(errors.New("error channel has been closed"), err)
-				panic(err)
+	go func() {
+		for {
+			select {
+			case errNew, ok := <-errCh:
+				err = utils.WrapErrs(err, errNew)
+				if !ok {
+					err = utils.WrapErrs(errors.New("error channel has been closed"), err)
+					panic(err)
+				}
 			}
-		case <-ctx.Done():
-			wg.Wait()
-			err = utils.WrapErrs(errors.New("context done"), err)
-			panic(err)
 		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		wg.Wait()
+		err = utils.WrapErrs(errors.New("context done"), err)
+		panic(err)
 	}
 }

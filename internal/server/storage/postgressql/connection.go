@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/service/retry"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/service/retry/prepared_option"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/utils/service/retry"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/utils/service/retry/prepared_option"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 )

@@ -89,8 +89,9 @@ func (m *MetricManager) startCollecting(errCh chan<- error) chan *[]dto.Metrics 
 
 func (m *MetricManager) send(inputCh <-chan *[]dto.Metrics, errCh chan<- error) *sync.WaitGroup {
 	ch := make(chan *[]dto.Metrics)
+
 	wg, _ := threading_pattern.InitWorkerPool(m.ctx, config.Configuration.RateLimit, ch, func(_ int, metricList *[]dto.Metrics) error {
-		err := m.client.SendBatch(metricList)
+		err := m.client.SendBatch(m.ctx, metricList)
 		if nil != err {
 			errCh <- err
 			m.cancel()
@@ -173,6 +174,8 @@ func NewMetricManager(
 	wrappedCtx, cancel := context.WithCancel(ctx)
 
 	metricManager := MetricManager{
+		ctx:                  wrappedCtx,
+		cancel:               cancel,
 		metricNamesToCollect: metricNameList,
 		dataCollector:        dataCollector,
 		client:               client,

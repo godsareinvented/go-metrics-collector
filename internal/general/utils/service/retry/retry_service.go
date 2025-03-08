@@ -3,8 +3,8 @@ package retry
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/godsareinvented/go-metrics-collector/internal/server/dto"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/utils"
 	"time"
 )
 
@@ -27,7 +27,7 @@ func DoWithRetry(ctx context.Context, retryOpts dto.RetryOptions, callback UserD
 	var iter uint = 0
 	for {
 		if iter >= retryOpts.Attempts {
-			return fmt.Errorf("%w: %v", ErrNonExecution, lastCallbackErr)
+			return utils.WrapErrs(ErrNonExecution, lastCallbackErr)
 		}
 
 		delay, err := getNextDelay(iter, retryOpts)
@@ -39,7 +39,7 @@ func DoWithRetry(ctx context.Context, retryOpts dto.RetryOptions, callback UserD
 			if 0 == iter {
 				return ErrIncorrectDelay
 			}
-			return fmt.Errorf("%w: %v", ErrNonExecution, lastCallbackErr)
+			return utils.WrapErrs(ErrNonExecution, lastCallbackErr)
 		}
 
 		select {

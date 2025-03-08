@@ -1,7 +1,7 @@
 package prepared_option
 
 import (
-	"github.com/godsareinvented/go-metrics-collector/internal/server/dto"
+	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 	"time"
 )
 
