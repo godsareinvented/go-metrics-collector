@@ -1,5 +1,7 @@
 package config
 
+import "github.com/go-playground/validator/v10"
+
 type Config struct {
 	// Адрес эндпоинта HTTP-сервера
 	Endpoint string `env:"ADDRESS" validate:"required,hostname_port"`
@@ -28,6 +30,9 @@ type Config struct {
 
 	// Список названий метрик, собираемый агентом. Список генерируемый
 	MetricNameList []string `validate:"required,unique,min=1,max=1031,dive,metric_name"`
+
+	// Валидатор
+	Validate *validator.Validate `validate:"required"`
 }
 
 var Configuration Config

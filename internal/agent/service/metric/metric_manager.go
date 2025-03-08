@@ -2,7 +2,6 @@ package metric
 
 import (
 	"context"
-	"errors"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/buisness_logic/parser"
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/config"
 	agentDto "github.com/godsareinvented/go-metrics-collector/internal/agent/dto"
@@ -13,31 +12,30 @@ import (
 	"time"
 )
 
-// MetricManager todo: Стоит переформатировать названия пакетов: убрать упоминание пакета вначале структур, убрать использование снейк_кейс, камелКейс и т.д.
-type MetricManager struct {
-	ctx                  context.Context
-	cancel               context.CancelFunc
-	metricNamesToCollect []string
-	dataCollector        interfaces.MetricDataCollectorInterface
-	client               interfaces.ClientInterface
-}
+type (
+	interimData struct {
+		err           error
+		metric        dto.Metrics
+		metricList    []dto.Metrics
+		collectedData agentDto.CollectedMetricData
+		strategyMap   map[string]interfaces.ParsingStrategyInterface
+	}
 
-var (
-	ErrNoInitializedArguments = errors.New("all metric manager arguments must be initialized")
-	ErrNoMetricsToCollect     = errors.New("empty metric name list. No metrics to collect")
-
-	// Переменные вынесены в область видимости пакета для избежагания постоянной инициализации переменных в функциях и выделения памяти
-	collectingErr       error
-	strategies          map[string]interfaces.ParsingStrategyInterface
-	metric              dto.Metrics
-	metricList          []dto.Metrics
-	collectedMetricData agentDto.CollectedMetricData
+	// MetricManager todo: Стоит переформатировать названия пакетов: убрать упоминание пакета вначале структур, убрать использование снейк_кейс, камелКейс и т.д.
+	MetricManager struct {
+		ctx                  context.Context                         `validate:"required"`
+		cancel               context.CancelFunc                      `validate:"required"`
+		metricNamesToCollect []string                                `validate:"required,unique,min=1,max=1031,dive,metric_name"`
+		dataCollector        interfaces.MetricDataCollectorInterface `validate:"required"`
+		client               interfaces.ClientInterface              `validate:"required"`
+		interimDataPool      *sync.Pool                              `validate:"required"`
+	}
 )
 
 func (m *MetricManager) CollectAndSend() (*sync.WaitGroup, chan error) {
 	errCh := make(chan error)
 
-	err := m.validateArguments()
+	err := config.Configuration.Validate.Struct(*m)
 	if nil != err {
 		errCh <- err
 		close(errCh)
@@ -63,19 +61,18 @@ func (m *MetricManager) startCollecting(errCh chan<- error) chan *[]dto.Metrics 
 	go func(ch chan *[]dto.Metrics, errCh chan<- error) {
 		defer close(ch)
 
-		var err error
 		for {
 			select {
 			case <-m.ctx.Done():
 				return
 			default:
-				err = m.collectMetrics()
+				metricList, err := m.collectMetrics()
 				if nil != err {
 					errCh <- err
 					return
 				}
 
-				ch <- &metricList
+				ch <- metricList
 
 				if config.Configuration.PollInterval > 0 {
 					time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
@@ -121,47 +118,39 @@ func (m *MetricManager) send(inputCh <-chan *[]dto.Metrics, errCh chan<- error) 
 	return wg
 }
 
-func (m *MetricManager) collectMetrics() error {
-	collectedMetricData = agentDto.CollectedMetricData{}
-	collectingErr = m.dataCollector.CollectMetricData(m.ctx, &collectedMetricData)
-	if nil != collectingErr {
-		return collectingErr
+func (m *MetricManager) collectMetrics() (*[]dto.Metrics, error) {
+	d := m.interimDataPool.Get().(*interimData)
+
+	d.collectedData = agentDto.CollectedMetricData{}
+	d.err = m.dataCollector.CollectMetricData(m.ctx, &d.collectedData)
+	if nil != d.err {
+		return &d.metricList, nil
 	}
 
-	metricList = metricList[:0]
+	d.metricList = d.metricList[:0]
 	for _, metricName := range m.metricNamesToCollect {
-		metric = dto.Metrics{}
-		collectingErr = strategies[metricName].ParseMetric(&metric, &collectedMetricData)
-		if nil != collectingErr {
-			return collectingErr
+		d.metric = dto.Metrics{}
+		d.err = d.strategyMap[metricName].ParseMetric(&d.metric, &d.collectedData)
+		if nil != d.err {
+			return &d.metricList, nil
 		}
-		metricList = append(metricList, metric)
+		d.metricList = append(d.metricList, d.metric)
 	}
 
-	return nil
+	return &d.metricList, nil
 }
 
-func (m *MetricManager) initStrategies() error {
-	strategies = make(map[string]interfaces.ParsingStrategyInterface, len(m.metricNamesToCollect))
+func initStrategies(strategyMap *map[string]interfaces.ParsingStrategyInterface, metricNames []string) error {
+	*strategyMap = make(map[string]interfaces.ParsingStrategyInterface, len(metricNames))
 
 	var err error
-	for _, metricName := range m.metricNamesToCollect {
-		strategies[metricName], err = parser.GetStrategy(metricName)
+	for _, metricName := range metricNames {
+		(*strategyMap)[metricName], err = parser.GetStrategy(metricName)
 		if nil != err {
 			return err
 		}
 	}
 
-	return nil
-}
-
-func (m *MetricManager) validateArguments() error {
-	if nil == m.dataCollector || nil == m.client || nil == m.metricNamesToCollect {
-		return ErrNoInitializedArguments
-	}
-	if len(m.metricNamesToCollect) == 0 {
-		return ErrNoMetricsToCollect
-	}
 	return nil
 }
 
@@ -171,6 +160,21 @@ func NewMetricManager(
 	dataCollector interfaces.MetricDataCollectorInterface,
 	client interfaces.ClientInterface,
 ) (MetricManager, error) {
+	var err error
+
+	pool := &sync.Pool{
+		New: func() interface{} {
+			s := interimData{}
+			s.metricList = make([]dto.Metrics, 0, len(metricNameList))
+			err = initStrategies(&s.strategyMap, metricNameList)
+			return &s
+		},
+	}
+	pool.New()
+	if nil != err {
+		return MetricManager{}, err
+	}
+
 	wrappedCtx, cancel := context.WithCancel(ctx)
 
 	metricManager := MetricManager{
@@ -179,17 +183,9 @@ func NewMetricManager(
 		metricNamesToCollect: metricNameList,
 		dataCollector:        dataCollector,
 		client:               client,
-		ctx:                  wrappedCtx,
-		cancel:               cancel,
+		interimDataPool:      pool,
 	}
-	err := metricManager.validateArguments()
-	if nil != err {
-		return MetricManager{}, err
-	}
-
-	metricList = make([]dto.Metrics, 0, len(metricList))
-
-	err = metricManager.initStrategies()
+	err = config.Configuration.Validate.Struct(metricManager)
 	if nil != err {
 		return MetricManager{}, err
 	}

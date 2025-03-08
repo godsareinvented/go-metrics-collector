@@ -27,12 +27,7 @@ func (c *ConfigConfigurator) ParseConfig(ctx context.Context) error {
 }
 
 func validateConfiguration(ctx context.Context) error {
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	validate, err := validationDecorator.GetRegisteredCustomFunctionsValidator(validate)
-	if nil != err {
-		return err
-	}
-	return validate.StructCtx(ctx, Configuration)
+	return Configuration.Validate.StructCtx(ctx, Configuration)
 }
 
 func parseConfig() error {
@@ -54,6 +49,13 @@ func parseConfig() error {
 	if nil != err {
 		return err
 	}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	validate, err = validationDecorator.GetRegisteredCustomFunctionsValidator(validate)
+	if nil != err {
+		return err
+	}
+	Configuration.Validate = validate
+
 	return nil
 }
 
