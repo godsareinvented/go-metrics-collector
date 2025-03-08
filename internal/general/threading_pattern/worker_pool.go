@@ -1,23 +1,46 @@
 package threading_pattern
 
-import "errors"
+import (
+	"context"
+	"errors"
+	"sync"
+)
 
 var (
 	ErrNoArguments = errors.New("no arguments")
 )
 
-func InitWorkerPool[T interface{}](workerCount int, taskCh <-chan T, callback func(workerId int, task T)) error {
+func InitWorkerPool[T interface{}](
+	ctx context.Context,
+	workerCount int,
+	taskCh <-chan T,
+	callback func(workerId int, task T) error,
+) (*sync.WaitGroup, error) {
+	wg := sync.WaitGroup{}
 	if nil == taskCh || nil == callback {
-		return ErrNoArguments
+		return &wg, ErrNoArguments
 	}
 
 	for i := 0; i < workerCount; i++ {
-		go func(i int) {
+		wg.Add(1)
+
+		go func(ctx context.Context, i int, wg *sync.WaitGroup) {
+			defer wg.Done()
+
+			var err error
 			for task := range taskCh {
-				callback(i, task)
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					err = callback(i, task)
+					if nil != err {
+						return
+					}
+				}
 			}
-		}(i)
+		}(ctx, i, &wg)
 	}
 
-	return nil
+	return &wg, nil
 }

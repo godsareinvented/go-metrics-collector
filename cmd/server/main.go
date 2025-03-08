@@ -20,7 +20,6 @@ func main() {
 		OnStart: callback.OnServerStartedCallback,
 		OnStop:  callback.OnServerStoppedCallback,
 	}
-	// todo: Нужен контекст для завершения этой горутины?..
 	go webServer.Start()
 
 	select {}

@@ -9,11 +9,14 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/interfaces"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/threading_pattern"
+	"sync"
 	"time"
 )
 
 // MetricManager todo: Стоит переформатировать названия пакетов: убрать упоминание пакета вначале структур, убрать использование снейк_кейс, камелКейс и т.д.
 type MetricManager struct {
+	ctx                  context.Context
+	cancel               context.CancelFunc
 	metricNamesToCollect []string
 	dataCollector        interfaces.MetricDataCollectorInterface
 	client               interfaces.ClientInterface
@@ -31,23 +34,30 @@ var (
 	collectedMetricData agentDto.CollectedMetricData
 )
 
-func (m *MetricManager) CollectAndSend(ctx context.Context) chan error {
+func (m *MetricManager) CollectAndSend() (*sync.WaitGroup, chan error) {
 	errCh := make(chan error)
 
 	err := m.validateArguments()
 	if nil != err {
 		errCh <- err
 		close(errCh)
-		return errCh
+		return &sync.WaitGroup{}, errCh
 	}
 
-	ch := m.startCollecting(ctx, errCh)
-	m.send(ctx, ch)
+	ch := m.startCollecting(errCh)
+	wg := m.send(ch, errCh)
 
-	return errCh
+	go func(wg *sync.WaitGroup) {
+		defer close(errCh)
+		defer m.cancel()
+
+		wg.Wait()
+	}(wg)
+
+	return wg, errCh
 }
 
-func (m *MetricManager) startCollecting(ctx context.Context, errCh chan error) chan *[]dto.Metrics {
+func (m *MetricManager) startCollecting(errCh chan<- error) chan *[]dto.Metrics {
 	ch := make(chan *[]dto.Metrics)
 
 	go func(ch chan *[]dto.Metrics, errCh chan<- error) {
@@ -55,17 +65,21 @@ func (m *MetricManager) startCollecting(ctx context.Context, errCh chan error) c
 
 		var err error
 		for {
-			err = m.collectMetrics(ctx)
-			if nil != err {
-				close(ch)
-				errCh <- err
-				close(errCh)
+			select {
+			case <-m.ctx.Done():
 				return
-			}
-			ch <- &metricList
+			default:
+				err = m.collectMetrics()
+				if nil != err {
+					errCh <- err
+					return
+				}
 
-			if config.Configuration.PollInterval > 0 {
-				time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
+				ch <- &metricList
+
+				if config.Configuration.PollInterval > 0 {
+					time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
+				}
 			}
 		}
 	}(ch, errCh)
@@ -73,29 +87,42 @@ func (m *MetricManager) startCollecting(ctx context.Context, errCh chan error) c
 	return ch
 }
 
-func (m *MetricManager) send(ctx context.Context, inputCh <-chan *[]dto.Metrics) {
-	go func(ctx context.Context, inputCh <-chan *[]dto.Metrics) {
-		ch := make(chan *[]dto.Metrics)
-		defer close(ch)
+func (m *MetricManager) send(inputCh <-chan *[]dto.Metrics, errCh chan<- error) *sync.WaitGroup {
+	ch := make(chan *[]dto.Metrics)
+	wg, _ := threading_pattern.InitWorkerPool(m.ctx, config.Configuration.RateLimit, ch, func(_ int, metricList *[]dto.Metrics) error {
+		err := m.client.SendBatch(metricList)
+		if nil != err {
+			errCh <- err
+			m.cancel()
+		}
+		return err
+	})
 
-		_ = threading_pattern.InitWorkerPool(config.Configuration.RateLimit, ch, func(_ int, metricList *[]dto.Metrics) {
-			_ = m.client.SendBatch(metricList)
-		})
+	go func(ch chan *[]dto.Metrics, inputCh <-chan *[]dto.Metrics, wg *sync.WaitGroup) {
+		defer close(ch)
 
 		var metricNameList *[]dto.Metrics
 		for metricNameList = range inputCh {
-			ch <- metricNameList
+			select {
+			case <-m.ctx.Done():
+				return
+			default:
+				ch <- metricNameList
 
-			if config.Configuration.ReportInterval > 0 {
-				time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
+				if config.Configuration.ReportInterval > 0 {
+					time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
+				}
 			}
+
 		}
-	}(ctx, inputCh)
+	}(ch, inputCh, wg)
+
+	return wg
 }
 
-func (m *MetricManager) collectMetrics(ctx context.Context) error {
+func (m *MetricManager) collectMetrics() error {
 	collectedMetricData = agentDto.CollectedMetricData{}
-	collectingErr = m.dataCollector.CollectMetricData(ctx, &collectedMetricData)
+	collectingErr = m.dataCollector.CollectMetricData(m.ctx, &collectedMetricData)
 	if nil != collectingErr {
 		return collectingErr
 	}
@@ -138,14 +165,19 @@ func (m *MetricManager) validateArguments() error {
 }
 
 func NewMetricManager(
+	ctx context.Context,
+	metricNameList []string,
 	dataCollector interfaces.MetricDataCollectorInterface,
 	client interfaces.ClientInterface,
-	metricNameList []string,
 ) (MetricManager, error) {
+	wrappedCtx, cancel := context.WithCancel(ctx)
+
 	metricManager := MetricManager{
 		metricNamesToCollect: metricNameList,
 		dataCollector:        dataCollector,
 		client:               client,
+		ctx:                  wrappedCtx,
+		cancel:               cancel,
 	}
 	err := metricManager.validateArguments()
 	if nil != err {
