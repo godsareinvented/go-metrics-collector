@@ -8,10 +8,20 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/agent/service/metric"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/utils"
 	"github.com/godsareinvented/go-metrics-collector/internal/general/utils/service/retry/prepared_option"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		exitCh := make(chan os.Signal, 1)
+		signal.Notify(exitCh, os.Interrupt, syscall.SIGTERM)
+		<-exitCh
+		cancel()
+	}()
 
 	configConfigurator := config.ConfigConfigurator{}
 	err := configConfigurator.ParseConfig(ctx)
