@@ -7,22 +7,22 @@ import (
 	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric"
 )
 
-func OnServerStoppedCallback(ctx context.Context) error {
-	var resultError error
-
+func OnServerStoppedCallback(ctx context.Context, errCh chan<- error) {
 	printServerStopped()
 
 	err := exportMetricsToPermanentStorage(ctx)
 	if nil != err {
-		resultError = err
+		errCh <- err
+		return
 	}
 
-	err = closeStorage()
+	err = closeResources()
 	if nil != err {
-		resultError = err
+		errCh <- err
+		return
 	}
 
-	return resultError
+	return
 }
 
 func printServerStopped() {
@@ -36,12 +36,10 @@ func exportMetricsToPermanentStorage(ctx context.Context) error {
 	}
 
 	metricManager := metric.MetricManager{}
-	err := metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
-	(*config.Configuration.PermanentStorage).Close()
-
-	return err
+	return metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 }
 
-func closeStorage() error {
+func closeResources() error {
+	(*config.Configuration.PermanentStorage).Close()
 	return config.Configuration.Repository.CloseStorage()
 }

@@ -8,10 +8,20 @@ import (
 	"time"
 )
 
-func OnServerStartedCallback(ctx context.Context) error {
+func OnServerStartedCallback(ctx context.Context, errCh chan<- error) error {
 	printServerStarted()
-	initExportTask(ctx)
-	return importMetricsFromPermanentStorage(ctx)
+
+	err := importMetricsFromPermanentStorage(ctx)
+	if nil != err {
+		return err
+	}
+
+	err = initTasks(ctx, errCh)
+	if nil != err {
+		return err
+	}
+
+	return nil
 }
 
 func printServerStarted() {
@@ -19,23 +29,39 @@ func printServerStarted() {
 }
 
 // todo: В будущем обязательно переписать на более надёжную схему.
-func initExportTask(ctx context.Context) {
+func initTasks(ctx context.Context, errCh chan<- error) error {
 	if config.Configuration.StoreInterval > 0 {
-		go exportTask(ctx)
-	}
-}
-
-func exportTask(ctx context.Context) {
-	metricManager := metric.MetricManager{}
-	ticker := time.NewTicker(time.Duration(config.Configuration.StoreInterval) * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			_ = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+		err := exportTask(ctx, errCh)
+		if nil != err {
+			return err
 		}
 	}
+	return nil
+}
+
+func exportTask(ctx context.Context, errCh chan<- error) error {
+	metricManager := metric.MetricManager{}
+	err := metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+	if nil != err {
+		return err
+	}
+
+	go func() {
+		ticker := time.NewTicker(time.Duration(config.Configuration.StoreInterval) * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				err = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+				if nil != err {
+					errCh <- err
+				}
+			}
+		}
+	}()
+
+	return nil
 }
 
 func importMetricsFromPermanentStorage(ctx context.Context) error {
