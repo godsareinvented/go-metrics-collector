@@ -1,13 +1,12 @@
 package handler
 
 import (
-	"github.com/go-playground/validator/v10"
 	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/action"
-	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/parser"
+	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
+	"github.com/oldhanasong/go-metrics-collector/internal/dto"
+	"github.com/oldhanasong/go-metrics-collector/internal/service/validator/metric"
 	"net/http"
-	"reflect"
 	"strconv"
-	"strings"
 )
 
 type UpdateMetricHandler struct{}
@@ -18,30 +17,30 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 		return
 	}
 
-	requestParser := parser.RequestParser{}
-	metricDTO := requestParser.GetParsedMetric(request)
-
-	err := validator.New().Struct(metricDTO)
-
-	if err != nil {
-		message, statusCode := processError(err)
-		http.Error(responseWriter, message, statusCode)
+	MType, MName, MValue := parsedMetricValues(request)
+	if MType == "" || MName == "" || MValue == "" {
+		http.Error(responseWriter, "empty metric data", http.StatusNotFound)
 		return
 	}
 
-	if reflect.TypeOf(metricDTO.Value).Name() == "int64" {
-		metricDTO.Value, _ = strconv.ParseInt(metricDTO.Value.(string), 10, 64)
-	} else {
-		metricDTO.Value, _ = strconv.ParseFloat(metricDTO.Value.(string), 64)
+	err := metric.ValidateMetricValues(MType, MName, MValue)
+	if err != nil {
+		http.Error(responseWriter, "incorrect metric data", http.StatusBadRequest)
+		return
 	}
 
-	action.UpdateValue(metricDTO)
+	metrics := dto.Metric{Type: MType, Name: MName}
+	if MType == dictionary.GaugeMetricType {
+		metrics.Value, _ = strconv.ParseInt(MValue, 10, 64)
+	} else {
+		metrics.Value, _ = strconv.ParseFloat(MValue, 64)
+	}
+
+	action.UpdateValue(metrics)
 }
 
-func processError(error error) (string, int) {
-	errors := error.(validator.ValidationErrors)
-	if strings.Contains(errors[0].Field(), "Name") {
-		return "Metric name not passed on or incorrect", http.StatusNotFound
-	}
-	return "incorrect metric data", http.StatusBadRequest
+func parsedMetricValues(r *http.Request) (string, string, string) {
+	return r.PathValue("type"),
+		r.PathValue("name"),
+		r.PathValue("value")
 }
