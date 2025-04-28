@@ -93,12 +93,17 @@ func (s *PostgreSQLStorage) GetAll(ctx context.Context) ([]dto.Metrics, error) {
 
 	var metrics []dto.Metrics
 	for queryRows.Next() {
-		var metric dto.Metrics
-		err = queryRows.Scan(&metric.ID, &metric.MType, &metric.MName, &metric.Delta, &metric.Value)
-		if nil != err {
-			return nil, err
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			var metric dto.Metrics
+			err = queryRows.Scan(&metric.ID, &metric.MType, &metric.MName, &metric.Delta, &metric.Value)
+			if nil != err {
+				return nil, err
+			}
+			metrics = append(metrics, metric)
 		}
-		metrics = append(metrics, metric)
 	}
 
 	err = queryRows.Err()
@@ -116,17 +121,16 @@ func (s *PostgreSQLStorage) GetAll(ctx context.Context) ([]dto.Metrics, error) {
 
 func (s *PostgreSQLStorage) GetByID(ctx context.Context, ID string, mType string) (dto.Metrics, bool, error) {
 	queryRow := s.db.QueryRowContext(ctx, getMetricByIDQuery, ID, mType)
-
-	var metric dto.Metrics
-	err := queryRow.Scan(&metric.ID, &metric.MType, &metric.MName, &metric.Delta, &metric.Value)
-	if errors.Is(err, sql.ErrNoRows) {
-		return dto.Metrics{}, false, nil
-	}
+	err := queryRow.Err()
 	if nil != err {
 		return dto.Metrics{}, false, err
 	}
 
-	err = queryRow.Err()
+	var metric dto.Metrics
+	err = queryRow.Scan(&metric.ID, &metric.MType, &metric.MName, &metric.Delta, &metric.Value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return dto.Metrics{}, false, nil
+	}
 	if nil != err {
 		return dto.Metrics{}, false, err
 	}
@@ -136,17 +140,16 @@ func (s *PostgreSQLStorage) GetByID(ctx context.Context, ID string, mType string
 
 func (s *PostgreSQLStorage) GetByName(ctx context.Context, mName string, mType string) (dto.Metrics, bool, error) {
 	queryRow := s.db.QueryRowContext(ctx, getMetricByNameQuery, mName, mType)
-
-	var metric dto.Metrics
-	err := queryRow.Scan(&metric.ID, &metric.MType, &metric.MName, &metric.Delta, &metric.Value)
-	if errors.Is(err, sql.ErrNoRows) {
-		return dto.Metrics{}, false, nil
-	}
+	err := queryRow.Err()
 	if nil != err {
 		return dto.Metrics{}, false, err
 	}
 
-	err = queryRow.Err()
+	var metric dto.Metrics
+	err = queryRow.Scan(&metric.ID, &metric.MType, &metric.MName, &metric.Delta, &metric.Value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return dto.Metrics{}, false, nil
+	}
 	if nil != err {
 		return dto.Metrics{}, false, err
 	}

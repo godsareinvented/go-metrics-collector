@@ -14,7 +14,7 @@ import (
 
 type ConfigConfigurator struct{}
 
-func (c *ConfigConfigurator) ParseConfig(ctx context.Context) error {
+func (c *ConfigConfigurator) Parse(ctx context.Context) error {
 	err := parseConfig()
 	if nil != err {
 		return err

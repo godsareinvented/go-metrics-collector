@@ -21,18 +21,29 @@ func UpdateMetricBatchMetric(ctx context.Context) http.HandlerFunc {
 		}
 
 		// Валидация корректности данных метрик.
+		// metricBatch todo: Добавить валидацию на уникальность метрик (unique=field)?
 		for _, metric := range metricBatch {
-			err = config.Configuration.Validate.Struct(metric)
-			if nil != err {
-				message, statusCode := ProcessValidationError(err)
-				http.Error(responseWriter, message, statusCode)
+			err = config.Configuration.Validate.StructCtx(requestCtx, metric)
+			if nil == err {
+				continue
+			}
+			if isContextError(err) {
+				http.Error(responseWriter, "", http.StatusInternalServerError)
 				return
 			}
+
+			message, statusCode := processValidationError(err)
+			http.Error(responseWriter, message, statusCode)
+			return
 		}
 
 		if nil != metricBatch {
 			metricManager := metricPackage.MetricManager{}
-			metricManager.UpdateMetrics(requestCtx, metricBatch)
+			err = metricManager.UpdateMetrics(requestCtx, metricBatch)
+			if nil != err {
+				http.Error(responseWriter, "", http.StatusInternalServerError)
+				return
+			}
 		}
 
 		responseWriter.WriteHeader(http.StatusOK)

@@ -10,7 +10,7 @@ import (
 
 type RequestParser struct{}
 
-func (rp *RequestParser) GetMetricDTO(request *http.Request, parsingValueFlag bool) (dto.Metrics, error) {
+func (rp *RequestParser) GetMetric(request *http.Request, parsingValueFlag bool) (dto.Metrics, error) {
 	metricType, metricName, metricValue := getParsedRequest(request)
 
 	metric := dto.Metrics{

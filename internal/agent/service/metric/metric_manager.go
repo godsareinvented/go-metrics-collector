@@ -33,7 +33,7 @@ type (
 )
 
 func (m *MetricManager) CollectAndSend() (*sync.WaitGroup, chan error) {
-	errCh := make(chan error)
+	errCh := make(chan error, 3)
 
 	err := config.Configuration.Validate.Struct(*m)
 	if nil != err {

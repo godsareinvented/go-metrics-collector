@@ -21,7 +21,7 @@ type ConfigConfigurator struct{}
 
 var ErrNotStorageConnectorInterface = errors.New("the postgresql storage doesn't implement the StorageConnectorInterface")
 
-func (c *ConfigConfigurator) GetConfig(ctx context.Context) error {
+func (c *ConfigConfigurator) Parse(ctx context.Context) error {
 	err := parseConfig()
 	if nil != err {
 		return err

@@ -24,7 +24,7 @@ func main() {
 	}()
 
 	configConfigurator := config.ConfigConfigurator{}
-	err := configConfigurator.ParseConfig(ctx)
+	err := configConfigurator.Parse(ctx)
 	if nil != err {
 		panic(err)
 	}
@@ -45,7 +45,9 @@ func main() {
 		for {
 			select {
 			case errNew, ok := <-errCh:
-				err = utils.WrapErrs(err, errNew)
+				if nil != errNew {
+					err = utils.WrapErrs(err, errNew)
+				}
 				if !ok {
 					err = utils.WrapErrs(errors.New("error channel has been closed"), err)
 					panic(err)
@@ -56,8 +58,10 @@ func main() {
 
 	select {
 	case <-ctx.Done():
-		wg.Wait()
-		err = utils.WrapErrs(errors.New("context done"), err)
+		if nil != wg {
+			wg.Wait()
+		}
+		err = utils.WrapErrs(errors.New("context canceled"), err)
 		panic(err)
 	}
 }

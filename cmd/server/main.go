@@ -23,7 +23,7 @@ func main() {
 	}()
 
 	configConfigurator := config.ConfigConfigurator{}
-	err := configConfigurator.GetConfig(ctx)
+	err := configConfigurator.Parse(ctx)
 	if nil != err {
 		panic(err)
 	}

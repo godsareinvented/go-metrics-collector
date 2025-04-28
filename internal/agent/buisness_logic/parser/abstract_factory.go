@@ -74,6 +74,7 @@ func getParsedCpuUtilizationStrategy(metricName string) (interfaces.ParsingStrat
 	if !ok {
 		return nil, false
 	}
+	// todo: Добавить кеширование в strategyMap.
 	return strategy.NewCPUutilizationStrategy(logicalCpuNumber, metricName), true
 }
 

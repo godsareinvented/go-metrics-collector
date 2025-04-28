@@ -15,7 +15,7 @@ type Config struct {
 	StoreInterval int `env:"STORE_INTERVAL" validate:"required,numeric,gte=0,lte=86400"`
 
 	// Путь до файла, куда сохраняются текущие значения
-	FileStoragePath string `env:"FILE_STORAGE_PATH" validate:"required,file"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH" validate:"required"`
 
 	// Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера
 	Restore bool `env:"RESTORE" validate:"required"`
@@ -24,7 +24,7 @@ type Config struct {
 	DatabaseDSN string `env:"DATABASE_DSN" validate:"omitempty"`
 
 	// Ключ для вычисления хеша (hmac)
-	HashKey string `env:"KEY" validate:"required,hash_key,min=3,max=512"`
+	HashKey string `env:"KEY" validate:"omitempty,hash_key,min=3,max=512"`
 
 	// Разрешённые значения для заголовка "Content-Type" при сжатии ответа сервера
 	GzipAcceptedContentTypes []string `validate:"required,unique,min=1,max=253,dive,oneof=application/json text/html"`

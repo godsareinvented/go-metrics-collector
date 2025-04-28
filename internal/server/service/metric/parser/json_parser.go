@@ -8,7 +8,7 @@ import (
 
 type JsonParser struct{}
 
-func (jp *JsonParser) GetMetricDTO(request *http.Request) (dto.Metrics, error) {
+func (jp *JsonParser) GetMetric(request *http.Request) (dto.Metrics, error) {
 	var metric = dto.Metrics{}
 
 	err := json.NewDecoder(request.Body).Decode(&metric)

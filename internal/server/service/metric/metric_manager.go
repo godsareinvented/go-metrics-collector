@@ -11,34 +11,56 @@ import (
 
 type MetricManager struct{}
 
-func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metric dto.Metrics) {
+func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metric dto.Metrics) error {
 	repos := config.Configuration.Repository
 
-	if _, err := repos.UpdateMetric(ctx, metricManager.getPreparedMetric(ctx, *repos, &metric)); nil != err {
-		// todo: Надо пересмотреть выплёвывание ошибок.
-		panic("Error updating metric: " + err.Error())
+	metric, err := metricManager.getPreparedMetric(ctx, *repos, &metric)
+	if nil != err {
+		return err
+	}
+
+	_, err = repos.UpdateMetric(ctx, metric)
+	if nil != err {
+		return err
 	}
 
 	if 0 == config.Configuration.StoreInterval {
-		_ = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+		err = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+		if nil != err {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metrics []dto.Metrics) {
+func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metrics []dto.Metrics) error {
 	repos := config.Configuration.Repository
 
+	var metric dto.Metrics
 	var resultingMetrics []dto.Metrics
-	for _, metric := range metrics {
-		resultingMetrics = append(resultingMetrics, metricManager.getPreparedMetric(ctx, *repos, &metric))
+	var err error
+	for _, metric = range metrics {
+		metric, err = metricManager.getPreparedMetric(ctx, *repos, &metric)
+		if nil != err {
+			return err
+		}
+		resultingMetrics = append(resultingMetrics, metric)
 	}
 
-	if err := repos.UpdateMetricBatch(ctx, resultingMetrics); nil != err {
-		panic("Error updating metric: " + err.Error())
+	err = repos.UpdateMetricBatch(ctx, resultingMetrics)
+	if nil != err {
+		return err
 	}
 
 	if 0 == config.Configuration.StoreInterval {
-		_ = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+		err = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
+		if nil != err {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func (metricManager *MetricManager) ImportFrom(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {
@@ -68,8 +90,12 @@ func (metricManager *MetricManager) ExportTo(ctx context.Context, permanentStora
 	return nil
 }
 
-func (metricManager *MetricManager) getPreparedMetric(ctx context.Context, repos repository.Repository, metric *dto.Metrics) dto.Metrics {
-	metricFromStorage, isSet, _ := repos.GetMetric(ctx, *metric)
+// getPreparedMetric todo: Необходимо убрать лишние запросы на каждую отдельную метрику и заменить их единым запросом
+func (metricManager *MetricManager) getPreparedMetric(ctx context.Context, repos repository.Repository, metric *dto.Metrics) (dto.Metrics, error) {
+	metricFromStorage, isSet, err := repos.GetMetric(ctx, *metric)
+	if nil != err {
+		return dto.Metrics{}, err
+	}
 
 	valueHandler := valueHandlerAbstractFactory.GetValueHandler(*metric)
 	mutatedValueMetric := valueHandler.GetMutatedValueMetric(*metric, metricFromStorage, isSet)
@@ -78,5 +104,5 @@ func (metricManager *MetricManager) getPreparedMetric(ctx context.Context, repos
 		mutatedValueMetric.ID = metricFromStorage.ID
 	}
 
-	return mutatedValueMetric
+	return mutatedValueMetric, nil
 }

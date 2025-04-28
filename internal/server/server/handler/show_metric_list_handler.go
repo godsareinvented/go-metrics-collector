@@ -14,26 +14,30 @@ func ShowMetricList(ctx context.Context) http.HandlerFunc {
 		requestCtx, cancel := GetCombinedContext(ctx, request.Context())
 		defer cancel()
 
-		metricDTOList, _ := config.Configuration.Repository.GetAllMetrics(requestCtx)
+		metricList, err := config.Configuration.Repository.GetAllMetrics(requestCtx)
+		if isContextError(err) {
+			http.Error(responseWriter, "", http.StatusInternalServerError)
+			return
+		}
 
-		sort.Slice(metricDTOList, func(i, j int) bool {
-			return metricDTOList[i].MName < metricDTOList[j].MName
+		sort.Slice(metricList, func(i, j int) bool {
+			return metricList[i].MName < metricList[j].MName
 		})
+
+		responseWriter.Header().Set("Content-Type", "text/html")
+		responseWriter.WriteHeader(http.StatusOK)
 
 		tmpl := template.Must(template.ParseFiles("internal/server/template/main_page.html"))
 		data := struct {
 			Items []dto.Metrics
 		}{
-			Items: metricDTOList,
+			Items: metricList,
 		}
 
-		err := tmpl.Execute(responseWriter, data)
-		if err != nil {
-			panic(err)
+		err = tmpl.Execute(responseWriter, data)
+		if nil != err {
+			http.Error(responseWriter, "", http.StatusInternalServerError)
 		}
-
-		responseWriter.Header().Set("Content-Type", "text/html")
-		responseWriter.WriteHeader(http.StatusOK)
 	}
 	return fn
 }

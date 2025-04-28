@@ -22,20 +22,17 @@ func (repository *Repository) UpdateMetricBatch(ctx context.Context, metrics []d
 
 func (repository *Repository) GetMetric(ctx context.Context, metric dto.Metrics) (dto.Metrics, bool, error) {
 	var foundMetric dto.Metrics
-	var isSet = false
+	var isSet bool
 	var err error
 
 	if "" != metric.ID {
 		foundMetric, isSet, err = (*repository.storage).GetByID(ctx, metric.ID, metric.MType)
-		if isSet {
+		if isSet || nil != err {
 			return foundMetric, isSet, err
 		}
 	}
 	if "" != metric.MName {
 		foundMetric, isSet, err = (*repository.storage).GetByName(ctx, metric.MName, metric.MType)
-		if isSet {
-			return foundMetric, isSet, err
-		}
 	}
 
 	return foundMetric, isSet, err
@@ -57,13 +54,19 @@ func (repository *Repository) GetAllMetrics(ctx context.Context) ([]dto.Metrics,
 }
 
 func (repository *Repository) CloseStorage() error {
-	storageConnector := (*repository.storage).(interfaces.StorageConnectorInterface)
-	return storageConnector.CloseConnect()
+	storageConnector, ok := (*repository.storage).(interfaces.StorageConnectorInterface)
+	if ok {
+		return storageConnector.CloseConnect()
+	}
+	return nil
 }
 
 func (repository *Repository) PingStorage(ctx context.Context) (bool, error) {
-	storageConnector := (*repository.storage).(interfaces.StorageConnectorInterface)
-	return storageConnector.Ping(ctx)
+	storageConnector, ok := (*repository.storage).(interfaces.StorageConnectorInterface)
+	if ok {
+		return storageConnector.Ping(ctx)
+	}
+	return true, nil
 }
 
 func NewInstance(storageInterface *interfaces.StorageInterface) *Repository {

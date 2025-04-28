@@ -3,15 +3,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"github.com/go-playground/validator/v10"
-	"github.com/godsareinvented/go-metrics-collector/internal/general/dto"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric/parser"
 	"net/http"
 )
 
 type InputMetrics struct {
-	ID    string `json:"id"   validate:"omitempty"`
+	ID    string `json:"id"   validate:"required"`
 	MType string `json:"type" validate:"required,oneof=gauge counter"`
 }
 
@@ -21,7 +19,7 @@ func GetMetricJson(ctx context.Context) http.HandlerFunc {
 		defer cancel()
 
 		requestParser := parser.JsonParser{}
-		metric, err := requestParser.GetMetricDTO(request)
+		metric, err := requestParser.GetMetric(request)
 		if nil != err {
 			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
 			return
@@ -31,18 +29,21 @@ func GetMetricJson(ctx context.Context) http.HandlerFunc {
 			ID:    metric.ID,
 			MType: metric.MType,
 		}
-		err = validator.New().Struct(inputMetric)
+		err = config.Configuration.Validate.StructCtx(requestCtx, inputMetric)
 		if nil != err {
-			message, statusCode := ProcessValidationError(err)
+			if isContextError(err) {
+				http.Error(responseWriter, "", http.StatusInternalServerError)
+				return
+			}
+			message, statusCode := processValidationError(err)
 			http.Error(responseWriter, message, statusCode)
 			return
 		}
 
-		searchMetric := dto.Metrics{
-			ID:    metric.ID,
-			MType: metric.MType,
+		resultingMetric, isSet, err := config.Configuration.Repository.GetMetricByID(requestCtx, metric)
+		if nil != err {
+			http.Error(responseWriter, "", http.StatusInternalServerError)
 		}
-		resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByID(requestCtx, searchMetric)
 
 		if !isSet {
 			http.NotFound(responseWriter, request)
@@ -55,10 +56,9 @@ func GetMetricJson(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		responseWriter.Write(metricJson)
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusOK)
-		return
+		responseWriter.Write(metricJson)
 	}
 	return fn
 }

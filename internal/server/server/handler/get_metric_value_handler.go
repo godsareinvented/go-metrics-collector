@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"github.com/go-playground/validator/v10"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/config"
 	"github.com/godsareinvented/go-metrics-collector/internal/server/service/metric/parser"
 	"net/http"
@@ -14,29 +13,35 @@ func GetMetric(ctx context.Context) http.HandlerFunc {
 		defer cancel()
 
 		requestParser := parser.RequestParser{}
-		metricDTO, err := requestParser.GetMetricDTO(request, false)
+		metric, err := requestParser.GetMetric(request, false)
 		if nil != err {
 			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		err = validator.New().Struct(metricDTO)
+		err = config.Configuration.Validate.StructCtx(requestCtx, metric)
 		if nil != err {
-			message, statusCode := ProcessValidationError(err)
+			if isContextError(err) {
+				http.Error(responseWriter, "", http.StatusInternalServerError)
+				return
+			}
+			message, statusCode := processValidationError(err)
 			http.Error(responseWriter, message, statusCode)
 			return
 		}
 
-		resultingMetric, isSet, _ := config.Configuration.Repository.GetMetricByName(requestCtx, metricDTO)
-
-		if isSet {
-			preparedMetricValue := resultingMetric.GetFormattedValue()
-			responseWriter.WriteHeader(http.StatusOK)
-			_, _ = responseWriter.Write([]byte(preparedMetricValue))
-			return
+		resultingMetric, isSet, err := config.Configuration.Repository.GetMetricByName(requestCtx, metric)
+		if nil != err {
+			http.Error(responseWriter, "", http.StatusInternalServerError)
 		}
 
-		http.NotFound(responseWriter, request)
+		if !isSet {
+			http.NotFound(responseWriter, request)
+		}
+
+		preparedMetricValue := resultingMetric.GetFormattedValue()
+		responseWriter.WriteHeader(http.StatusOK)
+		responseWriter.Write([]byte(preparedMetricValue))
 	}
 	return fn
 }

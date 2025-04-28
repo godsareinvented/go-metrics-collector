@@ -16,16 +16,21 @@ type MemStorage struct {
 	idIndex    map[string]int
 }
 
-func (memStorage *MemStorage) GetAll(_ context.Context) ([]dto.Metrics, error) {
+func (memStorage *MemStorage) GetAll(ctx context.Context) ([]dto.Metrics, error) {
 	var metricList []dto.Metrics
 
 	for _, metricJson := range memStorage.entityList {
-		metric, err := memStorage.getDecodedMetric(metricJson)
-		if nil != err {
-			return nil, err
-		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			metric, err := memStorage.getDecodedMetric(metricJson)
+			if nil != err {
+				return nil, err
+			}
 
-		metricList = append(metricList, metric)
+			metricList = append(metricList, metric)
+		}
 	}
 
 	return metricList, nil
@@ -37,6 +42,7 @@ func (memStorage *MemStorage) GetByID(_ context.Context, ID string, _ string) (d
 	if -1 == index {
 		return dto.Metrics{}, false, nil
 	}
+
 	metric, err := memStorage.getDecodedMetric(memStorage.entityList[index])
 	if nil != err {
 		return dto.Metrics{}, false, err
@@ -49,6 +55,7 @@ func (memStorage *MemStorage) GetByName(_ context.Context, mName string, _ strin
 	if -1 == index {
 		return dto.Metrics{}, false, nil
 	}
+
 	metric, err := memStorage.getDecodedMetric(memStorage.entityList[index])
 	if nil != err {
 		return dto.Metrics{}, false, err
@@ -84,22 +91,27 @@ func (memStorage *MemStorage) SaveBatch(ctx context.Context, metricBatch []dto.M
 	defer memStorage.mu.Unlock()
 
 	for _, metric := range metricBatch {
-		if "" == metric.ID {
-			ID, _ := memStorage.GetGeneratedID(ctx, metric)
-			metric.ID = ID
-		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if "" == metric.ID {
+				ID, _ := memStorage.GetGeneratedID(ctx, metric)
+				metric.ID = ID
+			}
 
-		metricJson, err := memStorage.getEncodedMetric(metric)
-		if nil != err {
-			return err
-		}
-		if index := memStorage.getMetricIndex(metric); -1 != index {
-			memStorage.update(index, metric, metricJson)
-			strconv.Itoa(index)
-			continue
-		}
+			metricJson, err := memStorage.getEncodedMetric(metric)
+			if nil != err {
+				return err
+			}
+			if index := memStorage.getMetricIndex(metric); -1 != index {
+				memStorage.update(index, metric, metricJson)
+				strconv.Itoa(index)
+				continue
+			}
 
-		memStorage.save(metric, metricJson)
+			memStorage.save(metric, metricJson)
+		}
 	}
 
 	return nil

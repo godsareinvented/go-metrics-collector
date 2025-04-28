@@ -1,4 +1,4 @@
 /.idea/
-./cmd/client/go_build_client.exe
-./cmd/server/go_build_server.exe
+./cmd/client/client.exe
+./cmd/server/server.exe
 test.go
