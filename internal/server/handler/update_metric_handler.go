@@ -23,7 +23,7 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 
 	err := validator.New().Struct(metricDTO)
 
-	if nil != err {
+	if err != nil {
 		message, statusCode := processError(err)
 		http.Error(responseWriter, message, statusCode)
 		return

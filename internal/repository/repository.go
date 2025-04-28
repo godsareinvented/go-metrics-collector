@@ -22,7 +22,7 @@ func (repository *Repository) UpdateMetric(metric dto.Metric) {
 func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
 	key := getKey(metric)
 	value := repository.storage.Get(key)
-	if nil == value {
+	if value == nil {
 		return dto.Metric{}, false
 	}
 	return dto.Metric{Type: metric.Type, Name: metric.Name, Value: value}, true
