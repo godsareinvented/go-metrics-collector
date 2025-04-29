@@ -6,7 +6,6 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 )
 
-// MetricRepository todo: Внести наверх, когда появится конфиг приложения.
 var MetricRepository = Repository{storage: mem_storage.NewInstance()}
 
 type Repository struct {
