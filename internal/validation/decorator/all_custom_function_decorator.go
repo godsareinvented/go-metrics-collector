@@ -2,11 +2,11 @@ package decorator
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/oldhanasong/go-metrics-collector/internal/validation/custon_func"
+	"github.com/oldhanasong/go-metrics-collector/internal/validation/custom_func"
 )
 
 var customFuncMap = map[string]validator.Func{
-	"mvalue_by": custon_func.ValidateMetricValue(),
+	"mvalue_by": custom_func.ValidateMetricValue(),
 }
 
 func GetRegisteredCustomFunctionsValidator(validate *validator.Validate) (*validator.Validate, error) {

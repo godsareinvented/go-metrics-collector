@@ -1,4 +1,4 @@
-package custon_func
+package custom_func
 
 import (
 	"github.com/go-playground/validator/v10"
