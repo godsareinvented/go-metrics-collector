@@ -31,9 +31,9 @@ func (handler *UpdateMetricHandler) ServeHTTP(responseWriter http.ResponseWriter
 
 	metrics := dto.Metric{Type: MType, Name: MName}
 	if MType == dictionary.GaugeMetricType {
-		metrics.Value, _ = strconv.ParseInt(MValue, 10, 64)
-	} else {
 		metrics.Value, _ = strconv.ParseFloat(MValue, 64)
+	} else {
+		metrics.Value, _ = strconv.ParseInt(MValue, 10, 64)
 	}
 
 	metricManager := manager.MetricManager{}
