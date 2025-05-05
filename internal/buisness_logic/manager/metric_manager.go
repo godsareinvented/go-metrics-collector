@@ -38,13 +38,11 @@ func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
 
 func (metricManager *MetricManager) sendMetrics(metricDTO dto.Metric) {
 	response, err := http.Post(getPreparedURL(metricDTO), "text/plain", http.NoBody)
-	errBodyClose := response.Body.Close()
 	if err != nil {
-		panic(err)
+		return
 	}
-	if errBodyClose != nil {
-		panic(err)
-	}
+
+	_ = response.Body.Close()
 }
 
 func getPreparedURL(metricDTO dto.Metric) string {
