@@ -6,13 +6,15 @@ import (
 	"runtime"
 )
 
-type MetricDataCollector struct{}
+type MetricDataCollector struct {
+	pollCount int64
+}
 
 func (metricCollector *MetricDataCollector) GetMetricData() dto.CollectedMetricData {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	var pollCount int64 = 1
+	metricCollector.pollCount += 1
 
-	return dto.CollectedMetricData{MemStats: memStats, PollCount: pollCount, RandomValue: rand.Float64()}
+	return dto.CollectedMetricData{MemStats: memStats, PollCount: metricCollector.pollCount, RandomValue: rand.Float64()}
 }
