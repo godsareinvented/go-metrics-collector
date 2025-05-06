@@ -118,12 +118,12 @@ var (
 			want:        want{code: http.StatusBadRequest},
 		},
 		{
-			name:        "negative test #8: Empty metric name",
+			name:        "negative test #8: empty metric name",
 			requestData: requestData{url: "/update/counter/", method: http.MethodPost},
 			want:        want{code: http.StatusNotFound},
 		},
 		{
-			name:        "negative test #9: Empty metric value",
+			name:        "negative test #9: empty metric value",
 			requestData: requestData{url: "/update/counter/InvalidMetric/", method: http.MethodPost},
 			want:        want{code: http.StatusNotFound},
 		},

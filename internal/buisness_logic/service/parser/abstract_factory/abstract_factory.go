@@ -34,7 +34,7 @@ func GetStrategy(metricName string) interfaces.ParsingStrategy {
 		dictionary.StackInuseMetricName:    &strategy.StackInuseStrategy{},
 		dictionary.StackSysMetricName:      &strategy.StackSysStrategy{},
 		dictionary.SysMetricName:           &strategy.SysStrategy{},
-		dictionary.TotalAllocMetricName:    &strategy.TotalAllockStrategy{},
+		dictionary.TotalAllocMetricName:    &strategy.TotalAllocStrategy{},
 		dictionary.PollCountMetricName:     &strategy.PollCountStrategy{},
 		dictionary.RandomValueMetricName:   &strategy.RandomValueStrategy{},
 	}

@@ -5,9 +5,9 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 )
 
-type TotalAllockStrategy struct{}
+type TotalAllocStrategy struct{}
 
-func (strategy *TotalAllockStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
+func (strategy *TotalAllocStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metric {
 	return dto.Metric{
 		Type:  dictionary.GaugeMetricType,
 		Name:  metricName,
