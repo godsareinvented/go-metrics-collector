@@ -2,8 +2,6 @@ module github.com/oldhanasong/go-metrics-collector
 
 go 1.23.6
 
-toolchain go1.23.6
-
 require github.com/go-playground/validator/v10 v10.22.0
 
 require (
