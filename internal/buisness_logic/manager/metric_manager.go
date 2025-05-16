@@ -54,7 +54,7 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 			var strategies = make(map[string]interfaces.ParsingStrategy)
 			metricList = []dto.Metric{}
 			for _, metricName := range metricManager.MetricList {
-				if nil == strategies[metricName] {
+				if strategies[metricName] == nil {
 					strategies[metricName] = parserFactory.GetStrategy(metricName)
 				}
 
