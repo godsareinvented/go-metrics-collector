@@ -23,14 +23,14 @@ func (repository *Repository) UpdateMetric(metric dto.Metric) {
 func (repository *Repository) GetMetric(metric dto.Metric) (dto.Metric, bool) {
 	key := getKey(metric)
 	jsonMetric := repository.storage.Get(key)
-	if "" == jsonMetric {
+	if jsonMetric == "" {
 		return dto.Metric{}, false
 	}
 
 	var metricDTO dto.Metric
 	err := json.Unmarshal(jsonMetric.([]byte), &metricDTO)
 
-	if nil != err {
+	if err != nil {
 		panic("Cannot unmarshal metric")
 	}
 
