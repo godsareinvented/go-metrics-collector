@@ -157,7 +157,7 @@ var (
 		{
 			metricName: dictionary.PollCountMetricName,
 			strategy:   &PollCountStrategy{},
-			want:       dto.Metric{Type: dictionary.CounterMetricType, Name: dictionary.PollCountMetricName, Value: int64(0)},
+			want:       dto.Metric{Type: dictionary.CounterMetricType, Name: dictionary.PollCountMetricName, Delta: 0},
 		},
 	}
 )

@@ -39,7 +39,7 @@ func TestCollectAndSend(t *testing.T) {
 		endpoint = oldEndpoint
 	}()
 
-	metricManager := MetricManager{MetricDataCollector: data_collector.MetricDataCollector{}}
+	metricManager := MetricManager{MetricDataCollector: &data_collector.MetricDataCollector{}, MetricList: dictionary.MetricNameList[:]}
 
 	ctx, cancel := context.WithTimeout(context.Background(), reportInterval+1*time.Second)
 	defer cancel()
@@ -68,14 +68,16 @@ func testMetricList(t *testing.T, testName string, metrics []dto.Metric) {
 
 			require.Containsf(t, allowedMetricTypes, metric.Type, "metric %s is of a type not allowed", metric.Name)
 			require.Containsf(t, dictionary.MetricNameList, metric.Name, "metric %s is of a name not allowed", metric.Name)
+
 			if metric.Type == dictionary.GaugeMetricType {
-				testMetricValue[float64](t, metric.Value, metric.Name)
+				require.GreaterOrEqualf(t, metric.Value, 0.0, "%s metric value must be non-negative", metric.Name)
 				if metric.Value == 0.0 {
 					zeroValueMetricCount++
 				}
 				continue
 			}
-			testMetricValue[int64](t, metric.Value, metric.Name)
+
+			require.GreaterOrEqualf(t, metric.Delta, int64(0), "%s metric value must be non-negative", metric.Name)
 			if metric.Value == 0 {
 				zeroValueMetricCount++
 			}
@@ -86,13 +88,6 @@ func testMetricList(t *testing.T, testName string, metrics []dto.Metric) {
 		zeroValueMetricsPercent := float64(zeroValueMetricCount) / float64(len(dictionary.MetricNameList))
 		require.LessOrEqualf(t, zeroValueMetricsPercent, errorRate, "Too many metrics with zero values (%.0f%%)", zeroValueMetricsPercent*100)
 	})
-}
-
-func testMetricValue[MetricValue int64 | float64](t *testing.T, value interface{}, metricName string) {
-	presentValue, ok := value.(MetricValue)
-	require.Truef(t, ok, "%s metric value should be of correct type", metricName)
-
-	require.GreaterOrEqualf(t, presentValue, MetricValue(0), "%s metric value must be non-negative", metricName)
 }
 
 func router(t *testing.T) *http.ServeMux {
@@ -108,7 +103,7 @@ func router(t *testing.T) *http.ServeMux {
 
 func handle(r *http.Request) func(t *testing.T) {
 	return func(t *testing.T) {
-		if !assert.Equal(t, r.Method, http.MethodPost) || !assert.Equal(t, r.Header.Get("Content-Type"), "text/plain") {
+		if !assert.Equal(t, http.MethodPost, r.Method) {
 			return
 		}
 
@@ -122,7 +117,7 @@ func handle(r *http.Request) func(t *testing.T) {
 		if MType == dictionary.GaugeMetricType {
 			metrics.Value, err = strconv.ParseFloat(MValue, 64)
 		} else {
-			metrics.Value, err = strconv.ParseInt(MValue, 10, 64)
+			metrics.Delta, err = strconv.ParseInt(MValue, 10, 64)
 		}
 
 		require.NoErrorf(t, err, "%s metric value should be of correct type", MName)

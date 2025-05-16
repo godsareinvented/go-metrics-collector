@@ -11,7 +11,7 @@ import (
 func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	MType, MName := parsedAbridgedMetricValues(request)
 	if MType == "" || MName == "" {
-		http.Error(responseWriter, "empty metric data", http.StatusNotFound)
+		http.Error(responseWriter, "empty metric data", http.StatusBadRequest)
 		return
 	}
 

@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"github.com/go-chi/chi/v5"
+	"github.com/oldhanasong/go-metrics-collector/internal/repository"
+	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"net/http"
@@ -9,20 +12,20 @@ import (
 	"testing"
 )
 
-type (
-	requestData struct {
-		url    string
-		method string
-	}
+func TestUpdateMetricHandler(t *testing.T) {
+	type (
+		requestData struct {
+			url    string
+			method string
+		}
 
-	want struct {
-		code        int
-		contentType string
-	}
-)
+		want struct {
+			code        int
+			contentType string
+		}
+	)
 
-var (
-	tests = []struct {
+	tests := []struct {
 		name        string
 		requestData requestData
 		want        want
@@ -128,12 +131,12 @@ var (
 			want:        want{code: http.StatusNotFound},
 		},
 	}
-)
 
-func TestUpdateMetricHandler(t *testing.T) {
-	handler := UpdateMetricHandler{}
-	router := http.NewServeMux()
-	router.Handle("/update/{type}/{name}/{value}", &handler)
+	memStorage := mem_storage.NewInstance()
+	repository.NewInstance(memStorage)
+
+	router := chi.NewRouter()
+	router.Post("/update/{type}/{name}/{value}", UpdateMetric)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
