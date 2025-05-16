@@ -8,6 +8,10 @@ import (
 	"sort"
 )
 
+var (
+	mainPageTplPath = "template/main_page.html"
+)
+
 func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 	metricManager := manager.MetricManager{}
 	metricDTOList := metricManager.GetList()
@@ -16,7 +20,7 @@ func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 		return metricDTOList[i].Name < metricDTOList[j].Name
 	})
 
-	tmpl := template.Must(template.ParseFiles("internal/template/main_page.html"))
+	tmpl := template.Must(template.ParseFiles(mainPageTplPath))
 	data := struct {
 		Items []dto.Metric
 	}{

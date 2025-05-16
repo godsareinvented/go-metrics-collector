@@ -12,7 +12,7 @@ import (
 func UpdateMetric(responseWriter http.ResponseWriter, request *http.Request) {
 	MType, MName, MValue := parsedMetricValues(request)
 	if MType == "" || MName == "" || MValue == "" {
-		http.Error(responseWriter, "empty metric data", http.StatusNotFound)
+		http.Error(responseWriter, "empty metric data", http.StatusBadRequest)
 		return
 	}
 

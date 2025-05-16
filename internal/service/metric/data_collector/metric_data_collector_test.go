@@ -2,6 +2,7 @@ package data_collector
 
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
+	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/stretchr/testify/require"
 	"math"
 	"runtime"
@@ -12,9 +13,12 @@ const epsilon float64 = 500    // Допустимая ошибка
 const pollCountDelta int64 = 1 // Допустимая разница для PollCount
 
 func TestGetMetricData(t *testing.T) {
+	var collectedData dto.CollectedMetricData
+	var secondTimeCollectedData dto.CollectedMetricData
+
 	collector := MetricDataCollector{}
-	collectedData := collector.GetMetricData()
-	secondTimeCollectedData := collector.GetMetricData()
+	collector.CollectMetricData(&collectedData)
+	collector.CollectMetricData(&secondTimeCollectedData)
 
 	var memStatsDirect runtime.MemStats
 	runtime.ReadMemStats(&memStatsDirect)
