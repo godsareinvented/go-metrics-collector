@@ -2,8 +2,6 @@ package handler
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/repository"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"net/http"
@@ -132,8 +130,7 @@ func TestUpdateMetricHandler(t *testing.T) {
 		},
 	}
 
-	memStorage := mem_storage.NewInstance()
-	repository.NewInstance(memStorage)
+	parseAndCleanConfig()
 
 	router := chi.NewRouter()
 	router.Post("/update/{type}/{name}/{value}", UpdateMetric)

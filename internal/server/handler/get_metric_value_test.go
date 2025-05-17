@@ -2,9 +2,8 @@ package handler
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
-	"github.com/oldhanasong/go-metrics-collector/internal/repository"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -59,13 +58,12 @@ func TestGetMetric(t *testing.T) {
 		},
 	}
 
-	memStorage := mem_storage.NewInstance()
-	repository.NewInstance(memStorage)
+	parseAndCleanConfig()
 
 	router := chi.NewRouter()
 	router.Post("/value/{type}/{name}", GetMetric)
 
-	repos := repository.GetInstance()
+	repos := config.Configuration.Repository
 	repos.UpdateMetric(dto.Metric{Type: "counter", Name: "PollCount", Delta: 527})
 	repos.UpdateMetric(dto.Metric{Type: "gauge", Name: "RandomValue", Value: 0.47})
 

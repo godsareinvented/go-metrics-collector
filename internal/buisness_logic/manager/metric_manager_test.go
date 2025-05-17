@@ -3,9 +3,12 @@ package manager
 import (
 	"context"
 	"fmt"
+	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
+	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/data_collector"
+	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -30,18 +33,21 @@ var (
 // TestCollectAndSend Тест будет работать при условии, что значение reportInterval - минимум, 1 секунда,
 // т.к. за это время все метрики должны успеть уйти на сервер
 func TestCollectAndSend(t *testing.T) {
+	parseAndCleanConfig()
+
 	server := httptest.NewServer(router(t))
 	defer server.Close()
 
-	oldEndpoint := endpoint
-	endpoint = server.URL
+	oldEndpoint := config.Configuration.Endpoint
+	config.Configuration.Endpoint = server.URL
 	defer func() {
-		endpoint = oldEndpoint
+		config.Configuration.Endpoint = oldEndpoint
 	}()
 
 	metricManager := MetricManager{MetricDataCollector: &data_collector.MetricDataCollector{}, MetricList: dictionary.MetricNameList[:]}
+	metricManager.Init()
 
-	ctx, cancel := context.WithTimeout(context.Background(), reportInterval+1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.Configuration.ReportInterval)*time.Second+1*time.Second)
 	defer cancel()
 	metricManager.CollectAndSend(ctx)
 
@@ -141,4 +147,12 @@ func parsedMetricValues(r *http.Request) (string, string, string) {
 	return r.PathValue("type"),
 		r.PathValue("name"),
 		r.PathValue("value")
+}
+
+func parseAndCleanConfig() {
+	configConfigurator := config.ConfigConfigurator{}
+	configConfigurator.ParseConfig()
+
+	memStorage := mem_storage.NewInstance()
+	config.Configuration.Repository = repository.NewInstance(&memStorage)
 }
