@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -38,8 +39,10 @@ func TestCollectAndSend(t *testing.T) {
 	server := httptest.NewServer(router(t))
 	defer server.Close()
 
+	serverUrl, _ := url.Parse(server.URL)
+
 	oldEndpoint := config.Configuration.Endpoint
-	config.Configuration.Endpoint = server.URL
+	config.Configuration.Endpoint = fmt.Sprintf("%s:%s", serverUrl.Hostname(), serverUrl.Port())
 	defer func() {
 		config.Configuration.Endpoint = oldEndpoint
 	}()

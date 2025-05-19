@@ -19,9 +19,9 @@ func (s *MetricSender) Send(metric dto.Metric) {
 
 func getPreparedURL(metric dto.Metric) string {
 	if metric.Type == dictionary.GaugeMetricType {
-		return fmt.Sprintf("%s/update/%s/%s/%.2f", config.Configuration.Endpoint, metric.Type, metric.Name, metric.Value)
+		return fmt.Sprintf("http://%s/update/%s/%s/%.2f", config.Configuration.Endpoint, metric.Type, metric.Name, metric.Value)
 	}
-	return fmt.Sprintf("%s/update/%s/%s/%d", config.Configuration.Endpoint, metric.Type, metric.Name, metric.Delta)
+	return fmt.Sprintf("http://%s/update/%s/%s/%d", config.Configuration.Endpoint, metric.Type, metric.Name, metric.Delta)
 }
 
 func NewSender() *MetricSender {
