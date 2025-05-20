@@ -8,6 +8,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
+	"github.com/oldhanasong/go-metrics-collector/internal/util"
 	"github.com/oldhanasong/go-metrics-collector/internal/validation/decorator"
 	"net/http"
 )
@@ -26,6 +27,16 @@ func parseAndCleanConfig() *repository.Repository {
 	config.Configuration.Repository = repository.NewInstance(&memStorage)
 
 	return oldRepos
+}
+
+// prepareStorage For tests
+func prepareStorage() error {
+	repos := config.Configuration.Repository
+	delta := int64(527)
+	value := 0.47
+	err := repos.UpdateMetric(dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
+	err2 := repos.UpdateMetric(dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
+	return util.WrappedErrs(err2, err)
 }
 
 func parsedJsonMetric(r *http.Request) (dto.Metrics, error) {

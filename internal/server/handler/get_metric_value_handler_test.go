@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
-	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -66,12 +65,7 @@ func TestGetMetric(t *testing.T) {
 	router := chi.NewRouter()
 	router.Post("/value/{type}/{name}", GetMetric)
 
-	repos := config.Configuration.Repository
-	delta := int64(527)
-	value := 0.47
-	err := repos.UpdateMetric(dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
-	require.NoError(t, err)
-	err = repos.UpdateMetric(dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
+	err := prepareStorage()
 	require.NoError(t, err)
 
 	for _, tt := range tests {
