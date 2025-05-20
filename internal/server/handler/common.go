@@ -8,11 +8,12 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
+	"github.com/oldhanasong/go-metrics-collector/internal/validation/decorator"
 	"net/http"
 )
 
 var (
-	v = validator.New()
+	v, _ = decorator.GetRegisteredCustomFunctionsValidator(validator.New())
 )
 
 // parseAndCleanConfig For tests

@@ -6,6 +6,7 @@ import (
 )
 
 var customFuncMap = map[string]validator.Func{
+	"mname":     custom_func.ValidateMetricName(),
 	"mvalue_by": custom_func.ValidateMetricValue(),
 }
 
