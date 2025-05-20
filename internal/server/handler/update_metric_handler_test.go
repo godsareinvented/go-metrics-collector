@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestUpdateMetricHandler(t *testing.T) {
+func TestUpdateMetric(t *testing.T) {
 	type (
 		requestData struct {
 			url    string
@@ -130,7 +131,10 @@ func TestUpdateMetricHandler(t *testing.T) {
 		},
 	}
 
-	parseAndCleanConfig()
+	oldRepos := parseAndCleanConfig()
+	defer func() {
+		config.Configuration.Repository = oldRepos
+	}()
 
 	router := chi.NewRouter()
 	router.Post("/update/{type}/{name}/{value}", UpdateMetric)

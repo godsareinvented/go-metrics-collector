@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	processedMetricList []dto.Metric
+	processedMetricList []dto.Metrics
 	mu                  sync.Mutex
 	requestCount        = atomic.Uint32{}
 )
@@ -34,7 +34,10 @@ var (
 // TestCollectAndSend Тест будет работать при условии, что значение reportInterval - минимум, 1 секунда,
 // т.к. за это время все метрики должны успеть уйти на сервер
 func TestCollectAndSend(t *testing.T) {
-	parseAndCleanConfig()
+	oldRepos := parseAndCleanConfig()
+	defer func() {
+		config.Configuration.Repository = oldRepos
+	}()
 
 	server := httptest.NewServer(router(t))
 	defer server.Close()
@@ -58,36 +61,36 @@ func TestCollectAndSend(t *testing.T) {
 	testMetricList(t, "test send method", processedMetricList)
 }
 
-func testMetricList(t *testing.T, testName string, metrics []dto.Metric) {
+func testMetricList(t *testing.T, testName string, metrics []dto.Metrics) {
 	t.Run(testName, func(t *testing.T) {
 		metricCountMap := make(map[string]int)
 		zeroValueMetricCount := 0
 		allowedMetricTypes := []string{dictionary.GaugeMetricType, dictionary.CounterMetricType}
 
 		for _, metric := range metrics {
-			if _, ok := metricCountMap[metric.Name]; !ok {
-				metricCountMap[metric.Name] = 0
+			if _, ok := metricCountMap[metric.ID]; !ok {
+				metricCountMap[metric.ID] = 0
 			}
 
-			metricCountMap[metric.Name]++
+			metricCountMap[metric.ID]++
 
-			if metricCountMap[metric.Name] > 1 {
-				t.Fatalf("metric '%s' passed more than once", metric.Name)
+			if metricCountMap[metric.ID] > 1 {
+				t.Fatalf("metric '%s' passed more than once", metric.ID)
 			}
 
-			require.Containsf(t, allowedMetricTypes, metric.Type, "metric %s is of a type not allowed", metric.Name)
-			require.Containsf(t, dictionary.MetricNameList, metric.Name, "metric %s is of a name not allowed", metric.Name)
+			require.Containsf(t, allowedMetricTypes, metric.MType, "metric %s is of a type not allowed", metric.ID)
+			require.Containsf(t, dictionary.MetricNameList, metric.ID, "metric %s is of a name not allowed", metric.ID)
 
-			if metric.Type == dictionary.GaugeMetricType {
-				require.GreaterOrEqualf(t, metric.Value, 0.0, "%s metric value must be non-negative", metric.Name)
-				if metric.Value == 0.0 {
+			if metric.MType == dictionary.GaugeMetricType {
+				require.GreaterOrEqualf(t, *metric.Value, 0.0, "%s metric value must be non-negative", metric.ID)
+				if *metric.Value == 0.0 {
 					zeroValueMetricCount++
 				}
 				continue
 			}
 
-			require.GreaterOrEqualf(t, metric.Delta, int64(0), "%s metric value must be non-negative", metric.Name)
-			if metric.Value == 0 {
+			require.GreaterOrEqualf(t, *metric.Delta, int64(0), "%s metric value must be non-negative", metric.ID)
+			if *metric.Delta == 0 {
 				zeroValueMetricCount++
 			}
 		}
@@ -121,12 +124,16 @@ func handle(r *http.Request) func(t *testing.T) {
 			return
 		}
 
-		metrics := dto.Metric{Type: MType, Name: MName}
+		metrics := dto.Metrics{ID: MName, MType: MType}
 		var err error
+		var value float64
+		var delta int64
 		if MType == dictionary.GaugeMetricType {
-			metrics.Value, err = strconv.ParseFloat(MValue, 64)
+			value, err = strconv.ParseFloat(MValue, 64)
+			metrics.Value = &value
 		} else {
-			metrics.Delta, err = strconv.ParseInt(MValue, 10, 64)
+			delta, err = strconv.ParseInt(MValue, 10, 64)
+			metrics.Delta = &delta
 		}
 
 		require.NoErrorf(t, err, "%s metric value should be of correct type", MName)
@@ -152,10 +159,13 @@ func parsedMetricValues(r *http.Request) (string, string, string) {
 		r.PathValue("value")
 }
 
-func parseAndCleanConfig() {
+func parseAndCleanConfig() *repository.Repository {
 	configConfigurator := config.ConfigConfigurator{}
 	configConfigurator.ParseConfig()
 
+	oldRepos := config.Configuration.Repository
 	memStorage := mem_storage.NewInstance()
 	config.Configuration.Repository = repository.NewInstance(&memStorage)
+
+	return oldRepos
 }

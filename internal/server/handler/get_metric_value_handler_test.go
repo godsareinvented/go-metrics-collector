@@ -58,14 +58,21 @@ func TestGetMetric(t *testing.T) {
 		},
 	}
 
-	parseAndCleanConfig()
+	oldRepos := parseAndCleanConfig()
+	defer func() {
+		config.Configuration.Repository = oldRepos
+	}()
 
 	router := chi.NewRouter()
 	router.Post("/value/{type}/{name}", GetMetric)
 
 	repos := config.Configuration.Repository
-	repos.UpdateMetric(dto.Metric{Type: "counter", Name: "PollCount", Delta: 527})
-	repos.UpdateMetric(dto.Metric{Type: "gauge", Name: "RandomValue", Value: 0.47})
+	delta := int64(527)
+	value := 0.47
+	err := repos.UpdateMetric(dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
+	require.NoError(t, err)
+	err = repos.UpdateMetric(dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
+	require.NoError(t, err)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

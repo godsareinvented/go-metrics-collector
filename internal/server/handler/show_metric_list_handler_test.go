@@ -15,7 +15,10 @@ import (
 )
 
 func TestShowMetricList(t *testing.T) {
-	parseAndCleanConfig()
+	oldRepos := parseAndCleanConfig()
+	defer func() {
+		config.Configuration.Repository = oldRepos
+	}()
 
 	router := chi.NewRouter()
 	router.Get("/", ShowMetricList)
@@ -32,20 +35,24 @@ func TestShowMetricList(t *testing.T) {
 		assert.Equal(t, http.StatusMethodNotAllowed, statusCode)
 	})
 
-	testHandler(t, "no metrics", []dto.Metric{}, router)
+	testHandler(t, "no metrics", []dto.Metrics{}, router)
 
 	repos := config.Configuration.Repository
-	repos.UpdateMetric(dto.Metric{Type: "counter", Name: "PollCount", Delta: 527})
-	repos.UpdateMetric(dto.Metric{Type: "gauge", Name: "RandomValue", Value: 0.47})
+	delta := int64(527)
+	value := 0.47
+	err := repos.UpdateMetric(dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
+	require.NoError(t, err)
+	err = repos.UpdateMetric(dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
+	require.NoError(t, err)
 
-	metricList := []dto.Metric{
-		{Type: "counter", Name: "PollCount", Delta: 527},
-		{Type: "gauge", Name: "RandomValue", Value: 0.47},
+	metricList := []dto.Metrics{
+		{ID: "PollCount", MType: "counter", Delta: &delta},
+		{ID: "RandomValue", MType: "gauge", Value: &value},
 	}
 	testHandler(t, "sorted metric list", metricList, router)
 }
 
-func testHandler(t *testing.T, testName string, metrics []dto.Metric, router *chi.Mux) {
+func testHandler(t *testing.T, testName string, metrics []dto.Metrics, router *chi.Mux) {
 	t.Run(testName, func(t *testing.T) {
 		statusCode, contentType, body, err := sendRequest(router, http.MethodGet)
 		require.Nil(t, err)
@@ -75,10 +82,10 @@ func sendRequest(router chi.Router, method string) (int, string, string, error) 
 	return resp.StatusCode, resp.Header.Get("Content-Type"), string(rawBody), nil
 }
 
-func htmlBody(metrics []dto.Metric) (string, error) {
+func htmlBody(metrics []dto.Metrics) (string, error) {
 	tmpl := template.Must(template.ParseFiles(mainPageTplPath))
 	data := struct {
-		Items []dto.Metric
+		Items []dto.Metrics
 	}{
 		Items: metrics,
 	}

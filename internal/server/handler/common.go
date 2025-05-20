@@ -16,12 +16,15 @@ var (
 )
 
 // parseAndCleanConfig For tests
-func parseAndCleanConfig() {
+func parseAndCleanConfig() *repository.Repository {
 	configConfigurator := config.ConfigConfigurator{}
 	configConfigurator.ParseConfig()
 
+	oldRepos := config.Configuration.Repository
 	memStorage := mem_storage.NewInstance()
 	config.Configuration.Repository = repository.NewInstance(&memStorage)
+
+	return oldRepos
 }
 
 func parsedJsonMetric(r *http.Request) (dto.Metrics, error) {
