@@ -1,20 +1,21 @@
 package value_handler
 
 import (
-	handler2 "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/value_handler/handler"
+	"fmt"
+	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/value_handler/handler"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 )
 
-func GetValueHandler(metric dto.Metrics, repos *repository.Repository) interfaces.ValueHandler {
+func GetValueHandler(metric dto.Metrics, repos *repository.Repository) (interfaces.ValueHandler, error) {
 	switch metric.MType {
 	case dictionary.GaugeMetricType:
-		return &handler2.GaugeValueHandler{Repository: repos}
+		return &handler.GaugeValueHandler{Repository: repos}, nil
 	case dictionary.CounterMetricType:
-		return &handler2.CounterValueHandler{Repository: repos}
+		return &handler.CounterValueHandler{Repository: repos}, nil
 	default:
-		panic("unknown metric type")
+		return nil, fmt.Errorf("unknown metric type: %s", metric.MType)
 	}
 }

@@ -76,10 +76,14 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 func (metricManager *MetricManager) UpdateValue(metric dto.Metrics) error {
 	repos := config.Configuration.Repository
 
-	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metric, repos)
+	valueHandler, err := valueHandlerAbstractFactory.GetValueHandler(metric, repos)
+	if err != nil {
+		return err
+	}
+
 	metric = valueHandler.GetMutatedValueMetric(metric)
 
-	err := repos.UpdateMetric(metric)
+	err = repos.UpdateMetric(metric)
 	if err != nil {
 		return err
 	}
