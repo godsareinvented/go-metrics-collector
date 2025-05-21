@@ -39,6 +39,16 @@ func prepareStorage() error {
 	return util.WrappedErrs(err2, err)
 }
 
+// ptrInt For tests
+func ptrInt(val int64) *int64 {
+	return &val
+}
+
+// ptrFloat For tests
+func ptrFloat(val float64) *float64 {
+	return &val
+}
+
 func parsedJsonMetric(r *http.Request) (dto.Metrics, error) {
 	m := dto.Metrics{}
 	err := json.NewDecoder(r.Body).Decode(&m)

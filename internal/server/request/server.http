@@ -33,8 +33,8 @@ POST {{domain}}:{{port}}/update/
 Content-Type: application/json
 
 {
+  "id": "PollCount",
   "type": "counter",
-  "name": "PollCount",
   "delta": 1
 }
 

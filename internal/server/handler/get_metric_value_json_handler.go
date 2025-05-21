@@ -32,7 +32,7 @@ func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	metricJson, err := json.Marshal(resultingMetric)
-	if nil != err {
+	if err != nil {
 		http.Error(responseWriter, err.Error(), http.StatusBadRequest)
 		return
 	}
