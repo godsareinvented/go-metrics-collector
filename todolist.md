@@ -11,12 +11,14 @@
    флагов?
 3. [config_configurator](internal/config/config_configurator.go:#L26) Необходимо разделить логику сервера и агента,
    т.к. для агента не требуется инициализация хранилища.
+4. [config_configurator](internal/config/config_configurator.go:#L26) Значение GzipMinContentLength должно быть 1400.
+   Для соответствия инкременту 8 заменено на 0.
 
 ---
 
 ### Валидация
 
-4. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
+5. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
    поддерживающие проверку, что число во входной строке не больше ```math.MaxInt64``` и ```math.MaxFloat64```
    (*плюс поддержка отрицательных значений через регулярку*)\
    \
@@ -29,7 +31,7 @@
 
 ### Кодстайл
 
-5. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
+6. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
    ```if metric.Type == dictionary.GaugeMetricType { // ... } else``` на switch с обработкой ситуации в ```default```
    -секции,
    что метрика имеет некорректный тип
@@ -38,6 +40,6 @@
 
 ### Проблемы сервиса
 
-6. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
+7. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
 
 ---

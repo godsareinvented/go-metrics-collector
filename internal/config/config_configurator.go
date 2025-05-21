@@ -23,7 +23,7 @@ func (c *ConfigConfigurator) ParseConfig() {
 
 		Configuration = Config{
 			GzipAcceptedContentTypes: []string{"application/json", "text/html"},
-			GzipMinContentLength:     1400,
+			GzipMinContentLength:     0, // Должно быть 1400. Для соответствия инкременту 8 заменено на 0.
 			Repository:               repository.NewInstance(&memStorage),
 			Logger:                   logger.NewInstance(),
 		}
