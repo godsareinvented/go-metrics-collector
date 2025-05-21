@@ -8,7 +8,7 @@ import (
 type TotalAllocStrategy struct{}
 
 func (strategy *TotalAllocStrategy) GetMetric(metricName string, metricData dto.CollectedMetricData) dto.Metrics {
-	var value = float64(metricData.MemStats.Sys)
+	var value = float64(metricData.MemStats.TotalAlloc)
 	return dto.Metrics{
 		ID:    metricName,
 		MType: dictionary.GaugeMetricType,
