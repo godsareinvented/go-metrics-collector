@@ -34,6 +34,7 @@ func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 
 	err = tmpl.Execute(responseWriter, data)
 	if err != nil {
+		http.Error(responseWriter, "body record error", http.StatusInternalServerError)
 		return
 	}
 

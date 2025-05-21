@@ -37,5 +37,8 @@ func GetMetric(responseWriter http.ResponseWriter, request *http.Request) {
 
 	responseWriter.WriteHeader(http.StatusOK)
 	preparedMetricValue := resultingMetric.FormattedValue()
-	responseWriter.Write([]byte(preparedMetricValue))
+	_, err = responseWriter.Write([]byte(preparedMetricValue))
+	if err != nil {
+		http.Error(responseWriter, "body record error", http.StatusInternalServerError)
+	}
 }

@@ -37,6 +37,10 @@ func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	responseWriter.Write(metricJson)
+	_, err = responseWriter.Write(metricJson)
+	if err != nil {
+		http.Error(responseWriter, "body record error", http.StatusInternalServerError)
+	}
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
 	"net/http"
 )
@@ -25,5 +26,11 @@ func UpdateMetricJson(responseWriter http.ResponseWriter, request *http.Request)
 		return
 	}
 
+	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(responseWriter).Encode(m)
+	if err != nil {
+		http.Error(responseWriter, "failed to encode the metric", http.StatusInternalServerError)
+		return
+	}
 }
