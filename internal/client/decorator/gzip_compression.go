@@ -27,7 +27,7 @@ func getCompressBodyBuffer(body []byte) *bytes.Buffer {
 	buffer := new(bytes.Buffer)
 
 	gzipWriter, err := gzip.NewWriterLevel(buffer, gzip.BestSpeed)
-	if nil != err {
+	if err != nil {
 		panic(err)
 	}
 	defer gzipWriter.Close()

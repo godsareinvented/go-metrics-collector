@@ -16,7 +16,7 @@ func GzipRequestDecompressing(handlerFunc http.Handler) http.Handler {
 		}
 
 		gz, err := gzip.NewReader(request.Body)
-		if nil != err {
+		if err != nil {
 			http.Error(responseWriter, "failed to declare gzip reader", http.StatusInternalServerError)
 			return
 		}
@@ -27,7 +27,7 @@ func GzipRequestDecompressing(handlerFunc http.Handler) http.Handler {
 		}(gz)
 
 		body, err := io.ReadAll(gz)
-		if nil != err {
+		if err != nil {
 			http.Error(responseWriter, "failed to decompress data via gzip writer", http.StatusInternalServerError)
 			return
 		}
@@ -42,5 +42,5 @@ func GzipRequestDecompressing(handlerFunc http.Handler) http.Handler {
 
 func isRequestCompressed(request *http.Request) bool {
 	contentEncoding := request.Header.Get("Content-Encoding")
-	return "gzip" == contentEncoding
+	return contentEncoding == "gzip"
 }

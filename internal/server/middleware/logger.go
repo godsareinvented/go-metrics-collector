@@ -18,7 +18,7 @@ type loggingResponseWriter struct {
 
 func (lrw *loggingResponseWriter) Write(bytes []byte) (int, error) {
 	size, err := lrw.ResponseWriter.Write(bytes)
-	if nil == err {
+	if err == nil {
 		*lrw.responseData.responseSize += size
 	}
 	return size, err
