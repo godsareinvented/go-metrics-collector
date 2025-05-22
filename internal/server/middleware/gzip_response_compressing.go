@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
-	"io"
 	"net/http"
 	"slices"
 	"strings"
@@ -39,7 +38,10 @@ func GzipResponseCompressing(handlerFunc http.Handler) http.Handler {
 		handlerFunc.ServeHTTP(&recorder, request)
 
 		if !isCompressionNeed(recorder) {
-			_, _ = responseWriter.Write(recorder.buffer.Bytes())
+			responseWriter.WriteHeader(recorder.statusCode)
+			if _, err := responseWriter.Write(recorder.buffer.Bytes()); err != nil {
+				http.Error(responseWriter, "failed to write metric in the response", http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -48,12 +50,18 @@ func GzipResponseCompressing(handlerFunc http.Handler) http.Handler {
 
 		gzipWriter, err := gzip.NewWriterLevel(responseWriter, gzip.BestSpeed)
 		if err != nil {
-			_, _ = io.WriteString(responseWriter, err.Error())
+			http.Error(responseWriter, "failed to declare gzip writer", http.StatusInternalServerError)
 			return
 		}
-		defer gzipWriter.Close()
+		defer func(gzipWriter *gzip.Writer) {
+			if err = gzipWriter.Close(); err != nil {
+				http.Error(responseWriter, "failed to close gzip writer", http.StatusInternalServerError)
+			}
+		}(gzipWriter)
 
-		_, _ = gzipWriter.Write(recorder.buffer.Bytes())
+		if _, err = gzipWriter.Write(recorder.buffer.Bytes()); err != nil {
+			http.Error(responseWriter, "failed to compress data via gzip writer", http.StatusInternalServerError)
+		}
 	}
 	return http.HandlerFunc(fn)
 }

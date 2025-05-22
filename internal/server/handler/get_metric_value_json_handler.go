@@ -9,12 +9,11 @@ import (
 func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
 	m, err := parsedJsonMetric(request)
 	if err != nil {
-		http.Error(responseWriter, "failed to get the metric list", http.StatusBadRequest)
+		http.Error(responseWriter, "failed to decode request body", http.StatusBadRequest)
 		return
 	}
 
-	err = v.StructPartial(m, "ID", "MType")
-	if err != nil {
+	if err = v.StructPartial(m, "ID", "MType"); err != nil {
 		http.Error(responseWriter, "incorrect metric data", http.StatusBadRequest)
 		return
 	}
@@ -27,20 +26,13 @@ func GetMetricJson(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	if !isSet {
-		http.NotFound(responseWriter, request)
-		return
-	}
-
-	metricJson, err := json.Marshal(resultingMetric)
-	if err != nil {
-		http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+		http.Error(responseWriter, "metric not found", http.StatusNotFound)
 		return
 	}
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	_, err = responseWriter.Write(metricJson)
-	if err != nil {
-		http.Error(responseWriter, "body record error", http.StatusInternalServerError)
+	if err = json.NewEncoder(responseWriter).Encode(resultingMetric); err != nil {
+		http.Error(responseWriter, "failed to encode the metric", http.StatusInternalServerError)
 	}
 }

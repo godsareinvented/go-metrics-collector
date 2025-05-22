@@ -13,24 +13,20 @@ func UpdateMetricJson(responseWriter http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	err = v.Struct(m)
-	if err != nil {
+	if err = v.Struct(m); err != nil {
 		http.Error(responseWriter, "incorrect metric data", http.StatusBadRequest)
 		return
 	}
 
 	metricManager := manager.MetricManager{}
-	err = metricManager.UpdateValue(m)
-	if err != nil {
-		http.Error(responseWriter, "failed to save the metric", http.StatusInternalServerError)
+	if err = metricManager.UpdateValue(m); err != nil {
+		http.Error(responseWriter, "failed to write metric in the response", http.StatusInternalServerError)
 		return
 	}
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(responseWriter).Encode(m)
-	if err != nil {
+	if err = json.NewEncoder(responseWriter).Encode(m); err != nil {
 		http.Error(responseWriter, "failed to encode the metric", http.StatusInternalServerError)
-		return
 	}
 }

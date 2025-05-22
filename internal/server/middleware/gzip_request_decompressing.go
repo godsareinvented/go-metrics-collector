@@ -17,14 +17,18 @@ func GzipRequestDecompressing(handlerFunc http.Handler) http.Handler {
 
 		gz, err := gzip.NewReader(request.Body)
 		if nil != err {
-			http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+			http.Error(responseWriter, "failed to declare gzip reader", http.StatusInternalServerError)
 			return
 		}
-		defer gz.Close()
+		defer func(gz *gzip.Reader) {
+			if err = gz.Close(); err != nil {
+				http.Error(responseWriter, "failed to close gzip reader", http.StatusInternalServerError)
+			}
+		}(gz)
 
 		body, err := io.ReadAll(gz)
 		if nil != err {
-			http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+			http.Error(responseWriter, "failed to decompress data via gzip writer", http.StatusInternalServerError)
 			return
 		}
 

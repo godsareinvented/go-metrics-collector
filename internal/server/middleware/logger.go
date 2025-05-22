@@ -25,8 +25,8 @@ func (lrw *loggingResponseWriter) Write(bytes []byte) (int, error) {
 }
 
 func (lrw *loggingResponseWriter) WriteHeader(statusCode int) {
-	*lrw.responseData.statusCode = statusCode
 	lrw.ResponseWriter.WriteHeader(statusCode)
+	*lrw.responseData.statusCode = statusCode
 }
 
 func WithLogging(handlerFunc http.Handler) http.Handler {
