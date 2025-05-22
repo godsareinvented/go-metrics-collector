@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -32,7 +31,7 @@ func GzipRequestDecompressing(handlerFunc http.Handler) http.Handler {
 			return
 		}
 
-		request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		request.Body = io.NopCloser(bytes.NewBuffer(body))
 		request.ContentLength = int64(len(body))
 
 		handlerFunc.ServeHTTP(responseWriter, request)
