@@ -16,7 +16,7 @@ func printServerStopped() {
 }
 
 func exportMetricsToPermanentStorage() error {
-	if nil == config.Configuration.PermanentStorage {
+	if config.Configuration.PermanentStorage == nil {
 		fmt.Println("Saving metrics to persistent storage by server shutdowns is disabled")
 		return nil
 	}

@@ -37,7 +37,7 @@ func exportTask() {
 }
 
 func importMetricsFromPermanentStorage() error {
-	if nil == config.Configuration.PermanentStorage {
+	if config.Configuration.PermanentStorage == nil {
 		fmt.Println("Saving metrics to and uploading from persistent storage between server outages is disabled")
 		return nil
 	}

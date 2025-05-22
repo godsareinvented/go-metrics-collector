@@ -17,7 +17,7 @@ type PermanentStorage struct {
 }
 
 func (s *PermanentStorage) Import() ([]dto.Metrics, error) {
-	if nil != s.file {
+	if s.file != nil {
 		s.Close()
 		panic(fmt.Sprintf("File \"%s\" is open for write", s.FileFullPath))
 	}
@@ -26,7 +26,7 @@ func (s *PermanentStorage) Import() ([]dto.Metrics, error) {
 	if errors.Is(err, os.ErrNotExist) {
 		return []dto.Metrics{}, nil
 	}
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -37,7 +37,7 @@ func (s *PermanentStorage) Import() ([]dto.Metrics, error) {
 		var metric dto.Metrics
 
 		metricJson := scanner.Bytes()
-		if err = json.Unmarshal(metricJson, &metric); nil != err {
+		if err = json.Unmarshal(metricJson, &metric); err != nil {
 			return nil, err
 		}
 
@@ -48,13 +48,13 @@ func (s *PermanentStorage) Import() ([]dto.Metrics, error) {
 }
 
 func (s *PermanentStorage) Export(metricList []dto.Metrics) error {
-	if err := s.openFileToWrite(); nil != err {
+	if err := s.openFileToWrite(); err != nil {
 		return err
 	}
 
 	for _, metric := range metricList {
 		metricJson, err := json.Marshal(metric)
-		if nil != err {
+		if err != nil {
 			return err
 		}
 
@@ -87,7 +87,7 @@ func (s *PermanentStorage) writeMetricToFile(metricJson []byte) error {
 
 func (s *PermanentStorage) openFileToRead() (*os.File, *bufio.Scanner, error) {
 	file, err := os.OpenFile(s.FileFullPath, os.O_RDONLY, 0666)
-	if nil != err {
+	if err != nil {
 		return file, &bufio.Scanner{}, err
 	}
 
@@ -96,7 +96,7 @@ func (s *PermanentStorage) openFileToRead() (*os.File, *bufio.Scanner, error) {
 
 func (s *PermanentStorage) openFileToWrite() error {
 	file, err := os.OpenFile(s.FileFullPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND|os.O_TRUNC, 0666)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 
