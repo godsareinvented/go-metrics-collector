@@ -15,7 +15,6 @@ var (
 func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 	metricManager := manager.MetricManager{}
 	metricList, err := metricManager.GetList()
-
 	if err != nil {
 		http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 		return
@@ -32,11 +31,9 @@ func ShowMetricList(responseWriter http.ResponseWriter, _ *http.Request) {
 		Items: metricList,
 	}
 
-	err = tmpl.Execute(responseWriter, data)
-	if err != nil {
-		http.Error(responseWriter, "body record error", http.StatusInternalServerError)
-		return
-	}
-
+	responseWriter.Header().Set("Content-Type", "text/html")
 	responseWriter.WriteHeader(http.StatusOK)
+	if err = tmpl.Execute(responseWriter, data); err != nil {
+		http.Error(responseWriter, "failed to write html in the response", http.StatusInternalServerError)
+	}
 }
