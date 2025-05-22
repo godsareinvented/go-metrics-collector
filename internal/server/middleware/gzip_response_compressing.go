@@ -12,16 +12,16 @@ import (
 
 type bufferResponseWriter struct {
 	http.ResponseWriter
-	buffer     *bytes.Buffer
-	statusCode *int
+	buffer     bytes.Buffer
+	statusCode int
 }
 
-func (w bufferResponseWriter) Write(b []byte) (int, error) {
+func (w *bufferResponseWriter) Write(b []byte) (int, error) {
 	return w.buffer.Write(b)
 }
 
-func (w bufferResponseWriter) WriteHeader(statusCode int) {
-	*w.statusCode = statusCode
+func (w *bufferResponseWriter) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
 }
 
 func GzipResponseCompressing(handlerFunc http.Handler) http.Handler {
@@ -31,11 +31,10 @@ func GzipResponseCompressing(handlerFunc http.Handler) http.Handler {
 			return
 		}
 
-		statusCode := http.StatusOK
 		recorder := bufferResponseWriter{
 			ResponseWriter: responseWriter,
-			buffer:         &bytes.Buffer{},
-			statusCode:     &statusCode,
+			buffer:         bytes.Buffer{},
+			statusCode:     http.StatusOK,
 		}
 		handlerFunc.ServeHTTP(&recorder, request)
 
@@ -45,7 +44,7 @@ func GzipResponseCompressing(handlerFunc http.Handler) http.Handler {
 		}
 
 		responseWriter.Header().Set("Content-Encoding", "gzip")
-		responseWriter.WriteHeader(*recorder.statusCode)
+		responseWriter.WriteHeader(recorder.statusCode)
 
 		gzipWriter, err := gzip.NewWriterLevel(responseWriter, gzip.BestSpeed)
 		if err != nil {
