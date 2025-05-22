@@ -6,19 +6,21 @@
 
 ### Временные
 
-1. [metric](internal/dto/metric.go:#L6) Переписать констреинты для большего соответствия сущности
-2. [config_configurator](internal/config/config_configurator.go:#L22) Необходимо валидация отрицательных значений
+1. [config_configurator](internal/config/config_configurator.go:#L22) Необходимо валидация отрицательных значений
    флагов?
-3. [config_configurator](internal/config/config_configurator.go:#L26) Необходимо разделить логику сервера и агента,
+2. [config_configurator](internal/config/config_configurator.go:#L26) Необходимо разделить логику сервера и агента,
    т.к. для агента не требуется инициализация хранилища.
-4. [config_configurator](internal/config/config_configurator.go:#L26) Значение GzipMinContentLength должно быть 1400.
+3. [config_configurator](internal/config/config_configurator.go:#L26) Значение GzipMinContentLength должно быть 1400.
    Для соответствия инкременту 8 заменено на 0.
+4. [update_metric_json](internal/client/request/update_metric_json.go:#L16) Нужно пересмотреть выплёвывание ошибок.
+5. [on_start_callback](internal/server/callback/on_start_callback.go:#L20) В будущем, необходимо перейти
+   на более надёжную схему менеджера джоб.
 
 ---
 
 ### Валидация
 
-5. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
+7. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
    поддерживающие проверку, что число во входной строке не больше ```math.MaxInt64``` и ```math.MaxFloat64```
    (*плюс поддержка отрицательных значений через регулярку*)\
    \
@@ -31,7 +33,7 @@
 
 ### Кодстайл
 
-6. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
+8. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
    ```if metric.Type == dictionary.GaugeMetricType { // ... } else``` на switch с обработкой ситуации в ```default```
    -секции,
    что метрика имеет некорректный тип
@@ -40,6 +42,6 @@
 
 ### Проблемы сервиса
 
-7. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
+9. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
 
 ---
