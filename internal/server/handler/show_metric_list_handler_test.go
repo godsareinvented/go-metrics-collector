@@ -68,6 +68,7 @@ func testHandler(t *testing.T, testName string, metrics []dto.Metrics, router *c
 
 func sendRequest(router chi.Router, method string) (int, string, string, error) {
 	r := httptest.NewRequest(method, "/", nil)
+	r.Header.Set("Accept-Encoding", "")
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, r)

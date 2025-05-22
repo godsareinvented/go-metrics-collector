@@ -90,7 +90,7 @@ Content-Type: application/json
 Accept-Encoding: gzip
 
 {
-  "id": "0",
+  "id": "PollCount",
   "type": "counter"
 }
 

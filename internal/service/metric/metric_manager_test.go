@@ -1,8 +1,11 @@
 package metric
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
@@ -12,6 +15,8 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/service/metric/data_collector"
 	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -108,7 +113,12 @@ func router(t *testing.T) *chi.Mux {
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/", func(_ http.ResponseWriter, r *http.Request) {
 			m := dto.Metrics{}
-			err := json.NewDecoder(r.Body).Decode(&m)
+
+			body, err := decompressRequestBody(r)
+			require.NoError(t, err)
+
+			err = json.NewDecoder(bytes.NewReader(body)).Decode(&m)
+			require.NoError(t, err)
 
 			testName := nameOfTestByMetricName(m.ID)
 			t.Run(testName, func(t *testing.T) {
@@ -127,6 +137,24 @@ func router(t *testing.T) *chi.Mux {
 	})
 
 	return r
+}
+
+func decompressRequestBody(r *http.Request) ([]byte, error) {
+	gz, err := gzip.NewReader(r.Body)
+	if err != nil {
+		return []byte{}, errors.New("failed to declare gzip reader")
+	}
+
+	body, err := io.ReadAll(gz)
+	if err != nil {
+		return []byte{}, errors.New("failed to decompress data via gzip writer")
+	}
+
+	if err = gz.Close(); err != nil {
+		return []byte{}, errors.New("failed to close gzip reader")
+	}
+
+	return body, nil
 }
 
 func nameOfTestByMetricName(MName string) string {

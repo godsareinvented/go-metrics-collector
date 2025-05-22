@@ -71,6 +71,7 @@ func TestGetMetric(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest(tt.requestData.method, tt.requestData.url, nil)
+			r.Header.Set("Accept-Encoding", "")
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, r)

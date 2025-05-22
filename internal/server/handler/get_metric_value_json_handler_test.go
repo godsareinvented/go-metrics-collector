@@ -85,6 +85,7 @@ func TestGetMetricJson(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			body := io.NopCloser(strings.NewReader(tt.requestData.body))
 			r := httptest.NewRequest(tt.requestData.method, "/value", body)
+			r.Header.Set("Accept-Encoding", "")
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, r)
