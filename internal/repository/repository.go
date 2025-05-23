@@ -38,6 +38,6 @@ func (repository *Repository) PingStorage(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func NewInstance(storageInterface *interfaces.Storage) *Repository {
-	return &Repository{storage: storageInterface}
+func NewInstance(storageInterface interfaces.Storage) *Repository {
+	return &Repository{storage: &storageInterface}
 }

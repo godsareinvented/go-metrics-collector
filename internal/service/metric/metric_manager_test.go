@@ -178,7 +178,7 @@ func parseAndCleanConfig() *repository.Repository {
 
 	oldRepos := config.Configuration.Repository
 	memStorage := mem_storage.NewInstance()
-	config.Configuration.Repository = repository.NewInstance(&memStorage)
+	config.Configuration.Repository = repository.NewInstance(memStorage)
 
 	return oldRepos
 }

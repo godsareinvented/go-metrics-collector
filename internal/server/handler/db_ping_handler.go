@@ -19,7 +19,12 @@ func DbPing(ctx context.Context) http.HandlerFunc {
 			cancel()
 		}()
 
-		storage := postgres.NewInstance(config.Configuration.DatabaseDSN)
+		storage, err := postgres.NewInstance(config.Configuration.DatabaseDSN)
+		if err != nil {
+			http.Error(responseWriter, "error when accessing the storage", http.StatusInternalServerError)
+			return
+		}
+
 		connector, ok := storage.(interfaces.StorageConnector)
 		if !ok {
 			http.Error(responseWriter, "storage doesn't import the StorageConnector interface", http.StatusInternalServerError)

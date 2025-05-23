@@ -42,21 +42,26 @@ func (s *PostgreSQLStorage) Ping(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func NewInstance(dbDsn string) interfaces.Storage {
-	return &PostgreSQLStorage{
-		db: getOpenedConnection(dbDsn),
+func NewInstance(dbDsn string) (interfaces.Storage, error) {
+	db, err := openedConnection(dbDsn)
+	if err != nil {
+		return nil, err
 	}
+
+	return &PostgreSQLStorage{
+		db: db,
+	}, nil
 }
 
-func getOpenedConnection(dbDsn string) *sql.DB {
+func openedConnection(dbDsn string) (*sql.DB, error) {
 	if "" == dbDsn {
-		panic(errors.New("DATABASE_DSN is empty"))
+		return nil, errors.New("dbDsn is empty")
 	}
 
 	db, err := sql.Open("pgx", dbDsn)
 	if nil != err {
-		panic(err)
+		return nil, err
 	}
 
-	return db
+	return db, nil
 }

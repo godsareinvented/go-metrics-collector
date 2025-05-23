@@ -47,7 +47,7 @@ func (c *ConfigConfigurator) ParseConfig() {
 		Configuration.PermanentStorage = &permanentStorage
 
 		storage := mem_storage.NewInstance()
-		Configuration.Repository = repository.NewInstance(&storage)
+		Configuration.Repository = repository.NewInstance(storage)
 	})
 }
 
