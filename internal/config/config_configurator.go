@@ -6,7 +6,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/logger"
 	"github.com/oldhanasong/go-metrics-collector/internal/permanent_storage/file"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
-	"github.com/oldhanasong/go-metrics-collector/internal/storage/postgres"
+	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
 	"os"
 	"strings"
 	"sync"
@@ -46,7 +46,7 @@ func (c *ConfigConfigurator) ParseConfig() {
 		permanentStorage := file.NewInstance(Configuration.FileStoragePath)
 		Configuration.PermanentStorage = &permanentStorage
 
-		storage := postgres.NewInstance(Configuration.DatabaseDSN)
+		storage := mem_storage.NewInstance()
 		Configuration.Repository = repository.NewInstance(&storage)
 	})
 }
