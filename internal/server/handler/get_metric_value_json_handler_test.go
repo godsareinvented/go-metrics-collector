@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
@@ -76,7 +77,7 @@ func TestGetMetricJson(t *testing.T) {
 	}()
 
 	router := chi.NewRouter()
-	router.Post("/value", GetMetricJson)
+	router.Post("/value", GetMetricJson(context.Background()))
 
 	err := prepareStorage()
 	require.NoError(t, err)

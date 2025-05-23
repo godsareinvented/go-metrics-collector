@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/stretchr/testify/assert"
@@ -137,7 +138,7 @@ func TestUpdateMetric(t *testing.T) {
 	}()
 
 	router := chi.NewRouter()
-	router.Post("/update/{type}/{name}/{value}", UpdateMetric)
+	router.Post("/update/{type}/{name}/{value}", UpdateMetric(context.Background()))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/stretchr/testify/assert"
@@ -63,7 +64,7 @@ func TestGetMetric(t *testing.T) {
 	}()
 
 	router := chi.NewRouter()
-	router.Post("/value/{type}/{name}", GetMetric)
+	router.Post("/value/{type}/{name}", GetMetric(context.Background()))
 
 	err := prepareStorage()
 	require.NoError(t, err)

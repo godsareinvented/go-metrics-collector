@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
@@ -21,7 +22,7 @@ func TestShowMetricList(t *testing.T) {
 	}()
 
 	router := chi.NewRouter()
-	router.Get("/", ShowMetricList)
+	router.Get("/", ShowMetricList(context.Background()))
 
 	oldTpl := mainPageTplPath
 	mainPageTplPath = `.\..\..\..\template\main_page.html`

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
@@ -130,7 +131,7 @@ func TestUpdateMetricHandler(t *testing.T) {
 	}()
 
 	router := chi.NewRouter()
-	router.Post("/update", UpdateMetricJson)
+	router.Post("/update", UpdateMetricJson(context.Background()))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
