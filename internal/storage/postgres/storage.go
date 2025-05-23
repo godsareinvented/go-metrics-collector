@@ -54,12 +54,12 @@ func NewInstance(dbDsn string) (interfaces.Storage, error) {
 }
 
 func openedConnection(dbDsn string) (*sql.DB, error) {
-	if "" == dbDsn {
+	if dbDsn == "" {
 		return nil, errors.New("dbDsn is empty")
 	}
 
 	db, err := sql.Open("pgx", dbDsn)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
