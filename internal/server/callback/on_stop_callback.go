@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
+	"github.com/oldhanasong/go-metrics-collector/internal/util"
 )
 
 func OnServerStoppedCallback() error {
 	printServerStopped()
-	return exportMetricsToPermanentStorage()
+	err1 := exportMetricsToPermanentStorage()
+	err2 := closeStorageConnection()
+	return util.WrappedErrs(err1, err2)
 }
 
 func printServerStopped() {
@@ -26,4 +29,8 @@ func exportMetricsToPermanentStorage() error {
 	(*config.Configuration.PermanentStorage).Close()
 
 	return err
+}
+
+func closeStorageConnection() error {
+	return config.Configuration.Repository.CloseStorage()
 }
