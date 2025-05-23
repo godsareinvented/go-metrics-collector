@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 )
