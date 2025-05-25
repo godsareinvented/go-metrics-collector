@@ -3,8 +3,8 @@ package postgres
 import (
 	"database/sql"
 	"errors"
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/postgres"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 )
 
@@ -25,7 +25,7 @@ func (c *PostgreSQLConfigurator) createTables() error {
 }
 
 func (c *PostgreSQLConfigurator) applyMigrations() error {
-	driver, err := postgres.WithInstance(c.db, &postgres.Config{})
+	driver, err := pgx.WithInstance(c.db, &pgx.Config{})
 	if nil != err {
 		return err
 	}
