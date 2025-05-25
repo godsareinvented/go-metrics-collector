@@ -3,7 +3,7 @@ package decorator
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/go-resty/resty"
+	"github.com/go-resty/resty/v2"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"strconv"
 )

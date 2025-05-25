@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/go-resty/resty"
+	"github.com/go-resty/resty/v2"
 	"github.com/oldhanasong/go-metrics-collector/internal/client/decorator"
 	"github.com/oldhanasong/go-metrics-collector/internal/client/request"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"

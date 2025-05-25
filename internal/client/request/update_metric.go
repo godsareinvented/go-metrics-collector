@@ -2,7 +2,7 @@ package request
 
 import (
 	"fmt"
-	"github.com/go-resty/resty"
+	"github.com/go-resty/resty/v2"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
