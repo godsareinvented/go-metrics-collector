@@ -8,8 +8,11 @@ import (
 	"net/http"
 )
 
-func GetMetric(_ context.Context) http.HandlerFunc {
+func GetMetric(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
+		combinedCtx, cancel := combineContext(ctx, request.Context())
+		defer cancel()
+
 		MType, MName := parsedAbridgedMetricValues(request)
 		if MType == "" || MName == "" {
 			http.Error(responseWriter, "empty metric data", http.StatusBadRequest)
@@ -24,12 +27,11 @@ func GetMetric(_ context.Context) http.HandlerFunc {
 
 		m := dto.Metrics{ID: MName, MType: MType}
 
-		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(m)
+		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(combinedCtx, m)
 		if err != nil {
 			http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 			return
 		}
-
 		if !isSet {
 			http.NotFound(responseWriter, request)
 			return
@@ -37,8 +39,7 @@ func GetMetric(_ context.Context) http.HandlerFunc {
 
 		responseWriter.WriteHeader(http.StatusOK)
 		preparedMetricValue := resultingMetric.FormattedValue()
-		_, err = responseWriter.Write([]byte(preparedMetricValue))
-		if err != nil {
+		if _, err = responseWriter.Write([]byte(preparedMetricValue)); err != nil {
 			http.Error(responseWriter, "body record error", http.StatusInternalServerError)
 		}
 	}

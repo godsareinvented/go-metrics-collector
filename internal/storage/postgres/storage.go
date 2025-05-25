@@ -13,19 +13,19 @@ type PostgreSQLStorage struct {
 }
 
 // GetAll todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) GetAll() ([]dto.Metrics, error) {
+func (s *PostgreSQLStorage) GetAll(_ context.Context) ([]dto.Metrics, error) {
 	// ...
 	return nil, nil
 }
 
 // Get todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) Get(_ dto.Metrics) (dto.Metrics, bool, error) {
+func (s *PostgreSQLStorage) Get(_ context.Context, _ dto.Metrics) (dto.Metrics, bool, error) {
 	// ...
 	return dto.Metrics{}, false, nil
 }
 
 // Set todo: заглушка для реализации интерфейса. Позже прописать тело функции.
-func (s *PostgreSQLStorage) Set(_ dto.Metrics) error {
+func (s *PostgreSQLStorage) Set(_ context.Context, _ dto.Metrics) error {
 	// ...
 	return nil
 }

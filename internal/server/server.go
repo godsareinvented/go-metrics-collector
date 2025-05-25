@@ -17,15 +17,15 @@ type Server struct {
 	server *http.Server
 	router *chi.Mux
 
-	OnStart func() error
-	OnStop  func() error
+	OnStart func(ctx context.Context) error
+	OnStop  func(ctx context.Context) error
 }
 
 func (s *Server) Start(ctx context.Context) {
 	s.createServer(ctx)
 
 	go func() {
-		if err := s.startingServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := s.startingServer(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
 		}
 	}()
@@ -36,13 +36,13 @@ func (s *Server) Stop() error {
 		return nil
 	}
 
-	var err error
-	if s.OnStop != nil {
-		err = s.OnStop()
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	var err error
+	if s.OnStop != nil {
+		err = s.OnStop(ctx)
+	}
 
 	errShutdown := s.server.Shutdown(ctx)
 	return util.WrappedErrs(err, errShutdown)
@@ -87,7 +87,7 @@ func (s *Server) createServer(ctx context.Context) {
 	}
 }
 
-func (s *Server) startingServer() error {
+func (s *Server) startingServer(ctx context.Context) error {
 	l, err := net.Listen("tcp", config.Configuration.Endpoint)
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func (s *Server) startingServer() error {
 	}()
 
 	if s.OnStart != nil {
-		if err = s.OnStart(); err != nil {
+		if err = s.OnStart(ctx); err != nil {
 			errListenerClose := l.Close()
 			return util.WrappedErrs(err, errListenerClose)
 		}
@@ -116,11 +116,4 @@ func (s *Server) startingServer() error {
 	}
 
 	return nil
-}
-
-func (s *Server) executeOnStartCallback() error {
-	if s.OnStart == nil {
-		return nil
-	}
-	return s.OnStart()
 }

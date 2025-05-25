@@ -10,8 +10,11 @@ import (
 	"strconv"
 )
 
-func UpdateMetric(_ context.Context) http.HandlerFunc {
+func UpdateMetric(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
+		combinedCtx, cancel := combineContext(ctx, request.Context())
+		defer cancel()
+
 		MType, MName, MValue := parsedMetricValues(request)
 		if MType == "" || MName == "" || MValue == "" {
 			http.Error(responseWriter, "empty metric data", http.StatusBadRequest)
@@ -34,7 +37,7 @@ func UpdateMetric(_ context.Context) http.HandlerFunc {
 		}
 
 		metricManager := manager.MetricManager{}
-		err = metricManager.UpdateMetrics(m)
+		err = metricManager.UpdateMetrics(combinedCtx, m)
 		if err != nil {
 			http.Error(responseWriter, "failed to save the metric", http.StatusInternalServerError)
 			return

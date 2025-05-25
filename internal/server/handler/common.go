@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -34,8 +35,8 @@ func prepareStorage() error {
 	repos := config.Configuration.Repository
 	delta := int64(527)
 	value := 0.47
-	err := repos.UpdateMetric(dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
-	err2 := repos.UpdateMetric(dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
+	err := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
+	err2 := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
 	return util.WrappedErrs(err2, err)
 }
 
@@ -47,6 +48,18 @@ func ptrInt(val int64) *int64 {
 // ptrFloat For tests
 func ptrFloat(val float64) *float64 {
 	return &val
+}
+
+// combineContext Получение комбинированного контекста, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
+func combineContext(serverCtx context.Context, requestCtx context.Context) (context.Context, context.CancelFunc) {
+	combinedCtx, cancel := context.WithCancel(requestCtx)
+
+	go func() {
+		<-serverCtx.Done()
+		cancel()
+	}()
+
+	return combinedCtx, cancel
 }
 
 func parsedJsonMetric(r *http.Request) (dto.Metrics, error) {

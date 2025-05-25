@@ -11,14 +11,8 @@ import (
 
 func DbPing(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		// Комбинированный контекст, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
-		requestCtx, cancel := context.WithCancel(request.Context())
+		combinedCtx, cancel := combineContext(ctx, request.Context())
 		defer cancel()
-
-		go func() {
-			<-ctx.Done()
-			cancel()
-		}()
 
 		conf := storage.Config{Type: dictionary.PostgresqlStorage, DSN: config.Configuration.DatabaseDSN}
 		s, _, err := storage.CreateStorageAndConfigurator(conf)
@@ -33,7 +27,7 @@ func DbPing(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		if ping, err := connector.Ping(requestCtx); !ping || err != nil {
+		if ping, err := connector.Ping(combinedCtx); !ping || err != nil {
 			http.Error(responseWriter, "failed to ping db", http.StatusInternalServerError)
 			return
 		}

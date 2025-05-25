@@ -10,16 +10,16 @@ type Repository struct {
 	storage *interfaces.Storage
 }
 
-func (repository *Repository) UpdateMetric(metric dto.Metrics) error {
-	return (*repository.storage).Set(metric)
+func (repository *Repository) UpdateMetric(ctx context.Context, metric dto.Metrics) error {
+	return (*repository.storage).Set(ctx, metric)
 }
 
-func (repository *Repository) GetMetric(metric dto.Metrics) (dto.Metrics, bool, error) {
-	return (*repository.storage).Get(metric)
+func (repository *Repository) GetMetric(ctx context.Context, metric dto.Metrics) (dto.Metrics, bool, error) {
+	return (*repository.storage).Get(ctx, metric)
 }
 
-func (repository *Repository) GetAllMetrics() ([]dto.Metrics, error) {
-	return (*repository.storage).GetAll()
+func (repository *Repository) GetAllMetrics(ctx context.Context) ([]dto.Metrics, error) {
+	return (*repository.storage).GetAll(ctx)
 }
 
 func (repository *Repository) CloseStorage() error {

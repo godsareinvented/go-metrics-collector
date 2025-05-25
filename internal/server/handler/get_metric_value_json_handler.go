@@ -7,8 +7,11 @@ import (
 	"net/http"
 )
 
-func GetMetricJson(_ context.Context) http.HandlerFunc {
+func GetMetricJson(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
+		combinedCtx, cancel := combineContext(ctx, request.Context())
+		defer cancel()
+
 		m, err := parsedJsonMetric(request)
 		if err != nil {
 			http.Error(responseWriter, "failed to decode request body", http.StatusBadRequest)
@@ -20,7 +23,7 @@ func GetMetricJson(_ context.Context) http.HandlerFunc {
 			return
 		}
 
-		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(m)
+		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(combinedCtx, m)
 		if err != nil {
 			http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 			return

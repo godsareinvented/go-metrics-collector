@@ -7,8 +7,11 @@ import (
 	"net/http"
 )
 
-func UpdateMetricJson(_ context.Context) http.HandlerFunc {
+func UpdateMetricJson(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
+		combinedCtx, cancel := combineContext(ctx, request.Context())
+		defer cancel()
+
 		m, err := parsedJsonMetric(request)
 		if err != nil {
 			http.Error(responseWriter, "failed to get the metric list", http.StatusBadRequest)
@@ -21,7 +24,7 @@ func UpdateMetricJson(_ context.Context) http.HandlerFunc {
 		}
 
 		metricManager := manager.MetricManager{}
-		if err = metricManager.UpdateMetrics(m); err != nil {
+		if err = metricManager.UpdateMetrics(combinedCtx, m); err != nil {
 			http.Error(responseWriter, "failed to write metric in the response", http.StatusInternalServerError)
 			return
 		}

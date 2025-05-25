@@ -73,10 +73,10 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 	}
 }
 
-func (metricManager *MetricManager) UpdateMetrics(metric dto.Metrics) error {
+func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metric dto.Metrics) error {
 	repos := config.Configuration.Repository
 
-	metricFromStorage, isSet, err := repos.GetMetric(metric)
+	metricFromStorage, isSet, err := repos.GetMetric(ctx, metric)
 	if err != nil {
 		return err
 	}
@@ -87,24 +87,24 @@ func (metricManager *MetricManager) UpdateMetrics(metric dto.Metrics) error {
 	}
 
 	metric = valueHandler.GetMutatedValueMetric(metric, metricFromStorage, isSet)
-	err = repos.UpdateMetric(metric)
+	err = repos.UpdateMetric(ctx, metric)
 
 	var errExport error
 	if 0 == config.Configuration.StoreInterval {
-		errExport = metricManager.ExportTo(config.Configuration.PermanentStorage)
+		errExport = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 	}
 
 	return util.WrappedErrs(err, errExport)
 }
 
-func (metricManager *MetricManager) ImportFrom(permanentStorage *interfaces.PermanentStorage) error {
+func (metricManager *MetricManager) ImportFrom(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {
 	toImport, err := (*permanentStorage).Import()
 	if err != nil {
 		return err
 	}
 
 	for _, metric := range toImport {
-		if err = metricManager.UpdateMetrics(metric); err != nil {
+		if err = metricManager.UpdateMetrics(ctx, metric); err != nil {
 			return err
 		}
 	}
@@ -112,8 +112,8 @@ func (metricManager *MetricManager) ImportFrom(permanentStorage *interfaces.Perm
 	return nil
 }
 
-func (metricManager *MetricManager) ExportTo(permanentStorage *interfaces.PermanentStorage) error {
-	toExport, err := config.Configuration.Repository.GetAllMetrics()
+func (metricManager *MetricManager) ExportTo(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {
+	toExport, err := config.Configuration.Repository.GetAllMetrics(ctx)
 	if err != nil {
 		return err
 	}

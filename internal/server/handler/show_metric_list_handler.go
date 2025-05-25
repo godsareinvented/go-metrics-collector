@@ -13,9 +13,12 @@ var (
 	mainPageTplPath = "template/main_page.html"
 )
 
-func ShowMetricList(_ context.Context) http.HandlerFunc {
+func ShowMetricList(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		metricList, err := config.Configuration.Repository.GetAllMetrics()
+		combinedCtx, cancel := combineContext(ctx, request.Context())
+		defer cancel()
+
+		metricList, err := config.Configuration.Repository.GetAllMetrics(combinedCtx)
 		if err != nil {
 			http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 			return

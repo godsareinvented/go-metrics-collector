@@ -6,9 +6,9 @@ import (
 )
 
 type Storage interface {
-	GetAll() ([]dto.Metrics, error)
-	Get(m dto.Metrics) (dto.Metrics, bool, error)
-	Set(m dto.Metrics) error
+	GetAll(ctx context.Context) ([]dto.Metrics, error)
+	Get(ctx context.Context, m dto.Metrics) (dto.Metrics, bool, error)
+	Set(ctx context.Context, m dto.Metrics) error
 }
 
 type StorageConnector interface {

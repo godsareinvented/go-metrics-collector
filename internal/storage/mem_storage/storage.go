@@ -1,6 +1,7 @@
 package mem_storage
 
 import (
+	"context"
 	"fmt"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
@@ -16,12 +17,12 @@ func (memStorage *MemStorage) GetAll(_ context.Context) ([]dto.Metrics, error) {
 	return slices.Collect(maps.Values(memStorage.entityList)), nil
 }
 
-func (memStorage *MemStorage) Get(m dto.Metrics) (dto.Metrics, bool, error) {
+func (memStorage *MemStorage) Get(_ context.Context, m dto.Metrics) (dto.Metrics, bool, error) {
 	metrics, ok := memStorage.entityList[key(m)]
 	return metrics, ok, nil
 }
 
-func (memStorage *MemStorage) Set(m dto.Metrics) error {
+func (memStorage *MemStorage) Set(_ context.Context, m dto.Metrics) error {
 	memStorage.entityList[key(m)] = m
 	return nil
 }
