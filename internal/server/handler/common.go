@@ -55,8 +55,12 @@ func combineContext(serverCtx context.Context, requestCtx context.Context) (cont
 	combinedCtx, cancel := context.WithCancel(requestCtx)
 
 	go func() {
-		<-serverCtx.Done()
-		cancel()
+		select {
+		case <-serverCtx.Done():
+			cancel()
+		case <-combinedCtx.Done():
+			return
+		}
 	}()
 
 	return combinedCtx, cancel
