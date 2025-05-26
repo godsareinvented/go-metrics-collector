@@ -26,16 +26,16 @@ func (c *PostgreSQLConfigurator) createTables() error {
 
 func (c *PostgreSQLConfigurator) applyMigrations() error {
 	driver, err := pgx.WithInstance(c.db, &pgx.Config{})
-	if nil != err {
+	if err != nil {
 		return err
 	}
 
 	m, err := migrate.NewWithDatabaseInstance("file://migration/postgres/", "metrics", driver)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 
-	if err = m.Up(); nil != err && !errors.Is(err, migrate.ErrNoChange) {
+	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
 

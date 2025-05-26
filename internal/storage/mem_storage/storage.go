@@ -13,8 +13,6 @@ type MemStorage struct {
 	entityList map[string]dto.Metrics
 }
 
-var ()
-
 func (memStorage *MemStorage) GetAll(_ context.Context) ([]dto.Metrics, error) {
 	return slices.Collect(maps.Values(memStorage.entityList)), nil
 }

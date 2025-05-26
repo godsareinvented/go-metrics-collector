@@ -90,7 +90,7 @@ func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metric dt
 	err = repos.UpdateMetric(ctx, metric)
 
 	var errExport error
-	if 0 == config.Configuration.StoreInterval {
+	if config.Configuration.StoreInterval == 0 {
 		errExport = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 	}
 

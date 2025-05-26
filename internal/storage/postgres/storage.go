@@ -50,7 +50,7 @@ ON CONFLICT (id) DO UPDATE
 
 func (s *PostgreSQLStorage) GetAll(ctx context.Context) ([]dto.Metrics, error) {
 	queryRows, err := s.db.QueryContext(ctx, getAllMetricsQuery)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -58,19 +58,19 @@ func (s *PostgreSQLStorage) GetAll(ctx context.Context) ([]dto.Metrics, error) {
 	for queryRows.Next() {
 		var metric dto.Metrics
 		err = queryRows.Scan(&metric.ID, &metric.MType, &metric.Delta, &metric.Value)
-		if nil != err {
+		if err != nil {
 			return nil, err
 		}
 		metrics = append(metrics, metric)
 	}
 
 	err = queryRows.Err()
-	if nil != err {
+	if err != nil {
 		return metrics, err
 	}
 
 	err = queryRows.Close()
-	if nil != err {
+	if err != nil {
 		return metrics, err
 	}
 
@@ -85,12 +85,12 @@ func (s *PostgreSQLStorage) Get(ctx context.Context, m dto.Metrics) (dto.Metrics
 	if errors.Is(err, sql.ErrNoRows) {
 		return dto.Metrics{}, false, nil
 	}
-	if nil != err {
+	if err != nil {
 		return dto.Metrics{}, false, err
 	}
 
 	err = queryRow.Err()
-	if nil != err {
+	if err != nil {
 		return dto.Metrics{}, false, err
 	}
 
@@ -99,11 +99,11 @@ func (s *PostgreSQLStorage) Get(ctx context.Context, m dto.Metrics) (dto.Metrics
 
 func (s *PostgreSQLStorage) Set(ctx context.Context, m dto.Metrics) error {
 	res, err := s.db.ExecContext(ctx, saveOrUpdateMetricQuery, m.ID, m.Delta, m.Value, m.MType)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 	rowsAffected, err := res.RowsAffected()
-	if nil != err {
+	if err != nil {
 		return err
 	}
 	if rowsAffected == 0 {
