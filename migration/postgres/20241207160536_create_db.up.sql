@@ -22,9 +22,11 @@ COMMENT ON COLUMN metric_type.ID is 'Автоматически увеличив
 COMMENT ON COLUMN metric_type.metric_type is 'Тип метрики: gauge или counter';
 
 INSERT INTO metric_type (metric_type)
-VALUES ('gauge');
+VALUES ('gauge')
+ON CONFLICT (metric_type) DO NOTHING;
 INSERT INTO metric_type (metric_type)
-VALUES ('counter');
+VALUES ('counter')
+ON CONFLICT (metric_type) DO NOTHING;
 
 
 CREATE TABLE IF NOT EXISTS metrics
