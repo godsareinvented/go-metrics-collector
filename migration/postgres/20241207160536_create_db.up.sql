@@ -30,7 +30,7 @@ VALUES ('counter');
 CREATE TABLE IF NOT EXISTS metrics
 (
     ID             VARCHAR(100) UNIQUE,
-    delta          INTEGER          NULL,
+    delta BIGINT NULL,
     value          DOUBLE PRECISION NULL,
     metric_type_id SMALLINT,
     PRIMARY KEY (ID),
