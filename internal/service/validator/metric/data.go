@@ -3,7 +3,7 @@ package metric
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/service/validator"
-	"github.com/oldhanasong/go-metrics-collector/internal/util"
+	"go.uber.org/multierr"
 )
 
 func ValidateMetricType(MType string) error {
@@ -19,9 +19,9 @@ func ValidateMetricValue(MType, MValue string) error {
 }
 
 func ValidateMetricValues(MType, MName, MValue string) error {
-	return util.WrappedErrs(ValidateMetricType(MType), ValidateMetricName(MName), ValidateMetricValue(MType, MValue))
+	return multierr.Combine(ValidateMetricType(MType), ValidateMetricName(MName), ValidateMetricValue(MType, MValue))
 }
 
 func ValidateAbridgedMetricValues(MType, MName string) error {
-	return util.WrappedErrs(ValidateMetricType(MType), ValidateMetricName(MName))
+	return multierr.Combine(ValidateMetricType(MType), ValidateMetricName(MName))
 }

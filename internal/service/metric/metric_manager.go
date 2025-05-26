@@ -8,7 +8,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
-	"github.com/oldhanasong/go-metrics-collector/internal/util"
+	"go.uber.org/multierr"
 	"time"
 )
 
@@ -96,7 +96,7 @@ func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metric dt
 		errExport = metricManager.ExportTo(ctx, config.Configuration.PermanentStorage)
 	}
 
-	return util.WrappedErrs(err, errExport)
+	return multierr.Combine(err, errExport)
 }
 
 func (metricManager *MetricManager) ImportFrom(ctx context.Context, permanentStorage *interfaces.PermanentStorage) error {

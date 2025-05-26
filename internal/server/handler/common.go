@@ -9,8 +9,8 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/storage/mem_storage"
-	"github.com/oldhanasong/go-metrics-collector/internal/util"
 	"github.com/oldhanasong/go-metrics-collector/internal/validation/decorator"
+	"go.uber.org/multierr"
 	"net/http"
 )
 
@@ -38,7 +38,7 @@ func prepareStorage() error {
 	repos := config.Configuration.Repository
 	err := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "PollCount", MType: "counter", Delta: ptrInt(527)})
 	err2 := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "RandomValue", MType: "gauge", Value: ptrFloat(0.47)})
-	return util.WrappedErrs(err2, err)
+	return multierr.Combine(err2, err)
 }
 
 // ptrInt For tests

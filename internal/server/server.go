@@ -7,7 +7,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/handler"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/middleware"
-	"github.com/oldhanasong/go-metrics-collector/internal/util"
+	"go.uber.org/multierr"
 	"net"
 	"net/http"
 	"time"
@@ -45,7 +45,7 @@ func (s *Server) Stop() error {
 	}
 
 	errShutdown := s.server.Shutdown(ctx)
-	return util.WrappedErrs(err, errShutdown)
+	return multierr.Combine(err, errShutdown)
 }
 
 func (s *Server) createAndConfigureRouter(ctx context.Context) {
@@ -97,7 +97,7 @@ func (s *Server) startingServer(ctx context.Context) error {
 		if r := recover(); r != nil {
 			errListenerClose := l.Close()
 			errShutdown := s.Stop()
-			if err = util.WrappedErrs(errListenerClose, errShutdown); err != nil {
+			if err = multierr.Combine(errListenerClose, errShutdown); err != nil {
 				panic(err)
 			}
 		}
@@ -106,13 +106,13 @@ func (s *Server) startingServer(ctx context.Context) error {
 	if s.OnStart != nil {
 		if err = s.OnStart(ctx); err != nil {
 			errListenerClose := l.Close()
-			return util.WrappedErrs(err, errListenerClose)
+			return multierr.Combine(err, errListenerClose)
 		}
 	}
 
 	if err = s.server.Serve(l); err != nil {
 		errListenerClose := l.Close()
-		return util.WrappedErrs(err, errListenerClose)
+		return multierr.Combine(err, errListenerClose)
 	}
 
 	return nil

@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/service/metric"
-	"github.com/oldhanasong/go-metrics-collector/internal/util"
+	"go.uber.org/multierr"
 )
 
 func OnServerStoppedCallback(ctx context.Context) error {
 	printServerStopped()
 	err1 := exportMetricsToPermanentStorage(ctx)
 	err2 := closeStorageConnection()
-	return util.WrappedErrs(err1, err2)
+	return multierr.Combine(err1, err2)
 }
 
 func printServerStopped() {
