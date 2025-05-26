@@ -39,10 +39,8 @@ var (
 // TestCollectAndSend Тест будет работать при условии, что значение reportInterval - минимум, 1 секунда,
 // т.к. за это время все метрики должны успеть уйти на сервер
 func TestCollectAndSend(t *testing.T) {
-	oldRepos := parseAndCleanConfig()
-	defer func() {
-		config.Configuration.Repository = oldRepos
-	}()
+	swapFunc := parseAndCleanConfig()
+	defer swapFunc()
 
 	server := httptest.NewServer(router(t))
 	defer server.Close()
@@ -172,13 +170,20 @@ func parsedMetricValues(r *http.Request) (string, string, string) {
 		r.PathValue("value")
 }
 
-func parseAndCleanConfig() *repository.Repository {
-	configConfigurator := config.ConfigConfigurator{}
-	configConfigurator.ParseConfig()
-
+func parseAndCleanConfig() func() {
 	oldRepos := config.Configuration.Repository
 	memStorage := mem_storage.NewStorage()
 	config.Configuration.Repository = repository.NewInstance(memStorage)
 
-	return oldRepos
+	oldStoreInterval := config.Configuration.StoreInterval
+	config.Configuration.StoreInterval = 1
+
+	oldReportInterval := config.Configuration.ReportInterval
+	config.Configuration.ReportInterval = 2
+
+	return func() {
+		config.Configuration.Repository = oldRepos
+		config.Configuration.StoreInterval = oldStoreInterval
+		config.Configuration.ReportInterval = oldReportInterval
+	}
 }

@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -58,10 +57,8 @@ func TestGetMetric(t *testing.T) {
 		},
 	}
 
-	oldRepos := parseAndCleanConfig()
-	defer func() {
-		config.Configuration.Repository = oldRepos
-	}()
+	swapFunc := parseAndCleanConfig()
+	defer swapFunc()
 
 	router := chi.NewRouter()
 	router.Post("/value/{type}/{name}", GetMetric(context.Background()))

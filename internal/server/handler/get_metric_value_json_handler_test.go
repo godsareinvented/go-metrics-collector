@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -71,10 +70,8 @@ func TestGetMetricJson(t *testing.T) {
 		},
 	}
 
-	oldRepos := parseAndCleanConfig()
-	defer func() {
-		config.Configuration.Repository = oldRepos
-	}()
+	swapFunc := parseAndCleanConfig()
+	defer swapFunc()
 
 	router := chi.NewRouter()
 	router.Post("/value", GetMetricJson(context.Background()))

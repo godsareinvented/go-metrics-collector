@@ -19,24 +19,25 @@ var (
 )
 
 // parseAndCleanConfig For tests
-func parseAndCleanConfig() *repository.Repository {
-	configConfigurator := config.ConfigConfigurator{}
-	configConfigurator.ParseConfig()
-
+func parseAndCleanConfig() func() {
 	oldRepos := config.Configuration.Repository
 	memStorage := mem_storage.NewStorage()
 	config.Configuration.Repository = repository.NewInstance(memStorage)
 
-	return oldRepos
+	oldStoreInterval := config.Configuration.StoreInterval
+	config.Configuration.StoreInterval = 1
+
+	return func() {
+		config.Configuration.Repository = oldRepos
+		config.Configuration.StoreInterval = oldStoreInterval
+	}
 }
 
 // prepareStorage For tests
 func prepareStorage() error {
 	repos := config.Configuration.Repository
-	delta := int64(527)
-	value := 0.47
-	err := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
-	err2 := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
+	err := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "PollCount", MType: "counter", Delta: ptrInt(527)})
+	err2 := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "RandomValue", MType: "gauge", Value: ptrFloat(0.47)})
 	return util.WrappedErrs(err2, err)
 }
 

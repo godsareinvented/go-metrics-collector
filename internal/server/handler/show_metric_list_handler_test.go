@@ -16,10 +16,8 @@ import (
 )
 
 func TestShowMetricList(t *testing.T) {
-	oldRepos := parseAndCleanConfig()
-	defer func() {
-		config.Configuration.Repository = oldRepos
-	}()
+	swapFunc := parseAndCleanConfig()
+	defer swapFunc()
 
 	router := chi.NewRouter()
 	router.Get("/", ShowMetricList(context.Background()))
@@ -39,16 +37,14 @@ func TestShowMetricList(t *testing.T) {
 	testHandler(t, "no metrics", []dto.Metrics{}, router)
 
 	repos := config.Configuration.Repository
-	delta := int64(527)
-	value := 0.47
-	err := repos.UpdateMetric(dto.Metrics{ID: "PollCount", MType: "counter", Delta: &delta})
+	err := repos.UpdateMetric(context.Background(), dto.Metrics{ID: "PollCount", MType: "counter", Delta: ptrInt(527)})
 	require.NoError(t, err)
-	err = repos.UpdateMetric(dto.Metrics{ID: "RandomValue", MType: "gauge", Value: &value})
+	err = repos.UpdateMetric(context.Background(), dto.Metrics{ID: "RandomValue", MType: "gauge", Value: ptrFloat(0.47)})
 	require.NoError(t, err)
 
 	metricList := []dto.Metrics{
-		{ID: "PollCount", MType: "counter", Delta: &delta},
-		{ID: "RandomValue", MType: "gauge", Value: &value},
+		{ID: "PollCount", MType: "counter", Delta: ptrInt(527)},
+		{ID: "RandomValue", MType: "gauge", Value: ptrFloat(0.47)},
 	}
 	testHandler(t, "sorted metric list", metricList, router)
 }

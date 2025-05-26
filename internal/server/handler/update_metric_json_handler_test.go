@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -125,10 +124,8 @@ func TestUpdateMetricHandler(t *testing.T) {
 		},
 	}
 
-	oldRepos := parseAndCleanConfig()
-	defer func() {
-		config.Configuration.Repository = oldRepos
-	}()
+	swapFunc := parseAndCleanConfig()
+	defer swapFunc()
 
 	router := chi.NewRouter()
 	router.Post("/update", UpdateMetricJson(context.Background()))

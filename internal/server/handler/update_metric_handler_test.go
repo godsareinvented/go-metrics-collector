@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"net/http"
@@ -132,10 +131,8 @@ func TestUpdateMetric(t *testing.T) {
 		},
 	}
 
-	oldRepos := parseAndCleanConfig()
-	defer func() {
-		config.Configuration.Repository = oldRepos
-	}()
+	swapFunc := parseAndCleanConfig()
+	defer swapFunc()
 
 	router := chi.NewRouter()
 	router.Post("/update/{type}/{name}/{value}", UpdateMetric(context.Background()))

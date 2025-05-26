@@ -18,13 +18,12 @@ import (
 func TestDbPing(t *testing.T) {
 	testConnectorInterfaceImplementation(t)
 
-	// todo: Раскомментировать после 11 инкремента.
-	//oldRepos := storageSwap(t)
-	//defer func() {
-	//	config.Configuration.Repository = oldRepos
-	//}()
-	//
-	//testResponse(t)
+	oldRepos := storageSwap(t)
+	defer func() {
+		config.Configuration.Repository = oldRepos
+	}()
+
+	testResponse(t)
 }
 
 func testConnectorInterfaceImplementation(t *testing.T) {

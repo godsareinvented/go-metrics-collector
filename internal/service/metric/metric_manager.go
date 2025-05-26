@@ -39,6 +39,7 @@ func (metricManager *MetricManager) CollectAndSend(ctx context.Context) {
 
 func (metricManager *MetricManager) collect(ctx context.Context) {
 	var metricCollectedData dto.CollectedMetricData
+	var metrics []dto.Metrics
 	for {
 		select {
 		case <-ctx.Done():
@@ -46,12 +47,13 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 		default:
 			metricManager.MetricDataCollector.CollectMetricData(&metricCollectedData)
 
-			metricList = []dto.Metrics{}
+			metrics = []dto.Metrics{}
 			for _, metricName := range metricManager.MetricList {
 				strategy := metricManager.strategies[metricName]
-				metrics := strategy.GetMetric(metricName, metricCollectedData)
-				metricList = append(metricList, metrics)
+				m := strategy.GetMetric(metricName, metricCollectedData)
+				metrics = append(metrics, m)
 			}
+			metricList = metrics
 
 			time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
 		}
