@@ -108,29 +108,31 @@ func testMetricList(t *testing.T, testName string, metrics []dto.Metrics) {
 func router(t *testing.T) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Route("/update", func(r chi.Router) {
+	r.Route("/updates", func(r chi.Router) {
 		r.Post("/", func(_ http.ResponseWriter, r *http.Request) {
-			m := dto.Metrics{}
+			var mList []dto.Metrics
 
 			body, err := decompressRequestBody(r)
 			require.NoError(t, err)
 
-			err = json.NewDecoder(bytes.NewReader(body)).Decode(&m)
+			err = json.NewDecoder(bytes.NewReader(body)).Decode(&mList)
 			require.NoError(t, err)
 
-			testName := nameOfTestByMetricName(m.ID)
-			t.Run(testName, func(t *testing.T) {
-				if !assert.Equal(t, http.MethodPost, r.Method) {
-					return
-				}
+			for _, m := range mList {
+				testName := nameOfTestByMetricName(m.ID)
+				t.Run(testName, func(t *testing.T) {
+					if !assert.Equal(t, http.MethodPost, r.Method) {
+						return
+					}
 
-				assert.Contains(t, r.Header.Get("Content-Type"), "application/json")
-				assert.NoError(t, err)
+					assert.Contains(t, r.Header.Get("Content-Type"), "application/json")
+					assert.NoError(t, err)
 
-				mu.Lock()
-				processedMetricList = append(processedMetricList, m)
-				mu.Unlock()
-			})
+					mu.Lock()
+					processedMetricList = append(processedMetricList, m)
+					mu.Unlock()
+				})
+			}
 		})
 	})
 
@@ -162,12 +164,6 @@ func nameOfTestByMetricName(MName string) string {
 		return fmt.Sprintf("request #%d (%s metric)", requestCount.Load(), MName)
 	}
 	return fmt.Sprintf("request #%d", requestCount.Load())
-}
-
-func parsedMetricValues(r *http.Request) (string, string, string) {
-	return r.PathValue("type"),
-		r.PathValue("name"),
-		r.PathValue("value")
 }
 
 func parseAndCleanConfig() func() {
