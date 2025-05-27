@@ -42,6 +42,10 @@ func importMetricsFromPermanentStorage() error {
 		return nil
 	}
 
+	if !config.Configuration.Restore {
+		return nil
+	}
+
 	metricManager := manager.MetricManager{}
 	return metricManager.ImportFrom(config.Configuration.PermanentStorage)
 }
