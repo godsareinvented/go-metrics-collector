@@ -10,6 +10,8 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
 	"go.uber.org/multierr"
+	"maps"
+	"slices"
 	"time"
 )
 
@@ -77,7 +79,7 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metric dto.Metrics) error {
 	repos := config.Configuration.Repository
 
-	m, err := metricManager.prepareMetric(ctx, *repos, metric)
+	m, err := prepareMetric(ctx, *repos, metric)
 	if err != nil {
 		return err
 	}
@@ -94,16 +96,21 @@ func (metricManager *MetricManager) UpdateMetric(ctx context.Context, metric dto
 func (metricManager *MetricManager) UpdateMetrics(ctx context.Context, metrics []dto.Metrics) error {
 	repos := config.Configuration.Repository
 
+	metrics, err := combineMetricValues(metrics)
+	if err != nil {
+		return err
+	}
+
 	var resMetrics []dto.Metrics
 	for _, metric := range metrics {
-		m, err := metricManager.prepareMetric(ctx, *repos, metric)
+		m, err := prepareMetric(ctx, *repos, metric)
 		if err != nil {
 			return err
 		}
 		resMetrics = append(resMetrics, m)
 	}
 
-	err := repos.UpdateMetricBatch(ctx, resMetrics)
+	err = repos.UpdateMetricBatch(ctx, resMetrics)
 
 	var errExport error
 	if config.Configuration.StoreInterval == 0 {
@@ -152,7 +159,7 @@ func (metricManager *MetricManager) Init() {
 	}
 }
 
-func (metricManager *MetricManager) prepareMetric(ctx context.Context, repos repository.Repository, metric dto.Metrics) (dto.Metrics, error) {
+func prepareMetric(ctx context.Context, repos repository.Repository, metric dto.Metrics) (dto.Metrics, error) {
 	metricFromStorage, isSet, err := repos.GetMetric(ctx, metric)
 	if err != nil {
 		return dto.Metrics{}, err
@@ -166,4 +173,27 @@ func (metricManager *MetricManager) prepareMetric(ctx context.Context, repos rep
 	metric = valueHandler.GetMutatedValueMetric(metric, metricFromStorage, isSet)
 
 	return metric, nil
+}
+
+func combineMetricValues(metricList []dto.Metrics) ([]dto.Metrics, error) {
+	valueHandlerMap := map[string]interfaces.ValueHandler{}
+	metricMap := map[string]dto.Metrics{}
+	isMetricSet := true
+
+	for _, metric := range metricList {
+		isMetricSet = true
+		if _, ok := metricMap[metric.ID]; !ok {
+			isMetricSet = false
+			if _, ok = valueHandlerMap[metric.MType]; !ok {
+				valueHandler, err := valueHandlerAbstractFactory.GetValueHandler(metric)
+				if err != nil {
+					return []dto.Metrics{}, err
+				}
+				valueHandlerMap[metric.MType] = valueHandler
+			}
+		}
+		metricMap[metric.ID] = valueHandlerMap[metric.MType].GetMutatedValueMetric(metric, metricMap[metric.ID], isMetricSet)
+	}
+
+	return slices.Collect(maps.Values(metricMap)), nil
 }
