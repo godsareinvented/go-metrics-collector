@@ -29,8 +29,11 @@ func TestShowMetricList(t *testing.T) {
 	}()
 
 	t.Run("invalid request method", func(t *testing.T) {
-		statusCode, _, _, err := sendRequest(router, http.MethodPost)
-		require.NoError(t, err)
+		r := httptest.NewRequest(http.MethodPost, "/", nil)
+		r.Header.Set("Accept-Encoding", "")
+
+		statusCode, _, _ := sendRequest(router, r)
+
 		assert.Equal(t, http.StatusMethodNotAllowed, statusCode)
 	})
 
@@ -51,33 +54,21 @@ func TestShowMetricList(t *testing.T) {
 
 func testHandler(t *testing.T, testName string, metrics []dto.Metrics, router *chi.Mux) {
 	t.Run(testName, func(t *testing.T) {
-		statusCode, contentType, body, err := sendRequest(router, http.MethodGet)
-		require.Nil(t, err)
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r.Header.Set("Accept-Encoding", "")
+
+		statusCode, headers, body := sendRequest(router, r)
 		assert.Equal(t, http.StatusOK, statusCode)
-		assert.Contains(t, contentType, "text/html")
+		assert.Contains(t, headers.Get("Content-Type"), "text/html")
 
 		expectedBody, err := htmlBody(metrics)
 		require.Nil(t, err)
 
-		assert.Equal(t, expectedBody, body)
+		bodyString, err := io.ReadAll(body)
+		require.Nil(t, err)
+
+		assert.Equal(t, expectedBody, string(bodyString))
 	})
-}
-
-func sendRequest(router chi.Router, method string) (int, string, string, error) {
-	r := httptest.NewRequest(method, "/", nil)
-	r.Header.Set("Accept-Encoding", "")
-	w := httptest.NewRecorder()
-
-	router.ServeHTTP(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-	rawBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, "", "", err
-	}
-
-	return resp.StatusCode, resp.Header.Get("Content-Type"), string(rawBody), nil
 }
 
 func htmlBody(metrics []dto.Metrics) (string, error) {
