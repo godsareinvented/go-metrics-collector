@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 type (
@@ -40,15 +41,21 @@ func (c *ConfigConfigurator) ParseConfig() {
 }
 
 func parseFlags() {
+	var reportInterval, pollInterval, storeInterval int
+
 	flag.StringVar(&Configuration.Endpoint, "a", "localhost:8080", "Адрес эндпоинта HTTP-сервера")
-	flag.DurationVar(&Configuration.ReportInterval, "r", 10, "Частота отправки метрик на сервер")
-	flag.DurationVar(&Configuration.PollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
-	flag.DurationVar(&Configuration.StoreInterval, "i", 300, "Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск")
+	flag.IntVar(&reportInterval, "r", 10, "Частота отправки метрик на сервер")
+	flag.IntVar(&pollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
+	flag.IntVar(&storeInterval, "i", 300, "Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск")
 	flag.StringVar(&Configuration.FileStoragePath, "f", getFileStoragePathDefaultValue(), "Путь до файла, куда сохраняются текущие значения")
 	flag.BoolVar(&Configuration.Restore, "e", true, "Булево значение, определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера")
 	flag.StringVar(&Configuration.DatabaseDSN, "d", "", "Адрес подключения к БД")
 
 	flag.Parse()
+
+	Configuration.ReportInterval = time.Duration(reportInterval)
+	Configuration.PollInterval = time.Duration(pollInterval)
+	Configuration.StoreInterval = time.Duration(storeInterval)
 }
 
 func parseEnv() error {
