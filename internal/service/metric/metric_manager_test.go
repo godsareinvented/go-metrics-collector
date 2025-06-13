@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/oldhanasong/go-metrics-collector/internal/client"
+	"github.com/oldhanasong/go-metrics-collector/internal/client/decorator"
 	"github.com/oldhanasong/go-metrics-collector/internal/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
@@ -53,12 +55,23 @@ func TestCollectAndSend(t *testing.T) {
 		config.Configuration.Endpoint = oldEndpoint
 	}()
 
-	metricManager := MetricManager{MetricDataCollector: &data_collector.MetricDataCollector{}, MetricList: dictionary.MetricNameList[:]}
+	c := client.NewClient()
+	c.Use(decorator.GzipCompress)
+
+	metricManager := MetricManager{
+		MetricList:          dictionary.MetricNameList[:],
+		MetricDataCollector: &data_collector.MetricDataCollector{},
+		Client:              c,
+	}
 	metricManager.Init()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.Configuration.ReportInterval)*time.Second+1*time.Second)
 	defer cancel()
 	metricManager.CollectAndSend(ctx)
+
+	select {
+	case <-ctx.Done():
+	}
 
 	testMetricList(t, "test collect method", metricList)
 	testMetricList(t, "test send method", processedMetricList)
