@@ -47,7 +47,7 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 		default:
 			metricManager.MetricDataCollector.CollectMetricData(&metricCollectedData)
 
-			metrics = []dto.Metrics{}
+			metrics = make([]dto.Metrics, 0, len(metricManager.MetricList))
 			for _, metricName := range metricManager.MetricList {
 				strategy := metricManager.strategies[metricName]
 				m := strategy.GetMetric(metricName, metricCollectedData)
