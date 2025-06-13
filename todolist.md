@@ -21,17 +21,14 @@
    Нужно перейти на схему с грациозным завершением сервера (?..). Надо исследовать этот момент глубже.
 7. [metric_manager](internal/service/metric/metric_manager.go:#L48) Упростить и улучшить именование методов и структур.
 8. [metric_manager](internal/service/metric/metric_manager.go:#L42) Неоптимальная инициализация среза (make len).
-9. [metric_manager](internal/service/metric/metric_manager.go:#L58) Заменить тип PollInterval и ReportInterval к
-   time.Duration,
-   чтобы избежать постоянного приведения типа.
-10. [metric_manager](internal/service/metric/metric_manager.go) Общение между горутинами необходимо переписать на каналы
+9. [metric_manager](internal/service/metric/metric_manager.go) Общение между горутинами необходимо переписать на каналы
     вместо использования переменной пакета.
 
 ---
 
 ### Валидация
 
-11. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
+10. [custom_func](internal/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и ```Float```,
    поддерживающие проверку, что число во входной строке не больше ```math.MaxInt64``` и ```math.MaxFloat64```
    (*плюс поддержка отрицательных значений через регулярку*)\
    \
@@ -44,17 +41,17 @@
 
 ### Хранилища
 
-12. [postgres/storage](internal/storage/postgres/storage.go:#L155) Следует ли добавить в будущем контекст с дедлайном?
+11. [postgres/storage](internal/storage/postgres/storage.go:#L155) Следует ли добавить в будущем контекст с дедлайном?
 
 ---
 
 ### Кодстайл
 
-13. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
+12. [metric_manager_test](internal/buisness_logic/manager/metric_manager_test.go:L72) Заменить все условия вида
    ```if metric.Type == dictionary.GaugeMetricType { // ... } else``` на switch с обработкой ситуации в ```default```
    -секции,
    что метрика имеет некорректный тип
-14. [update_metric_batch_handler](internal/server/handler/update_metric_batch_handler.go:#L29) Нужно пересмотреть
+13. [update_metric_batch_handler](internal/server/handler/update_metric_batch_handler.go:#L29) Нужно пересмотреть
     инициализацию объектов
     (убрать постоянное выделение памяти в обработчиках)
 
@@ -62,6 +59,6 @@
 
 ### Проблемы сервиса
 
-15. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
+14. Теоретически, для значений метрик с типом ```Counter``` может произойти переполнение переменной
 
 ---

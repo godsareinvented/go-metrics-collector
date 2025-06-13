@@ -55,7 +55,7 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 			}
 			metricList = metrics
 
-			time.Sleep(time.Duration(config.Configuration.PollInterval) * time.Second)
+			time.Sleep(config.Configuration.PollInterval * time.Second)
 		}
 	}
 }
@@ -68,7 +68,7 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 		default:
 			_ = metricManager.Client.SendBatch(metricList)
 
-			time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
+			time.Sleep(config.Configuration.ReportInterval * time.Second)
 		}
 	}
 }

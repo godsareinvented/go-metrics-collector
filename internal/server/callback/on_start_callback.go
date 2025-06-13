@@ -26,7 +26,7 @@ func initExportTask(ctx context.Context) {
 
 func exportTask(ctx context.Context) {
 	metricManager := manager.MetricManager{}
-	ticker := time.NewTicker(time.Duration(config.Configuration.StoreInterval) * time.Second)
+	ticker := time.NewTicker(config.Configuration.StoreInterval * time.Second)
 	defer ticker.Stop()
 
 	for {
