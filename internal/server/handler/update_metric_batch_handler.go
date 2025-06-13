@@ -27,14 +27,15 @@ func UpdateMetricBatch(ctx context.Context) http.HandlerFunc {
 		}
 
 		metricManager := manager.MetricManager{}
-		if err = metricManager.UpdateMetrics(combinedCtx, metricList); err != nil {
-			http.Error(responseWriter, "failed to write metrics in the response", http.StatusInternalServerError)
+		resMetrics, err := metricManager.UpdateMetrics(combinedCtx, metricList)
+		if err != nil {
+			http.Error(responseWriter, "failed to update metrics", http.StatusInternalServerError)
 			return
 		}
 
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusOK)
-		if err = json.NewEncoder(responseWriter).Encode(metricList); err != nil {
+		if err = json.NewEncoder(responseWriter).Encode(resMetrics); err != nil {
 			http.Error(responseWriter, "failed to encode the metrics", http.StatusInternalServerError)
 		}
 	}
