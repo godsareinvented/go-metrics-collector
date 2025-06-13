@@ -12,7 +12,7 @@ func GetUpdateMetricBatchRequest(metrics []dto.Metrics, client *resty.Client) *r
 	request := client.R()
 
 	body, err := json.Marshal(metrics)
-	if nil != err {
+	if err != nil {
 		panic(err)
 	}
 

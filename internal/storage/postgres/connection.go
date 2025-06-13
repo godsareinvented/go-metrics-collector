@@ -18,12 +18,12 @@ var (
 )
 
 func OpenConnection(dsn string) (*sql.DB, error) {
-	if "" == dsn {
+	if dsn == "" {
 		return nil, errors.New("DATABASE_DSN is empty")
 	}
 
 	db, err := sql.Open("pgx", dsn)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -31,7 +31,7 @@ func OpenConnection(dsn string) (*sql.DB, error) {
 }
 
 func OpenConnectionWithRetry(dsn string) (*sql.DB, error) {
-	if "" == dsn {
+	if dsn == "" {
 		return nil, errors.New("DATABASE_DSN is empty")
 	}
 
@@ -39,7 +39,7 @@ func OpenConnectionWithRetry(dsn string) (*sql.DB, error) {
 	var err error
 	callback := func() (error, bool) {
 		db, err = sql.Open("pgx", dsn)
-		if nil != err {
+		if err != nil {
 			return err, isRetriableError(err)
 		}
 		return nil, false

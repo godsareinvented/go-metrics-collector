@@ -31,7 +31,7 @@ func DoWithRetry(ctx context.Context, retryOpts dto.RetryOptions, callback UserD
 		}
 
 		delay, err := getNextDelay(iter, retryOpts)
-		if nil != err {
+		if err != nil {
 			return err
 		}
 
@@ -62,11 +62,11 @@ func getNextDelay(iteration uint, retryOpts dto.RetryOptions) (time.Duration, er
 		return 0, nil
 	}
 
-	if nil != retryOpts.DelayList {
+	if retryOpts.DelayList != nil {
 		return getNextDelayFromList(iteration, retryOpts), nil
 	}
 
-	if nil != retryOpts.DelayCallback {
+	if retryOpts.DelayCallback != nil {
 		return getNextDelayWithCallback(iteration, retryOpts), nil
 	}
 
