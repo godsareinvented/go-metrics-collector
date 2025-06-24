@@ -1,4 +1,4 @@
-package abstract_factory
+package factory
 
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/parser/strategy"

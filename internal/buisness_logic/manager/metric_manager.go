@@ -3,8 +3,8 @@ package manager
 import (
 	"context"
 	"fmt"
-	parserAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/parser/abstract_factory"
-	valueHandlerAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/value_handler/abstract_factory"
+	parserFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/parser/factory"
+	valueHandlerFactory "github.com/oldhanasong/go-metrics-collector/internal/buisness_logic/service/value_handler/factory"
 	"github.com/oldhanasong/go-metrics-collector/internal/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/repository"
@@ -48,7 +48,7 @@ func (metricManager *MetricManager) collect(ctx context.Context) {
 
 			metricList = []dto.Metric{}
 			for _, metricName := range dictionary.MetricNameList {
-				strategy := parserAbstractFactory.GetStrategy(metricName)
+				strategy := parserFactory.GetStrategy(metricName)
 				metrics := strategy.GetMetric(metricName, metricCollectedData)
 				metricList = append(metricList, metrics)
 			}
@@ -74,7 +74,7 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 }
 
 func (metricManager *MetricManager) UpdateValue(metricDTO dto.Metric) {
-	valueHandler := valueHandlerAbstractFactory.GetValueHandler(metricDTO)
+	valueHandler := valueHandlerFactory.GetValueHandler(metricDTO)
 	metricDTO = valueHandler.GetMutatedValueMetric(metricDTO)
 
 	repository.MetricRepository.UpdateMetric(metricDTO)
