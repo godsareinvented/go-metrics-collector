@@ -3,7 +3,7 @@ package metric
 import (
 	"context"
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
-	valueHandlerAbstractFactory "github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/value_handler"
+	valueHandlerFactory "github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/value_handler"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"
@@ -94,7 +94,7 @@ func prepareMetric(ctx context.Context, repos repository.Repository, metric gene
 		return generaldto.Metrics{}, err
 	}
 
-	valueHandler, err := valueHandlerAbstractFactory.GetValueHandler(metric)
+	valueHandler, err := valueHandlerFactory.GetValueHandler(metric)
 	if err != nil {
 		return generaldto.Metrics{}, err
 	}
@@ -114,7 +114,7 @@ func combineMetricValues(metricList []generaldto.Metrics) ([]generaldto.Metrics,
 		if _, ok := metricMap[metric.ID]; !ok {
 			isMetricSet = false
 			if _, ok = valueHandlerMap[metric.MType]; !ok {
-				valueHandler, err := valueHandlerAbstractFactory.GetValueHandler(metric)
+				valueHandler, err := valueHandlerFactory.GetValueHandler(metric)
 				if err != nil {
 					return []generaldto.Metrics{}, err
 				}
