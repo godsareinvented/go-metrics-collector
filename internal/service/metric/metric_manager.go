@@ -69,7 +69,9 @@ func (metricManager *MetricManager) send(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			_ = metricManager.client.SendBatch(metricList)
+			if len(metricList) > 0 {
+				_ = metricManager.client.SendBatch(metricList)
+			}
 
 			time.Sleep(time.Duration(config.Configuration.ReportInterval) * time.Second)
 		}
