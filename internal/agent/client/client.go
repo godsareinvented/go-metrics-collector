@@ -34,8 +34,8 @@ func (s *Client) sendRequest(r *resty.Request) error {
 }
 
 func (s *Client) prepareRequest(r *resty.Request) *resty.Request {
-	for _, decorator := range s.decorators {
-		r = decorator(r)
+	for i := len(s.decorators) - 1; i >= 0; i-- {
+		r = s.decorators[i](r)
 	}
 	return r
 }
