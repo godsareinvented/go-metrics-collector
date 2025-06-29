@@ -2,8 +2,10 @@ package callback
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/server/service/metric"
 	"go.uber.org/multierr"
 )
@@ -33,5 +35,9 @@ func exportMetricsToPermanentStorage(ctx context.Context) error {
 }
 
 func closeStorageConnection() error {
-	return config.Configuration.Repository.CloseStorage()
+	err := config.Configuration.Repository.CloseStorage()
+	if !errors.Is(err, repository.ErrDontImplementConnectorInterface) {
+		return err
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/interfaces"
 )
@@ -9,6 +10,10 @@ import (
 type Repository struct {
 	storage *interfaces.Storage
 }
+
+var (
+	ErrDontImplementConnectorInterface = errors.New("storage don't implement connector interface")
+)
 
 func (repository *Repository) UpdateMetric(ctx context.Context, metric dto.Metrics) error {
 	return (*repository.storage).Set(ctx, metric)
@@ -31,7 +36,7 @@ func (repository *Repository) CloseStorage() error {
 		return connector.Close()
 	}
 
-	return nil
+	return ErrDontImplementConnectorInterface
 }
 
 func (repository *Repository) PingStorage(ctx context.Context) (bool, error) {
@@ -39,7 +44,7 @@ func (repository *Repository) PingStorage(ctx context.Context) (bool, error) {
 		return connector.Ping(ctx)
 	}
 
-	return true, nil
+	return false, ErrDontImplementConnectorInterface
 }
 
 func New(storageInterface interfaces.Storage) *Repository {
