@@ -25,7 +25,7 @@ func (w srBufferResponseWriter) WriteHeader(statusCode int) {
 
 func SigningResponse(handlerFunc http.Handler) http.Handler {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		if "" == config.Configuration.HashKey {
+		if config.Configuration.HashKey == "" {
 			handlerFunc.ServeHTTP(responseWriter, request)
 			return
 		}

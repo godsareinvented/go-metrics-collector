@@ -9,7 +9,7 @@ import (
 )
 
 func HashCalculation(request *resty.Request) *resty.Request {
-	if "" == config.Configuration.HashKey {
+	if config.Configuration.HashKey == "" {
 		return request
 	}
 

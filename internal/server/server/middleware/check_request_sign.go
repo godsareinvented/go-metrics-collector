@@ -13,13 +13,13 @@ import (
 func CheckRequestSign(handlerFunc http.Handler) http.Handler {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
 		hash := request.Header.Get("HashSHA256")
-		if "" == hash {
+		if hash == "" {
 			handlerFunc.ServeHTTP(responseWriter, request)
 			return
 		}
 
 		body, err := io.ReadAll(request.Body)
-		if nil != err {
+		if err != nil {
 			http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -31,7 +31,7 @@ func CheckRequestSign(handlerFunc http.Handler) http.Handler {
 		calculatedDst := h.Sum(nil)
 
 		requestDst, err := hex.DecodeString(hash)
-		if nil != err {
+		if err != nil {
 			http.Error(responseWriter, "Failed to decode request dst: "+err.Error(), http.StatusBadRequest)
 			return
 		}

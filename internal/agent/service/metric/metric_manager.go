@@ -103,7 +103,7 @@ func New(metricList []string, dataCollector interfaces.MetricDataCollector, clie
 	}
 
 	pool.New()
-	if nil != err {
+	if err != nil {
 		return MetricManager{}, err
 	}
 
@@ -123,7 +123,7 @@ func initStrategies(strategyMap *map[string]interfaces.ParsingStrategy, metricNa
 	var err error
 	for _, metricName := range metricNames {
 		(*strategyMap)[metricName], err = parser.GetStrategy(metricName)
-		if nil != err {
+		if err != nil {
 			return err
 		}
 	}
