@@ -10,12 +10,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/client"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/client/decorator"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/service/metric/data_collector"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/storage/mem_storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -55,25 +53,22 @@ func TestCollectAndSend(t *testing.T) {
 		config.Configuration.Endpoint = oldEndpoint
 	}()
 
-	c := client.NewClient()
+	c := client.NewClientWithRetry()
 	c.Use(decorator.GzipCompress)
 
-	metricManager := MetricManager{
-		metricsToCollect: dictionary.MetricNameList[:],
-		dataCollector:    &data_collector.MetricDataCollector{},
-		client:           c,
-	}
-	metricManager.Init()
+	metricManager, err := New(dictionary.MetricNameList[:], data_collector.New(), c)
+	require.NoErrorf(t, err, "Ошибка инициализации менеджера метрик")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.Configuration.ReportInterval)*time.Second+1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), config.Configuration.ReportInterval*time.Second+1*time.Second)
 	defer cancel()
-	metricManager.CollectAndSend(ctx)
+	_ = metricManager.CollectAndSend(ctx)
 
 	select {
 	case <-ctx.Done():
 	}
 
-	testMetricList(t, "test collect method", metricList)
+	data := metricManager.Pool().Get().(*interimData)
+	testMetricList(t, "test collect method", data.metricList)
 	testMetricList(t, "test send method", processedMetricList)
 }
 
@@ -180,19 +175,10 @@ func nameOfTestByMetricName(MName string) string {
 }
 
 func parseAndCleanConfig() func() {
-	oldRepos := config.Configuration.Repository
-	memStorage := mem_storage.NewStorage()
-	config.Configuration.Repository = repository.New(memStorage)
-
-	oldStoreInterval := config.Configuration.StoreInterval
-	config.Configuration.StoreInterval = 1
-
 	oldReportInterval := config.Configuration.ReportInterval
 	config.Configuration.ReportInterval = 2
 
 	return func() {
-		config.Configuration.Repository = oldRepos
-		config.Configuration.StoreInterval = oldStoreInterval
 		config.Configuration.ReportInterval = oldReportInterval
 	}
 }

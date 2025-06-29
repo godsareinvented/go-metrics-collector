@@ -23,7 +23,7 @@ func TestShowMetricList(t *testing.T) {
 	router.Get("/", ShowMetricList(context.Background()))
 
 	oldTpl := mainPageTplPath
-	mainPageTplPath = `.\..\..\..\template\main_page.html`
+	mainPageTplPath = `.\..\..\..\..\template\main_page.html`
 	defer func() {
 		mainPageTplPath = oldTpl
 	}()

@@ -167,9 +167,12 @@ func TestGetMetric(t *testing.T) {
 	)
 
 	t.Run("strategy get metric", func(t *testing.T) {
+		var metric generaldto.Metrics
+		var collectedData agentdto.CollectedMetricData
+
 		for _, test := range tests {
-			metrics := test.strategy.GetMetric(test.metricName, agentdto.CollectedMetricData{})
-			assert.Equal(t, test.want, metrics)
+			test.strategy.GetMetric(&metric, &collectedData)
+			assert.Equal(t, test.want, metric)
 		}
 	})
 }
