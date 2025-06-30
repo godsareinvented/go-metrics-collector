@@ -14,7 +14,7 @@ type MetricDataCollector struct {
 	pollCount         int64
 }
 
-func (collector *MetricDataCollector) CollectMetricData(metricData *dto.CollectedMetricData) error {
+func (collector *MetricDataCollector) Collect(metricData *dto.CollectedMetricData) error {
 	collector.wg.Add(2)
 
 	var mcErr error
@@ -37,6 +37,8 @@ func (collector *MetricDataCollector) CollectMemStats(metricData *dto.CollectedM
 }
 
 func (collector *MetricDataCollector) CollectVirtualMemoryStats(metricData *dto.CollectedMetricData, parentErr *error) {
+	defer collector.wg.Done()
+
 	virtualMemoryStat, err := mem.VirtualMemory()
 	if nil != err {
 		*parentErr = err
@@ -45,7 +47,6 @@ func (collector *MetricDataCollector) CollectVirtualMemoryStats(metricData *dto.
 	}
 
 	metricData.VirtualMemoryStats = *virtualMemoryStat
-	collector.wg.Done()
 }
 
 func New() *MetricDataCollector {

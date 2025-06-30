@@ -3,11 +3,13 @@ package metric
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/go-multierror"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/buisness_logic/parser"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
 	agentdto "github.com/oldhanasong/go-metrics-collector/internal/agent/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/interfaces"
 	generaldto "github.com/oldhanasong/go-metrics-collector/internal/general/dto"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
 	"sync"
 	"time"
 )
@@ -39,57 +41,88 @@ func (metricManager *MetricManager) Pool() *sync.Pool {
 	return metricManager.pool
 }
 
-func (metricManager *MetricManager) CollectAndSend(ctx context.Context) error {
+func (metricManager *MetricManager) CollectAndSend(ctx context.Context, onDone func(err error)) {
 	data := metricManager.pool.Get().(*interimData)
 	if metricManager.metricsToCollect == nil || len(metricManager.metricsToCollect) == 0 || metricManager.dataCollector == nil || data.strategyMap == nil {
-		return ErrNotInitialised
+		onDone(ErrNotInitialised)
+		return
 	}
 
-	go metricManager.collect(ctx)
-	go metricManager.send(ctx)
+	currentCtx := context.Background()
+	currentCtx, cancel := util.CombineContexts(ctx, currentCtx)
 
-	return nil
+	errCh := make(chan error, 1)
+	wg := sync.WaitGroup{}
+
+	go func(errCh chan error) {
+		wg.Wait()
+		close(errCh)
+
+		var finalErr error
+		for err := range errCh {
+			finalErr = multierror.Append(finalErr, err)
+		}
+
+		onDone(finalErr)
+	}(errCh)
+
+	wg.Add(2)
+	metricManager.collect(currentCtx, cancel, &wg, errCh)
+	metricManager.send(currentCtx, &wg, errCh)
 }
 
-func (metricManager *MetricManager) collect(ctx context.Context) {
-	var data *interimData
-	var metricName string
-	var metrics []generaldto.Metrics
+func (metricManager *MetricManager) collect(ctx context.Context, cancel context.CancelFunc, wg *sync.WaitGroup, errCh chan<- error) {
+	go func(ctx context.Context, cancel context.CancelFunc, wg *sync.WaitGroup, errCh chan<- error) {
+		defer cancel()
+		defer wg.Done()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			data = metricManager.pool.Get().(*interimData)
+		var data *interimData
+		var metricName string
+		var metrics []generaldto.Metrics
 
-			_ = metricManager.dataCollector.CollectMetricData(&data.collectedData)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				data = metricManager.pool.Get().(*interimData)
 
-			metrics = make([]generaldto.Metrics, 0, len(metricManager.metricsToCollect))
-			for _, metricName = range metricManager.metricsToCollect {
-				data.strategyMap[metricName].GetMetric(&data.metric, &data.collectedData)
-				metrics = append(metrics, data.metric)
+				err := metricManager.dataCollector.Collect(&data.collectedData)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				metrics = make([]generaldto.Metrics, 0, len(metricManager.metricsToCollect))
+				for _, metricName = range metricManager.metricsToCollect {
+					data.strategyMap[metricName].GetMetric(&data.metric, &data.collectedData)
+					metrics = append(metrics, data.metric)
+				}
+				data.metricList = metrics
+				metricManager.pool.Put(interface{}(data))
+
+				time.Sleep(config.Configuration.PollInterval * time.Second)
 			}
-			data.metricList = metrics
-			metricManager.pool.Put(interface{}(data))
-
-			time.Sleep(config.Configuration.PollInterval * time.Second)
 		}
-	}
+	}(ctx, cancel, wg, errCh)
 }
 
-func (metricManager *MetricManager) send(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			data := metricManager.pool.Get().(*interimData)
-			_ = metricManager.client.SendBatch(data.metricList)
+func (metricManager *MetricManager) send(ctx context.Context, wg *sync.WaitGroup, _ chan<- error) {
+	go func(ctx context.Context, wg *sync.WaitGroup) {
+		defer wg.Done()
 
-			time.Sleep(config.Configuration.ReportInterval * time.Second)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				data := metricManager.pool.Get().(*interimData)
+				_ = metricManager.client.SendBatch(data.metricList)
+
+				time.Sleep(config.Configuration.ReportInterval * time.Second)
+			}
 		}
-	}
+	}(ctx, wg)
 }
 
 func New(metricList []string, dataCollector interfaces.MetricDataCollector, client interfaces.Client) (MetricManager, error) {

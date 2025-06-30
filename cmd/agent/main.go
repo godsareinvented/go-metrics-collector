@@ -23,10 +23,9 @@ func main() {
 		panic(err)
 	}
 
-	err = metricManager.CollectAndSend(context.Background())
-	if err != nil {
+	metricManager.CollectAndSend(context.Background(), func(err error) {
 		panic(err)
-	}
+	})
 
 	select {}
 }

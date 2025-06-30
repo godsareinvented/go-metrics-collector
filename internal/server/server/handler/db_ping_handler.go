@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"
 	"net/http"
@@ -10,10 +11,10 @@ import (
 
 func DbPing(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		combinedCtx, cancel := combineContext(ctx, request.Context())
+		ctx, cancel := util.CombineContexts(ctx, request.Context())
 		defer cancel()
 
-		ping, err := config.Configuration.Repository.PingStorage(combinedCtx)
+		ping, err := config.Configuration.Repository.PingStorage(ctx)
 		if errors.Is(err, repository.ErrDontImplementConnectorInterface) {
 			http.Error(responseWriter, "storage unavailable", http.StatusServiceUnavailable)
 			return

@@ -20,22 +20,6 @@ var (
 	v, _ = decorator.GetRegisteredCustomFunctionsValidator(validator.New())
 )
 
-// combineContext Получение комбинированного контекста, чтобы хендлер мог обработать завершение контекстов как приложения, так и запроса
-func combineContext(serverCtx context.Context, requestCtx context.Context) (context.Context, context.CancelFunc) {
-	combinedCtx, cancel := context.WithCancel(requestCtx)
-
-	go func() {
-		select {
-		case <-serverCtx.Done():
-			cancel()
-		case <-combinedCtx.Done():
-			return
-		}
-	}()
-
-	return combinedCtx, cancel
-}
-
 func parsedJsonMetric(r *http.Request) (dto.Metrics, error) {
 	m := dto.Metrics{}
 	err := json.NewDecoder(r.Body).Decode(&m)

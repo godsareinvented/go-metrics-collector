@@ -3,13 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/server/service/metric"
 	"net/http"
 )
 
 func UpdateMetricJson(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		combinedCtx, cancel := combineContext(ctx, request.Context())
+		ctx, cancel := util.CombineContexts(ctx, request.Context())
 		defer cancel()
 
 		m, err := parsedJsonMetric(request)
@@ -24,7 +25,7 @@ func UpdateMetricJson(ctx context.Context) http.HandlerFunc {
 		}
 
 		metricManager := manager.MetricManager{}
-		if err = metricManager.UpdateMetric(combinedCtx, m); err != nil {
+		if err = metricManager.UpdateMetric(ctx, m); err != nil {
 			http.Error(responseWriter, "failed to write metric in the response", http.StatusInternalServerError)
 			return
 		}

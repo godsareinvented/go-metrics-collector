@@ -3,13 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
 	"net/http"
 )
 
 func GetMetricJson(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		combinedCtx, cancel := combineContext(ctx, request.Context())
+		ctx, cancel := util.CombineContexts(ctx, request.Context())
 		defer cancel()
 
 		m, err := parsedJsonMetric(request)
@@ -23,7 +24,7 @@ func GetMetricJson(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(combinedCtx, m)
+		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(ctx, m)
 		if err != nil {
 			http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 			return

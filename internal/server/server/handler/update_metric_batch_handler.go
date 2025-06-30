@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/server/service/metric"
 	"net/http"
 )
 
 func UpdateMetricBatch(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		combinedCtx, cancel := combineContext(ctx, request.Context())
+		ctx, cancel := util.CombineContexts(ctx, request.Context())
 		defer cancel()
 
 		metricList, err := parsedJsonMetrics(request)
@@ -27,7 +28,7 @@ func UpdateMetricBatch(ctx context.Context) http.HandlerFunc {
 		}
 
 		metricManager := manager.MetricManager{}
-		resMetrics, err := metricManager.UpdateMetrics(combinedCtx, metricList)
+		resMetrics, err := metricManager.UpdateMetrics(ctx, metricList)
 		if err != nil {
 			http.Error(responseWriter, "failed to update metrics", http.StatusInternalServerError)
 			return

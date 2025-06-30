@@ -17,8 +17,8 @@ func TestGetMetricData(t *testing.T) {
 	var secondTimeCollectedData dto.CollectedMetricData
 
 	collector := MetricDataCollector{}
-	collector.CollectMetricData(&collectedData)
-	collector.CollectMetricData(&secondTimeCollectedData)
+	collector.Collect(&collectedData)
+	collector.Collect(&secondTimeCollectedData)
 
 	var memStatsDirect runtime.MemStats
 	runtime.ReadMemStats(&memStatsDirect)

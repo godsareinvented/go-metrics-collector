@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/service/validator/metric"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 
 func GetMetric(ctx context.Context) http.HandlerFunc {
 	fn := func(responseWriter http.ResponseWriter, request *http.Request) {
-		combinedCtx, cancel := combineContext(ctx, request.Context())
+		ctx, cancel := util.CombineContexts(ctx, request.Context())
 		defer cancel()
 
 		MType, MName := parsedAbridgedMetricValues(request)
@@ -27,7 +28,7 @@ func GetMetric(ctx context.Context) http.HandlerFunc {
 
 		m := dto.Metrics{ID: MName, MType: MType}
 
-		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(combinedCtx, m)
+		resultingMetric, isSet, err := config.Configuration.Repository.GetMetric(ctx, m)
 		if err != nil {
 			http.Error(responseWriter, "failed to get the metric list", http.StatusInternalServerError)
 			return
