@@ -40,7 +40,7 @@ WHERE metrics.ID = $1
 
 	saveOrUpdateMetricQuery = `
 WITH metric_type_id_cte AS (
-    SELECT id FROM postgres.public.metric_type WHERE metric_type = $4
+    SELECT id FROM postgres.public.metric_type WHERE metric_type = $4 FOR UPDATE
 )
 
 INSERT INTO postgres.public.metrics ("id", "delta", "value", "metric_type_id")
