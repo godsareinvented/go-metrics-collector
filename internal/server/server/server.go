@@ -39,13 +39,7 @@ func (s *Server) Stop() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var err error
-	if s.OnStop != nil {
-		err = s.OnStop(ctx)
-	}
-
-	errShutdown := s.server.Shutdown(ctx)
-	return multierr.Combine(err, errShutdown)
+	return s.server.Shutdown(ctx)
 }
 
 func (s *Server) createAndConfigureRouter(ctx context.Context) {
@@ -90,6 +84,13 @@ func (s *Server) createServer(ctx context.Context) {
 		Addr:    config.Configuration.Endpoint,
 		Handler: s.router,
 	}
+	s.server.RegisterOnShutdown(func() {
+		if s.OnStop != nil {
+			if err := s.OnStop(ctx); err != nil && !errors.Is(err, context.Canceled) {
+				panic(err)
+			}
+		}
+	})
 }
 
 func (s *Server) startingServer(ctx context.Context) error {

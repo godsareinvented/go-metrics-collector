@@ -29,6 +29,7 @@ type (
 		dataCollector    interfaces.MetricDataCollector
 		client           interfaces.Client
 		pool             *sync.Pool
+		sendingCounter   int
 	}
 )
 
@@ -122,31 +123,38 @@ func (metricManager *MetricManager) send(ch <-chan []generaldto.Metrics, wg *syn
 		sleep(config.Configuration.ReportInterval)
 
 		var batch []generaldto.Metrics
-		var count int
 		var ok bool
 
 		for {
-			count = batchCount(ch)
-			if count == 0 {
-				sleep(config.Configuration.ReportInterval)
-				continue
-			}
-
-			for i := 0; i < count; i++ {
-				batch, ok = <-ch
+			select {
+			case batch, ok = <-ch:
 				if !ok {
 					return
 				}
-				workerCh <- batch
-			}
 
-			sleep(config.Configuration.ReportInterval)
+				workerCh <- batch
+
+				if metricManager.doesReportNeedSleep(ch) {
+					sleep(config.Configuration.ReportInterval)
+				}
+			default:
+				sleep(config.Configuration.ReportInterval)
+			}
 		}
 	}(ch, workerCh, wg)
 }
 
+func (metricManager *MetricManager) doesReportNeedSleep(ch <-chan []generaldto.Metrics) bool {
+	metricManager.sendingCounter++
+	cond := len(ch) == 0 || metricManager.sendingCounter >= config.Configuration.RateLimit
+	if cond {
+		metricManager.sendingCounter = 0
+	}
+	return cond
+}
+
 func New(metricList []string, dataCollector interfaces.MetricDataCollector, client interfaces.Client) (MetricManager, error) {
-	if len(metricList) == 0 || dataCollector == nil || client == nil {
+	if dataCollector == nil || client == nil {
 		return MetricManager{}, ErrInvalidArguments
 	}
 
@@ -195,10 +203,6 @@ func collectingChan() chan []generaldto.Metrics {
 	))
 
 	return make(chan []generaldto.Metrics, chLen)
-}
-
-func batchCount(ch <-chan []generaldto.Metrics) int {
-	return int(math.Min(float64(config.Configuration.RateLimit), float64(len(ch))))
 }
 
 func sleep(d time.Duration) {

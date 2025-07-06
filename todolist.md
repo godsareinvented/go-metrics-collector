@@ -9,27 +9,23 @@
 1. [config_configurator](internal/server/config/config_configurator.go:#L22) Необходимо валидация отрицательных значений
    флагов?
 2. [config_configurator](internal/server/config/config_configurator.go:#L26) Значение GzipMinContentLength должно быть
-   1400.
+    1400.
    Для соответствия инкременту 8 заменено на 0.
 3. [update_metric_json](internal/agent/client/request/update_metric_json.go:#L16) Нужно пересмотреть выплёвывание
    ошибок.
 4. [on_start_callback](internal/server/server1/callback/on_start_callback.go:#L20) В будущем, необходимо перейти
    на более надёжную схему менеджера джоб.
-5. [server](internal/server/server.go:#L47) Реакция на завершение контекста сервера в хендлере DbPing прописано верно.
-   Но остановка сервера в текущем варианте останавливает хендлеры моментально, не давая им возможности корректно
-   обработать завершение родительного контекста (точно?).
-   Нужно перейти на схему с грациозным завершением сервера (?..). Надо исследовать этот момент глубже.
-6. [metric_manager](internal/server/service/metric/metric_manager.go:#L48) Упростить и улучшить именование методов и
+5. [metric_manager](internal/server/service/metric/metric_manager.go:#L48) Упростить и улучшить именование методов и
    структур.
-7. [factory](internal/agent/buisness_logic/parser/factory.go:#L11) Необходимо сделать описания ошибок более говорящими.
-8. [client_with_retry](internal/agent/client/client_with_retry.go) Переписать отдельную структуру клиента с ретраем на
-    декоратор.
+6. [factory](internal/agent/buisness_logic/parser/factory.go:#L11) Необходимо сделать описания ошибок более говорящими.
+7. [client_with_retry](internal/agent/client/client_with_retry.go) Переписать отдельную структуру клиента с ретраем на
+   декоратор.
 
 ---
 
 ### Валидация
 
-[custom_func](internal/general/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и
+8. [custom_func](internal/general/validation/custom_func): Добавить пользовательские констреинты ```Integer``` и
    ```Float```,
    поддерживающие проверку, что число во входной строке не больше ```math.MaxInt64``` и ```math.MaxFloat64```
    (*плюс поддержка отрицательных значений через регулярку*)\
