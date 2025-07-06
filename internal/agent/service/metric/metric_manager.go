@@ -189,10 +189,6 @@ func initStrategies(strategyMap *map[string]interfaces.ParsingStrategy, metricNa
 }
 
 func collectingChan() chan []generaldto.Metrics {
-	if config.Configuration.PollInterval == config.Configuration.ReportInterval {
-		return make(chan []generaldto.Metrics)
-	}
-
 	chLen := int(math.Max(
 		1,
 		math.Ceil(config.Configuration.ReportInterval.Seconds()/config.Configuration.PollInterval.Seconds()),
