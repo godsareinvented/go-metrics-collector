@@ -15,11 +15,11 @@ type srBufferResponseWriter struct {
 	statusCode int
 }
 
-func (w srBufferResponseWriter) Write(b []byte) (int, error) {
+func (w *srBufferResponseWriter) Write(b []byte) (int, error) {
 	return w.buffer.Write(b)
 }
 
-func (w srBufferResponseWriter) WriteHeader(statusCode int) {
+func (w *srBufferResponseWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
