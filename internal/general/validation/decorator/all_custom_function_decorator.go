@@ -6,15 +6,17 @@ import (
 )
 
 var customFuncMap = map[string]validator.Func{
-	"mname":     custom_func.ValidateMetricName(),
-	"mvalue_by": custom_func.ValidateMetricValue(),
+	"mname":         custom_func.ValidateMetricName(),
+	"mvalue_by":     custom_func.ValidateMetricValue(),
+	"hashkey":       custom_func.ValidateHashkey(),
+	"ratelimmin":    custom_func.ValidateRateLimitMin(),
+	"hostname_port": custom_func.ValidateHostnamePort(),
 }
 
 func GetRegisteredCustomFunctionsValidator(validate *validator.Validate) (*validator.Validate, error) {
 	var err error
 	for tag, validateFunc := range customFuncMap {
-		err = validate.RegisterValidation(tag, validateFunc)
-		if err != nil {
+		if err = validate.RegisterValidation(tag, validateFunc); err != nil {
 			return nil, err
 		}
 	}

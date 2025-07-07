@@ -22,7 +22,9 @@ func main() {
 	}()
 
 	configConfigurator := config.ConfigConfigurator{}
-	configConfigurator.ParseConfig()
+	if err := configConfigurator.ParseConfig(); err != nil {
+		panic(err)
+	}
 
 	webServer := server.Server{
 		OnStart: callback.OnServerStartedCallback,

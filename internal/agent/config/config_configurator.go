@@ -7,8 +7,8 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary/decorator"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/logger"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/service/validator"
 	"github.com/shirou/gopsutil/v3/cpu"
-	"go.uber.org/multierr"
 	"sync"
 	"time"
 )
@@ -26,14 +26,14 @@ func (c *ConfigConfigurator) ParseConfig() error {
 	once.Do(func() {
 		Configuration = Config{
 			GzipAcceptedContentTypes: []string{"application/json", "text/html"},
-			GzipMinContentLength:     0, // Должно быть 1400. Для соответствия инкременту 8 заменено на 0.
+			GzipMinContentLength:     1, // Должно быть 1400. Для соответствия инкременту 8 заменено на 1.
 			Logger:                   logger.New(),
 		}
 
 		parseFlags()
 
 		if err := parseEnv(); err != nil {
-			resErr = multierr.Append(errors.New("error parsing environment variables"), err)
+			resErr = errors.New("error parsing environment variables: " + err.Error())
 			return
 		}
 
@@ -43,6 +43,11 @@ func (c *ConfigConfigurator) ParseConfig() error {
 		}
 
 		if err := generateMetricNameList(); err != nil {
+			resErr = err
+			return
+		}
+
+		if err := validator.GetValidator().Struct(Configuration); err != nil {
 			resErr = err
 			return
 		}

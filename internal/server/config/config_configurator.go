@@ -7,6 +7,7 @@ import (
 	"github.com/oldhanasong/go-metrics-collector/internal/server/logger"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/permanent_storage/file"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/service/validator"
 	"os"
 	"strings"
 	"sync"
@@ -21,23 +22,35 @@ var (
 	once sync.Once
 )
 
-func (c *ConfigConfigurator) ParseConfig() {
+func (c *ConfigConfigurator) ParseConfig() error {
+	var resErr error
 	once.Do(func() {
 		Configuration = Config{
 			GzipAcceptedContentTypes: []string{"application/json", "text/html"},
-			GzipMinContentLength:     0, // Должно быть 1400. Для соответствия инкременту 8 заменено на 0.
+			GzipMinContentLength:     1, // Должно быть 1400. Для соответствия инкременту 8 заменено на 1.
 			Logger:                   logger.New(),
 		}
 
 		parseFlags()
+
 		if err := parseEnv(); err != nil {
-			panic("Error parsing environment variables")
+			resErr = errors.New("error parsing environment variables: " + err.Error())
+			return
 		}
+
 		createPermanentStorage()
+
 		if err := createRepository(); err != nil {
-			panic(err)
+			resErr = err
+			return
+		}
+
+		if err := validator.GetValidator().Struct(Configuration); err != nil {
+			resErr = err
+			return
 		}
 	})
+	return resErr
 }
 
 func parseFlags() {
