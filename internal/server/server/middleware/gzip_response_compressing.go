@@ -3,7 +3,7 @@ package middleware
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
 	"net/http"
 	"slices"
 	"strings"

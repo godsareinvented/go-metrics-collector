@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/validation/decorator"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/storage/mem_storage"
 	"go.uber.org/multierr"
@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	v, _ = decorator.GetRegisteredCustomFunctionsValidator(validator.New())
+	v, _ = decorator.RegisteredCustomFunctionsValidator(validator.New())
 )
 
 func parsedJsonMetric(r *http.Request) (dto.Metrics, error) {

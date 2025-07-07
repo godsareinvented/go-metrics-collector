@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
-	manager "github.com/oldhanasong/go-metrics-collector/internal/server/service/metric"
+	manager "github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/metric"
 	"net/http"
 )
 

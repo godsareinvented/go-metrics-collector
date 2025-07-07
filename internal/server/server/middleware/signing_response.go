@@ -5,7 +5,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
 	"net/http"
 )
 

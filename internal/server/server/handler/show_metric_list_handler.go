@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
 	"html/template"
 	"net/http"
 	"sort"

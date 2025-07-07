@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	blconfig "github.com/oldhanasong/go-metrics-collector/internal/agent/business_logic/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/business_logic/metric/data_collector"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/client"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/client/decorator"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
 	manager "github.com/oldhanasong/go-metrics-collector/internal/agent/service/metric"
-	"github.com/oldhanasong/go-metrics-collector/internal/agent/service/metric/data_collector"
 	"os"
 	"os/signal"
 	"sync"
@@ -33,7 +34,7 @@ func main() {
 	c.Use(decorator.GzipCompress)
 	c.Use(decorator.HashCalculation)
 
-	metricManager, err := manager.New(config.Configuration.MetricsToCollect, data_collector.New(), c)
+	metricManager, err := manager.New(blconfig.Configuration.MetricsToCollect, data_collector.New(), c)
 	if err != nil {
 		panic(err)
 	}

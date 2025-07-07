@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

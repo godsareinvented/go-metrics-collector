@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/interfaces"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/mock"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"

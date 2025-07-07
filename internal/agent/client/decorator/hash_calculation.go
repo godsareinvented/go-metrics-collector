@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/go-resty/resty/v2"
-	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/business_logic/config"
 )
 
 func HashCalculation(request *resty.Request) *resty.Request {

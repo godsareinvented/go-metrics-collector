@@ -4,10 +4,11 @@ import (
 	"errors"
 	"flag"
 	"github.com/caarlos0/env"
-	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
-	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary/decorator"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/logger"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/service/validator"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/business_logic/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary/decorator"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/logger"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/validation"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"sync"
 	"time"
@@ -24,7 +25,7 @@ var (
 func (c *ConfigConfigurator) ParseConfig() error {
 	var resErr error
 	once.Do(func() {
-		Configuration = Config{
+		config.Configuration = config.Config{
 			GzipAcceptedContentTypes: []string{"application/json", "text/html"},
 			GzipMinContentLength:     1, // Должно быть 1400. Для соответствия инкременту 8 заменено на 1.
 			Logger:                   logger.New(),
@@ -42,12 +43,12 @@ func (c *ConfigConfigurator) ParseConfig() error {
 			return
 		}
 
-		if err := generateMetricNameList(); err != nil {
+		if err := generateMetricNameToCollect(); err != nil {
 			resErr = err
 			return
 		}
 
-		if err := validator.GetValidator().Struct(Configuration); err != nil {
+		if err := validation.Validator().Struct(config.Configuration); err != nil {
 			resErr = err
 			return
 		}
@@ -58,20 +59,20 @@ func (c *ConfigConfigurator) ParseConfig() error {
 func parseFlags() {
 	var reportInterval, pollInterval int
 
-	flag.StringVar(&Configuration.Endpoint, "a", "localhost:8080", "Адрес эндпоинта HTTP-сервера")
+	flag.StringVar(&config.Configuration.Endpoint, "a", "localhost:8080", "Адрес эндпоинта HTTP-сервера")
 	flag.IntVar(&reportInterval, "r", 10, "Частота отправки метрик на сервер")
 	flag.IntVar(&pollInterval, "p", 2, "Частота опроса метрик из пакета runtime")
-	flag.StringVar(&Configuration.HashKey, "k", "", "Ключ для вычисления хэша")
-	flag.IntVar(&Configuration.RateLimit, "l", 1, "Количество одновременно исходящих запросов на сервер (количество воркеров)")
+	flag.StringVar(&config.Configuration.HashKey, "k", "", "Ключ для вычисления хэша")
+	flag.IntVar(&config.Configuration.RateLimit, "l", 1, "Количество одновременно исходящих запросов на сервер (количество воркеров)")
 
 	flag.Parse()
 
-	Configuration.ReportInterval = time.Duration(reportInterval)
-	Configuration.PollInterval = time.Duration(pollInterval)
+	config.Configuration.ReportInterval = time.Duration(reportInterval)
+	config.Configuration.PollInterval = time.Duration(pollInterval)
 }
 
 func parseEnv() error {
-	return env.Parse(&Configuration)
+	return env.Parse(&config.Configuration)
 }
 
 func setLogicalCpuNumber() error {
@@ -80,16 +81,16 @@ func setLogicalCpuNumber() error {
 		return err
 	}
 
-	Configuration.LogicalCpuCount = count
+	config.Configuration.LogicalCpuCount = count
 	return nil
 }
 
-func generateMetricNameList() error {
-	metricNameList, err := decorator.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], Configuration.LogicalCpuCount)
+func generateMetricNameToCollect() error {
+	metricNameList, err := decorator.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], config.Configuration.LogicalCpuCount)
 	if nil != err {
 		return err
 	}
 
-	Configuration.MetricsToCollect = metricNameList
+	config.Configuration.MetricsToCollect = metricNameList
 	return nil
 }

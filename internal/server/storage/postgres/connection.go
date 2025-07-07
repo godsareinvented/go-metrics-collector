@@ -6,8 +6,8 @@ import (
 	"errors"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/service/retry"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/service/retry/prepared_option"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/retry/prepared_option"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/service/retry"
 )
 
 var (

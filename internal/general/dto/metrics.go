@@ -2,7 +2,7 @@ package dto
 
 import (
 	"fmt"
-	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary"
 	"strconv"
 )
 

@@ -5,9 +5,9 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/client/request"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/interfaces"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/retry/prepared_option"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/service/retry"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/service/retry/prepared_option"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/service/retry"
 	"time"
 )
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
+	manager "github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/metric"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/repository"
-	manager "github.com/oldhanasong/go-metrics-collector/internal/server/service/metric"
 	"go.uber.org/multierr"
 )
 

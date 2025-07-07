@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/server/handler"
 	"github.com/oldhanasong/go-metrics-collector/internal/server/server/middleware"
 	"go.uber.org/multierr"

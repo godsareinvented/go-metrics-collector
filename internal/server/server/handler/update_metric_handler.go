@@ -2,11 +2,11 @@ package handler
 
 import (
 	"context"
-	"github.com/oldhanasong/go-metrics-collector/internal/general/dictionary"
+	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/util"
-	manager "github.com/oldhanasong/go-metrics-collector/internal/server/service/metric"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/service/validator/metric"
+	manager "github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/metric"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/validation/metric"
 	"net/http"
 	"strconv"
 )

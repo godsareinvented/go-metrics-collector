@@ -3,8 +3,8 @@ package callback
 import (
 	"context"
 	"fmt"
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
-	manager "github.com/oldhanasong/go-metrics-collector/internal/server/service/metric"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
+	manager "github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/metric"
 	"time"
 )
 

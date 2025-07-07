@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/oldhanasong/go-metrics-collector/internal/server/config"
+	"github.com/oldhanasong/go-metrics-collector/internal/server/buisness_logic/config"
 	"net/http"
 	"time"
 )
