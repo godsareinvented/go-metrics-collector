@@ -7,7 +7,7 @@ var (
 )
 
 func InitWorkerPool[T interface{}](workerCount int, taskCh <-chan T, callback func(workerId int, task T)) error {
-	if nil == taskCh || nil == callback {
+	if taskCh == nil || callback == nil {
 		return ErrNoArguments
 	}
 

@@ -85,7 +85,7 @@ func getLogicalCpuNumberFromMetricName(metricName string) (uint, bool) {
 		return 0, false
 	}
 	logicalCpuNumber, err := strconv.ParseUint(subStrings[1], 10, 8)
-	if nil != err {
+	if err != nil {
 		return 0, false
 	}
 	return uint(logicalCpuNumber), true

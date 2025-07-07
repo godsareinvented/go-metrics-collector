@@ -77,7 +77,7 @@ func parseEnv() error {
 
 func setLogicalCpuNumber() error {
 	count, err := cpu.Counts(true)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 
@@ -87,7 +87,7 @@ func setLogicalCpuNumber() error {
 
 func generateMetricNameToCollect() error {
 	metricNameList, err := decorator.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], config.Configuration.LogicalCpuCount)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 

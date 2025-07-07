@@ -27,7 +27,7 @@ func (collector *MetricDataCollector) Collect(metricData *dto.CollectedMetricDat
 
 	collector.wg.Wait()
 
-	if nil != mcErr {
+	if mcErr != nil {
 		return mcErr
 	}
 	return nil
@@ -42,13 +42,13 @@ func (collector *MetricDataCollector) CollectVirtualMemoryStatsAndCpuUtilization
 	defer collector.wg.Done()
 
 	virtualMemoryStat, err := mem.VirtualMemory()
-	if nil != err {
+	if err != nil {
 		*parentErr = err
 		return
 	}
 	metricData.VirtualMemoryStats = *virtualMemoryStat
 
-	if metricData.CPUPercentList, err = cpu.PercentWithContext(context.Background(), 0, true); nil != err {
+	if metricData.CPUPercentList, err = cpu.PercentWithContext(context.Background(), 0, true); err != nil {
 		*parentErr = err
 		return
 	}

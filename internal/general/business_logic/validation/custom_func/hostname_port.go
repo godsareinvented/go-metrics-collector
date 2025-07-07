@@ -15,7 +15,7 @@ type (
 // ValidateHostnamePort Функция для валидации имени хоста, которое может включать порт
 func ValidateHostnamePort() validator.Func {
 	fn := func(fl validator.FieldLevel) bool {
-		if ":" == fl.Field().String() {
+		if fl.Field().String() == ":" {
 			return false
 		}
 		hostnamePort := parsedHostnamePortStruct(fl.Field().String())
