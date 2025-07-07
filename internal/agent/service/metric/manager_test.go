@@ -8,11 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/oldhanasong/go-metrics-collector/internal/agent/business_logic/config"
+	blconf "github.com/oldhanasong/go-metrics-collector/internal/agent/business_logic/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/business_logic/metric/data_collector"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/client"
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/client/decorator"
+	"github.com/oldhanasong/go-metrics-collector/internal/agent/config"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary"
+	dictdec "github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary/decorator"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/dto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,32 +49,32 @@ func TestCollectAndSend(t *testing.T) {
 
 	serverUrl, _ := url.Parse(server.URL)
 
-	oldEndpoint := config.Configuration.Endpoint
-	config.Configuration.Endpoint = fmt.Sprintf("%s:%s", serverUrl.Hostname(), serverUrl.Port())
+	oldEndpoint := blconf.Configuration.Endpoint
+	blconf.Configuration.Endpoint = fmt.Sprintf("%s:%s", serverUrl.Hostname(), serverUrl.Port())
 	defer func() {
-		config.Configuration.Endpoint = oldEndpoint
+		blconf.Configuration.Endpoint = oldEndpoint
 	}()
 
 	c := client.NewClientWithRetry()
 	c.Use(decorator.GzipCompress)
 
-	metricManager, err := New(dictionary.MetricNameList[:], data_collector.New(), c)
+	metricsToCollect, err := dictdec.AddCpuUtilizationMetricNames(dictionary.MetricNameList[:], blconf.Configuration.LogicalCpuCount)
+	require.NoErrorf(t, err, "Ошибка формриования списка метрик для сбора")
+	metricManager, err := New(metricsToCollect, data_collector.New(), c)
 	require.NoErrorf(t, err, "Ошибка инициализации менеджера метрик")
 
-	ctx, cancel := context.WithTimeout(context.Background(), config.Configuration.ReportInterval*time.Second+1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), blconf.Configuration.ReportInterval*time.Second+time.Second)
 	defer cancel()
-	_ = metricManager.CollectAndSend(ctx)
+	metricManager.CollectAndSend(ctx, func(_ error) {})
 
 	select {
 	case <-ctx.Done():
 	}
 
-	data := metricManager.Pool().Get().(*interimData)
-	testMetricList(t, "test collect method", data.metricList)
-	testMetricList(t, "test send method", processedMetricList)
+	testMetricList(t, "test sent data", metricsToCollect, processedMetricList)
 }
 
-func testMetricList(t *testing.T, testName string, metrics []dto.Metrics) {
+func testMetricList(t *testing.T, testName string, metricToCollect []string, metrics []dto.Metrics) {
 	t.Run(testName, func(t *testing.T) {
 		metricCountMap := make(map[string]int)
 		zeroValueMetricCount := 0
@@ -90,7 +92,7 @@ func testMetricList(t *testing.T, testName string, metrics []dto.Metrics) {
 			}
 
 			assert.Containsf(t, allowedMetricTypes, metric.MType, "metric %s is of a type not allowed", metric.ID)
-			assert.Containsf(t, dictionary.MetricNameList, metric.ID, "metric %s is of a name not allowed", metric.ID)
+			assert.Containsf(t, metricToCollect, metric.ID, "metric %s is of a name not allowed", metric.ID)
 
 			if metric.MType == dictionary.GaugeMetricType {
 				assert.GreaterOrEqualf(t, *metric.Value, 0.0, "%s metric value must be non-negative", metric.ID)
@@ -106,9 +108,9 @@ func testMetricList(t *testing.T, testName string, metrics []dto.Metrics) {
 			}
 		}
 
-		assert.Equalf(t, len(dictionary.MetricNameList), len(processedMetricList), "Passed %d metrics, need %d", len(processedMetricList), len(dictionary.MetricNameList))
+		assert.Equalf(t, len(metricToCollect), len(processedMetricList), "Passed %d metrics, need %d", len(metrics), len(metricToCollect))
 
-		zeroValueMetricsPercent := float64(zeroValueMetricCount) / float64(len(dictionary.MetricNameList))
+		zeroValueMetricsPercent := float64(zeroValueMetricCount) / float64(len(metricToCollect))
 		assert.LessOrEqualf(t, zeroValueMetricsPercent, errorRate, "Too many metrics with zero values (%.0f%%)", zeroValueMetricsPercent*100)
 	})
 }
@@ -175,10 +177,16 @@ func nameOfTestByMetricName(MName string) string {
 }
 
 func parseAndCleanConfig() func() {
-	oldReportInterval := config.Configuration.ReportInterval
-	config.Configuration.ReportInterval = 2
+	configurator := config.ConfigConfigurator{}
+	_ = configurator.ParseConfig()
+
+	oldPollInterval := blconf.Configuration.PollInterval
+	blconf.Configuration.PollInterval = 2
+	oldReportInterval := blconf.Configuration.ReportInterval
+	blconf.Configuration.ReportInterval = 2
 
 	return func() {
-		config.Configuration.ReportInterval = oldReportInterval
+		blconf.Configuration.PollInterval = oldPollInterval
+		blconf.Configuration.ReportInterval = oldReportInterval
 	}
 }

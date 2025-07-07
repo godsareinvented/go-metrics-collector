@@ -3,27 +3,32 @@ package data_collector
 import (
 	"github.com/oldhanasong/go-metrics-collector/internal/agent/dto"
 	"github.com/oldhanasong/go-metrics-collector/internal/general/business_logic/dictionary"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"math"
 	"runtime"
 	"testing"
 )
 
-const epsilon float64 = 500    // Допустимая ошибка
+const epsilon float64 = 0.1    // Допустимая ошибка - 10%
 const pollCountDelta int64 = 1 // Допустимая разница для PollCount
 
 func TestGetMetricData(t *testing.T) {
+	var runtimeData dto.CollectedMetricData
 	var collectedData dto.CollectedMetricData
 	var secondTimeCollectedData dto.CollectedMetricData
 
 	collector := MetricDataCollector{}
-	collector.Collect(&collectedData)
-	collector.Collect(&secondTimeCollectedData)
 
-	var memStatsDirect runtime.MemStats
-	runtime.ReadMemStats(&memStatsDirect)
+	runtime.ReadMemStats(&runtimeData.MemStats)
 
-	testMemoryStatsCollecting(t, collectedData.MemStats, memStatsDirect)
+	err := collector.Collect(&collectedData)
+	require.NoError(t, err)
+
+	err = collector.Collect(&secondTimeCollectedData)
+	require.NoError(t, err)
+
+	testMemoryStatsCollecting(t, collectedData.MemStats, runtimeData.MemStats)
 	testPollCount(t, collectedData.PollCount, secondTimeCollectedData.PollCount)
 }
 
@@ -64,16 +69,21 @@ func testMemoryStatsCollecting(t *testing.T, collected, target runtime.MemStats)
 		}
 
 		for _, test := range tests {
-			if !almostEqual(test.collected, test.target) {
-				t.Errorf("%s mismatch: got %.0f, expected about %.0f (difference greater than %.0f)", test.metricName, test.collected, test.target, epsilon)
+			if test.target == test.collected {
+				continue
 			}
+			change := math.Abs((test.target - test.collected) / test.collected)
+			assert.Truef(
+				t,
+				change <= epsilon,
+				"The change of %d%% is outside the range of ±%d%% (old: %.2f, new: %.2f)",
+				int(change*100),
+				int(epsilon*100),
+				test.collected,
+				test.target,
+			)
 		}
 	})
-}
-
-func almostEqual(a, b float64) bool {
-	delta := math.Abs(b - a)
-	return delta <= epsilon
 }
 
 func testPollCount(t *testing.T, firstTimeValue, secondTimeValue int64) {

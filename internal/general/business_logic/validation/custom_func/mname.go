@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	metricIdRegexp = util.LazyRegexCompile(`[a-zA-Z]+\d*`)
+	metricIdRegexp = util.LazyRegexCompile(`^[a-zA-Z]+\d*$`)
 )
 
 func ValidateMetricName() validator.Func {

@@ -38,11 +38,6 @@ var (
 	ErrInvalidArguments = errors.New("not initialized metric list")
 )
 
-// Pool For tests
-func (metricManager *MetricManager) Pool() *sync.Pool {
-	return metricManager.pool
-}
-
 func (metricManager *MetricManager) CollectAndSend(ctx context.Context, onDone func(err error)) {
 	data := metricManager.pool.Get().(*interimData)
 	if metricManager.metricsToCollect == nil || len(metricManager.metricsToCollect) == 0 || metricManager.dataCollector == nil || data.strategyMap == nil {
